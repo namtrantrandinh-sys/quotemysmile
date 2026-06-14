@@ -28,18 +28,20 @@ img { max-width: 100%; display: block; }
 /* ============================================================ */
 /* Wordmark                                                     */
 /* ============================================================ */
-/* Wordmark — Cormorant SC small caps + Allura script "my".
-   Mint-era register: architectural Roman caps with a botanical flourish. */
+/* Wordmark — premium-dental register.
+   Inter Light wide-tracked caps reads "clinical-luxury skincare" —
+   Aēsop / RMS / Le Labo / Smile Direct's premium tier.
+   The Allura script "my" stays as the only flourish. */
 .wordmark {
-  font-family: "Cormorant SC", "Cormorant Garamond", serif;
-  font-weight: 400;
-  font-size: 20px;
-  letter-spacing: 0.18em;
+  font-family: "Inter", -apple-system, sans-serif;
+  font-weight: 200;
+  font-size: 13px;
+  letter-spacing: 0.36em;
   text-transform: uppercase;
   color: var(--espresso);
   line-height: 1;
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0;
   white-space: nowrap;
 }
@@ -47,7 +49,7 @@ img { max-width: 100%; display: block; }
   font-family: "Allura", cursive;
   font-style: normal;
   font-weight: 400;
-  font-size: 48px;
+  font-size: 42px;
   letter-spacing: 0;
   color: var(--gold);
   transform: translateY(8px) rotate(-3deg);
@@ -56,11 +58,11 @@ img { max-width: 100%; display: block; }
   text-transform: none;
   line-height: 1;
 }
-.wordmark.sm { font-size: 14px; letter-spacing: 0.20em; }
+.wordmark.sm { font-size: 10px; letter-spacing: 0.38em; }
 .wordmark.sm em {
-  font-size: 34px;
-  margin: 0 6px;
-  transform: translateY(5px) rotate(-3deg);
+  font-size: 30px;
+  margin: 0 7px;
+  transform: translateY(6px) rotate(-3deg);
   line-height: 1;
 }
 
@@ -115,11 +117,14 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   text-transform: uppercase; color: var(--taupe);
   margin: 0 0 22px;
 }
+/* Hero display — Inter Light reads as premium clinical, not magazine.
+   Allura script reserved for the one "in your hand" / accent move. */
 .display {
-  font-family: "Italiana", serif;
-  font-size: clamp(46px, 7vw, 92px);
-  line-height: 1.06;
-  letter-spacing: -0.005em;
+  font-family: "Inter", -apple-system, sans-serif;
+  font-weight: 200;
+  font-size: clamp(40px, 5.8vw, 72px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
   margin: 0 0 28px;
   color: var(--espresso);
 }
@@ -127,9 +132,10 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   font-family: "Allura", cursive;
   font-style: normal;
   color: var(--gold);
-  font-size: 1.4em;
+  font-size: 1.6em;
   letter-spacing: 0;
   line-height: 1;
+  font-weight: 400;
 }
 .lede {
   font-size: 19px;
@@ -428,6 +434,27 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   font-size: 11px;
   color: var(--taupe);
   letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.qc-meta .ahpra-tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--gold);
+  color: #fff;
+  padding: 2px 6px;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+.qc-meta .ahpra-tick::before {
+  content: "✓";
+  font-size: 9px;
+  line-height: 1;
 }
 .pulse-tag {
   font-family: "Inter", sans-serif;
