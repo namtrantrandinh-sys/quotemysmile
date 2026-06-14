@@ -36,7 +36,7 @@ export function Wordmark({ size = "md" }: { size?: Size }) {
           fontFamily: "Allura",
           fontSize: scriptBoost,
           lineHeight: scriptBoost,
-          color: "#C9A961",
+          color: "#A9CFC0",
           marginHorizontal: base * 0.4,
           transform: [{ translateY: 5 }, { rotate: "-2deg" }],
         }}
@@ -84,7 +84,7 @@ export function FullMark({ size = "md" }: { size?: Size }) {
         style={{
           fontFamily: "Allura",
           fontSize: script,
-          color: "#C9A961",
+          color: "#A9CFC0",
           lineHeight: script,
           marginVertical: -cap * 0.32,
           transform: [{ rotate: "-5deg" }],

@@ -62,7 +62,7 @@ export function CameraScanRing({ size = 280, active = true }: Props) {
           borderLeftWidth: 2,
           borderRightWidth: 0,
           borderBottomWidth: 0,
-          borderColor: "#C9A961",
+          borderColor: "#A9CFC0",
           opacity: fade,
           transform: [{ rotate: spinDeg }],
         }}

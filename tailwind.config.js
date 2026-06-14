@@ -18,7 +18,7 @@ module.exports = {
         sand: "#BFB29F",
 
         // Accents — brushed gold + restrained semantics
-        gold: "#C9A961",
+        gold: "#A9CFC0",
         honey: "#A8843D",
         forest: "#4A6B4F",
         clay: "#9E5E47",

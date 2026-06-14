@@ -48,7 +48,7 @@ export function PatientTabBar() {
                 <Icon
                   name={t.icon}
                   size={22}
-                  color={active ? "#C9A961" : "#8A7E6F"}
+                  color={active ? "#A9CFC0" : "#8A7E6F"}
                 />
               </View>
               <Text

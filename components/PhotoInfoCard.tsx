@@ -23,7 +23,7 @@ export function PhotoInfoCard({ icon, title, hint, tone = "neutral" }: Props) {
   return (
     <View className={`border ${borderClass} px-5 py-6 flex-row gap-4 items-center`}>
       <View>
-        <Icon name={icon} size={42} color={tone === "clay" ? "#9E5E47" : "#C9A961"} />
+        <Icon name={icon} size={42} color={tone === "clay" ? "#9E5E47" : "#A9CFC0"} />
       </View>
       <View className="flex-1">
         <Text className="font-display text-lg text-espresso mb-1">{title}</Text>
@@ -46,7 +46,7 @@ export function PhotoTips({ tips }: PhotoTipsProps) {
     <View className="flex-row justify-around px-4 py-5 border-y border-linen bg-eggshell/30">
       {tips.map((t, i) => (
         <View key={i} className="items-center gap-2">
-          <Icon name={t.icon} size={26} color={t.do === false ? "#9E5E47" : "#C9A961"} />
+          <Icon name={t.icon} size={26} color={t.do === false ? "#9E5E47" : "#A9CFC0"} />
           <Text className="text-[10px] tracking-cap uppercase text-walnut font-sans text-center">
             {t.label}
           </Text>

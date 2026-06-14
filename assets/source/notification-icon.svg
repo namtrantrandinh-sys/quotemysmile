@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Android notification icon — must be white-on-transparent silhouette only.
-  Android will tint it with our brand accent (#C9A961 set in expo-notifications
+  Android will tint it with our brand accent (#A9CFC0 set in expo-notifications
   plugin config in app.json).
 -->
 <svg xmlns="http://www.w3.org/2000/svg"

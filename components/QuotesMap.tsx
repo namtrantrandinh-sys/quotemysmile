@@ -237,7 +237,7 @@ export function QuotesMap({ quotes, patient, radiusKm = 10, onQuoteSelect }: Pro
                       borderLeftColor: "transparent",
                       borderRightColor: "transparent",
                       borderTopColor: q.isLowest
-                        ? "#C9A961"
+                        ? "#A9CFC0"
                         : q.isFinal
                           ? "#4D423A"
                           : "#2A2520",

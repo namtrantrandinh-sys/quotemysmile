@@ -14,14 +14,14 @@
     <style type="text/css">
       @import url('https://fonts.googleapis.com/css2?family=Italiana&amp;family=Allura&amp;display=swap');
       .bg    { fill: #F5F1E8; }
-      .ring  { fill: none; stroke: #C9A961; stroke-width: 6; opacity: 0.35; }
+      .ring  { fill: none; stroke: #A9CFC0; stroke-width: 6; opacity: 0.35; }
       .cap   { font-family: 'Italiana', 'Cormorant Garamond', serif;
                font-size: 152px; letter-spacing: 9px;
                fill: #2A2520; text-anchor: middle; }
       .script { font-family: 'Allura', cursive;
-                font-size: 268px; fill: #C9A961;
+                font-size: 268px; fill: #A9CFC0;
                 text-anchor: middle; }
-      .rule  { stroke: #C9A961; stroke-width: 3; }
+      .rule  { stroke: #A9CFC0; stroke-width: 3; }
     </style>
   </defs>
 

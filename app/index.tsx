@@ -99,7 +99,7 @@ export default function WelcomeScreen() {
               fontFamily: "Allura",
               fontSize: 68,
               lineHeight: 72,
-              color: "#C9A961",
+              color: "#A9CFC0",
               textAlign: "center",
               marginBottom: 24,
               transform: [{ rotate: "-3deg" }],
@@ -125,7 +125,7 @@ export default function WelcomeScreen() {
             style={{
               fontFamily: "Allura",
               fontSize: 38,
-              color: "#C9A961",
+              color: "#A9CFC0",
               textAlign: "center",
               marginBottom: 16,
               transform: [{ rotate: "-2deg" }],

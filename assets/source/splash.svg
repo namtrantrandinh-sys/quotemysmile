@@ -13,9 +13,9 @@
                 font-size: 168px; letter-spacing: 12px;
                 fill: #2A2520; text-anchor: middle; }
       .script { font-family: 'Allura', cursive;
-                font-size: 320px; fill: #C9A961;
+                font-size: 320px; fill: #A9CFC0;
                 text-anchor: middle; }
-      .rule   { stroke: #C9A961; stroke-width: 2; }
+      .rule   { stroke: #A9CFC0; stroke-width: 2; }
       .kicker { font-family: 'Italiana', serif; font-size: 26px;
                 letter-spacing: 10px; fill: #8A7E6F; text-anchor: middle; }
     </style>

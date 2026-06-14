@@ -6,11 +6,11 @@
       .bg { fill: #F5F1E8; }
       .cap { font-family: 'Italiana', serif; font-size: 96px; letter-spacing: 8px;
              fill: #2A2520; text-anchor: middle; text-transform: uppercase; }
-      .script { font-family: 'Allura', cursive; font-size: 180px; fill: #C9A961;
+      .script { font-family: 'Allura', cursive; font-size: 180px; fill: #A9CFC0;
                 text-anchor: middle; }
       .kicker { font-family: 'Italiana', serif; font-size: 22px;
                 letter-spacing: 8px; fill: #8A7E6F; text-anchor: middle; }
-      .rule { stroke: #C9A961; stroke-width: 2; }
+      .rule { stroke: #A9CFC0; stroke-width: 2; }
     </style>
   </defs>
   <rect class="bg" x="0" y="0" width="1200" height="630"/>

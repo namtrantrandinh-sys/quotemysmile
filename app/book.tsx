@@ -268,7 +268,7 @@ export default function BookScreen() {
         <View className="px-8 mb-10">
           <View className="border border-gold/40 bg-gold/5 p-5">
             <View className="flex-row items-center gap-3 mb-3">
-              <Icon name="lock" size={22} color="#C9A961" />
+              <Icon name="lock" size={22} color="#A9CFC0" />
               <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans">
                 Booking deposit
               </Text>

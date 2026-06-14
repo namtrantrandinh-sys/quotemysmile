@@ -4,8 +4,8 @@
     <style type="text/css">
       @import url('https://fonts.googleapis.com/css2?family=Allura&amp;display=swap');
       .bg { fill: #F5F1E8; }
-      .ring { fill: none; stroke: #C9A961; stroke-width: 0.6; opacity: 0.55; }
-      .m { font-family: 'Allura', cursive; font-size: 22px; fill: #C9A961;
+      .ring { fill: none; stroke: #A9CFC0; stroke-width: 0.6; opacity: 0.55; }
+      .m { font-family: 'Allura', cursive; font-size: 22px; fill: #A9CFC0;
            text-anchor: middle; dominant-baseline: middle; }
     </style>
   </defs>

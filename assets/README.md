@@ -55,7 +55,7 @@ per device class. The fastest path:
 ## Brand notes
 
 - **Italiana** for QUOTE + SMILE (high-contrast editorial serif)
-- **Allura** for "my" (signature script, slight rotation, gold #C9A961)
+- **Allura** for "my" (signature script, slight rotation, gold #A9CFC0)
 - Background **bone** #F5F1E8
 - Body **walnut** #4D423A
 - Espresso headings #2A2520

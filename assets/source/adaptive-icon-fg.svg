@@ -14,7 +14,7 @@
                font-size: 108px; letter-spacing: 7px;
                fill: #2A2520; text-anchor: middle; }
       .script { font-family: 'Allura', cursive;
-                font-size: 198px; fill: #C9A961;
+                font-size: 198px; fill: #A9CFC0;
                 text-anchor: middle; }
     </style>
   </defs>

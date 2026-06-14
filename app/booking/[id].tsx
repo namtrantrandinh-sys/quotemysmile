@@ -104,7 +104,7 @@ export default function BookingDetailScreen() {
         <View className="px-8 mb-8">
           <View className="border border-gold/40 bg-gold/5 p-5">
             <View className="flex-row items-center gap-3 mb-2">
-              <Icon name="lock" size={20} color="#C9A961" />
+              <Icon name="lock" size={20} color="#A9CFC0" />
               <Text className="text-[10px] tracking-cap uppercase text-walnut font-sans">
                 Deposit · {b.deposit_status}
               </Text>

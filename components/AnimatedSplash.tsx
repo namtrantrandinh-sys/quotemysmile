@@ -83,7 +83,7 @@ export function AnimatedSplash({ onDone }: Props) {
             marginBottom: 22,
           }}
         >
-          <View style={{ width: 16, height: 1, backgroundColor: "#C9A961" }} />
+          <View style={{ width: 16, height: 1, backgroundColor: "#A9CFC0" }} />
           <Text
             style={{
               fontFamily: "Inter",
@@ -95,7 +95,7 @@ export function AnimatedSplash({ onDone }: Props) {
           >
             est. 2026 · au
           </Text>
-          <View style={{ width: 16, height: 1, backgroundColor: "#C9A961" }} />
+          <View style={{ width: 16, height: 1, backgroundColor: "#A9CFC0" }} />
         </View>
 
         {/* Stacked QUOTE / my / SMILE — Italiana editorial caps + Allura script */}
@@ -115,7 +115,7 @@ export function AnimatedSplash({ onDone }: Props) {
           style={{
             fontFamily: "Allura",
             fontSize: 108,
-            color: "#C9A961",
+            color: "#A9CFC0",
             lineHeight: 108,
             marginVertical: -22,
             transform: [{ rotate: "-6deg" }],
@@ -141,7 +141,7 @@ export function AnimatedSplash({ onDone }: Props) {
           style={{
             width: 36,
             height: 1,
-            backgroundColor: "#C9A961",
+            backgroundColor: "#A9CFC0",
             marginTop: 24,
             marginBottom: 16,
           }}
@@ -170,7 +170,7 @@ export function AnimatedSplash({ onDone }: Props) {
           style={{
             fontFamily: "Allura",
             fontSize: 36,
-            color: "#C9A961",
+            color: "#A9CFC0",
             textAlign: "center",
             marginBottom: 18,
             transform: [{ rotate: "-3deg" }],

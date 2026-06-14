@@ -7,7 +7,7 @@ import { View } from "react-native";
  * 1px gold hairline strokes on transparent. Sized by `size` prop (default 48).
  *
  * Aesthetic rules:
- *  - 1px or 1.5px strokes, gold (#C9A961) by default
+ *  - 1px or 1.5px strokes, gold (#A9CFC0) by default
  *  - Minimal geometry — circles + lines + soft arcs
  *  - Never filled, never colourful — they read as engraved
  *  - Use sparingly: one hero icon per screen, one inline per row
@@ -41,7 +41,7 @@ export type IconName =
   | "list"
   | "map";
 
-export function Icon({ name, size = 48, color = "#C9A961" }: Props) {
+export function Icon({ name, size = 48, color = "#A9CFC0" }: Props) {
   return (
     <View
       style={{

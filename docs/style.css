@@ -6,7 +6,7 @@
   --taupe: #8a7e6f;
   --walnut: #4d423a;
   --espresso: #2a2520;
-  --gold: #c9a961;
+  --gold: #a9cfc0;
   --clay: #9e5e47;
   --forest: #4a6b4f;
   --bone-shadow: 0 1px 2px rgba(42, 37, 32, 0.05);
@@ -28,13 +28,14 @@ img { max-width: 100%; display: block; }
 /* ============================================================ */
 /* Wordmark                                                     */
 /* ============================================================ */
-/* Unified Allura script wordmark — one continuous signature. */
+/* Wordmark — Cormorant SC small caps + Allura script "my".
+   Mint-era register: architectural Roman caps with a botanical flourish. */
 .wordmark {
-  font-family: "Allura", cursive;
+  font-family: "Cormorant SC", "Cormorant Garamond", serif;
   font-weight: 400;
-  font-size: 44px;
-  letter-spacing: 0;
-  text-transform: none;
+  font-size: 20px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   color: var(--espresso);
   line-height: 1;
   display: inline-flex;
@@ -46,15 +47,20 @@ img { max-width: 100%; display: block; }
   font-family: "Allura", cursive;
   font-style: normal;
   font-weight: 400;
-  font-size: 44px;
+  font-size: 38px;
   letter-spacing: 0;
   color: var(--gold);
-  transform: rotate(-2deg);
-  margin: 0 4px;
+  transform: translateY(6px) rotate(-3deg);
+  margin: 0 6px;
   display: inline-block;
+  text-transform: none;
 }
-.wordmark.sm { font-size: 30px; }
-.wordmark.sm em { font-size: 30px; margin: 0 3px; }
+.wordmark.sm { font-size: 14px; letter-spacing: 0.20em; }
+.wordmark.sm em {
+  font-size: 28px;
+  margin: 0 4px;
+  transform: translateY(4px) rotate(-3deg);
+}
 
 /* ============================================================ */
 /* Topbar                                                       */
@@ -253,38 +259,69 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 }
 
 /* ============================================================ */
-/* Phone mockup                                                  */
+/* Phone mockup — iPhone 17 Pro Max (6.9" titanium)             */
 /* ============================================================ */
 .hero-phone { display: flex; justify-content: center; }
 .phone {
-  width: 320px;
-  height: 640px;
-  background: var(--espresso);
-  border-radius: 48px;
-  padding: 14px;
+  width: 340px;
+  height: 720px;
+  /* Titanium edge — three-stop gradient gives the brushed feel */
+  background: linear-gradient(
+    160deg,
+    #4a4543 0%,
+    #2a2520 38%,
+    #1a1614 60%,
+    #2a2520 100%
+  );
+  border-radius: 58px;
+  padding: 5px;
   box-shadow:
-    0 30px 60px -20px rgba(42, 37, 32, 0.25),
-    0 10px 25px -8px rgba(42, 37, 32, 0.15);
+    0 50px 80px -28px rgba(42, 37, 32, 0.32),
+    0 18px 38px -10px rgba(42, 37, 32, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   position: relative;
 }
+/* Inner bezel (the black ring around the screen) */
+.phone::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 54px;
+  background: #0a0908;
+  z-index: 0;
+}
+/* Side-button hint */
+.phone::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 180px;
+  width: 3px;
+  height: 86px;
+  background: linear-gradient(to bottom, #1a1614 0%, #3a3532 50%, #1a1614 100%);
+  border-radius: 2px 0 0 2px;
+}
+/* Dynamic Island — iPhone 17 Pro Max signature */
 .phone-notch {
   position: absolute;
-  top: 16px;
+  top: 14px;
   left: 50%;
   transform: translateX(-50%);
   width: 120px;
-  height: 26px;
-  background: var(--espresso);
-  border-radius: 0 0 18px 18px;
-  z-index: 2;
+  height: 36px;
+  background: #000;
+  border-radius: 22px;
+  z-index: 3;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 .phone-screen {
   background: var(--bone);
-  border-radius: 36px;
+  border-radius: 50px;
   height: 100%;
-  padding: 26px 22px;
+  padding: 60px 24px 28px;
   overflow: hidden;
   position: relative;
+  z-index: 1;
 }
 .screen-top {
   display: flex;
@@ -351,12 +388,12 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 .quote-card.faded { opacity: 0.7; }
 .quote-card.pulse {
   border-color: var(--gold);
-  background: rgba(201, 169, 97, 0.08);
+  background: rgba(169, 207, 192, 0.08);
   animation: pulse 1.6s ease infinite;
 }
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 169, 97, 0); }
-  50% { box-shadow: 0 0 0 6px rgba(201, 169, 97, 0.18); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(169, 207, 192, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(169, 207, 192, 0.18); }
 }
 .qc-row {
   display: flex;
@@ -427,26 +464,54 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   text-align: center;
 }
 .feature-col .phone-mini {
-  width: 240px;
-  height: 480px;
-  background: var(--espresso);
-  border-radius: 36px;
-  padding: 10px;
+  width: 260px;
+  height: 552px;
+  background: linear-gradient(
+    160deg,
+    #4a4543 0%,
+    #2a2520 38%,
+    #1a1614 60%,
+    #2a2520 100%
+  );
+  border-radius: 44px;
+  padding: 4px;
   box-shadow:
-    0 20px 40px -16px rgba(42, 37, 32, 0.20),
-    0 8px 18px -6px rgba(42, 37, 32, 0.12);
+    0 32px 56px -22px rgba(42, 37, 32, 0.28),
+    0 12px 24px -8px rgba(42, 37, 32, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   margin-bottom: 32px;
 }
+.feature-col .phone-mini::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 40px;
+  background: #0a0908;
+  z-index: 0;
+}
+.feature-col .phone-mini::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 130px;
+  width: 2px;
+  height: 60px;
+  background: linear-gradient(to bottom, #1a1614 0%, #3a3532 50%, #1a1614 100%);
+  border-radius: 2px 0 0 2px;
+}
 .feature-col .phone-mini .phone-notch {
-  top: 12px;
-  width: 88px;
-  height: 20px;
-  border-radius: 0 0 14px 14px;
+  top: 10px;
+  width: 96px;
+  height: 28px;
+  background: #000;
+  border-radius: 18px;
+  z-index: 3;
 }
 .feature-col .phone-mini .phone-screen {
-  border-radius: 26px;
-  padding: 20px 16px 16px;
+  border-radius: 38px;
+  padding: 46px 18px 18px;
+  z-index: 1;
 }
 .feature-col h3 {
   font-family: "Italiana", serif;
@@ -507,7 +572,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 }
 .scr-gps .grid-line {
   position: absolute;
-  background: rgba(201, 169, 97, 0.15);
+  background: rgba(169, 207, 192, 0.15);
 }
 .scr-gps .grid-v1 { left: 28%; top: 0; width: 1px; height: 100%; }
 .scr-gps .grid-v2 { left: 60%; top: 0; width: 1px; height: 100%; }
@@ -534,7 +599,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   background: var(--gold);
   border: 3px solid var(--bone);
   border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(201, 169, 97, 0.18);
+  box-shadow: 0 0 0 4px rgba(169, 207, 192, 0.18);
 }
 .scr-gps .clinic-pin {
   position: absolute;
@@ -642,14 +707,14 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   position: absolute;
   width: 160px;
   height: 110px;
-  border: 1px dashed rgba(201, 169, 97, 0.6);
+  border: 1px dashed rgba(169, 207, 192, 0.6);
   border-radius: 60% / 50%;
 }
 .scr-photo .guide-ring-inner {
   position: absolute;
   width: 100px;
   height: 60px;
-  border: 1px solid rgba(201, 169, 97, 0.45);
+  border: 1px solid rgba(169, 207, 192, 0.45);
   border-radius: 60% / 50%;
 }
 .scr-photo .crosshair {
@@ -676,7 +741,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   border-radius: 2px;
 }
 .scr-photo .dot.done { background: var(--gold); }
-.scr-photo .dot.active { background: rgba(201, 169, 97, 0.55); }
+.scr-photo .dot.active { background: rgba(169, 207, 192, 0.55); }
 .scr-photo .shutter-ring {
   width: 52px;
   height: 52px;
@@ -761,7 +826,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 }
 .scr-book .deposit-strip {
   border: 1px solid var(--gold);
-  background: rgba(201, 169, 97, 0.05);
+  background: rgba(169, 207, 192, 0.05);
   padding: 10px 14px;
   text-align: center;
   margin-bottom: 14px;

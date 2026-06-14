@@ -67,7 +67,7 @@ export default function ReviewScreen() {
                   style={{
                     fontFamily: "Cinzel-Medium",
                     fontSize: 36,
-                    color: n <= rating ? "#C9A961" : "#E5DCC8",
+                    color: n <= rating ? "#A9CFC0" : "#E5DCC8",
                   }}
                 >
                   ★

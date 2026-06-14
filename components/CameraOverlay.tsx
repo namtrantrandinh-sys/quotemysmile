@@ -151,19 +151,19 @@ function TargetGuide() {
       </View>
       <View
         className="absolute"
-        style={{ top: -8, left: -8, width: 18, height: 18, borderTopWidth: 2, borderLeftWidth: 2, borderColor: "#C9A961" }}
+        style={{ top: -8, left: -8, width: 18, height: 18, borderTopWidth: 2, borderLeftWidth: 2, borderColor: "#A9CFC0" }}
       />
       <View
         className="absolute"
-        style={{ top: -8, right: -8, width: 18, height: 18, borderTopWidth: 2, borderRightWidth: 2, borderColor: "#C9A961" }}
+        style={{ top: -8, right: -8, width: 18, height: 18, borderTopWidth: 2, borderRightWidth: 2, borderColor: "#A9CFC0" }}
       />
       <View
         className="absolute"
-        style={{ bottom: -8, left: -8, width: 18, height: 18, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: "#C9A961" }}
+        style={{ bottom: -8, left: -8, width: 18, height: 18, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: "#A9CFC0" }}
       />
       <View
         className="absolute"
-        style={{ bottom: -8, right: -8, width: 18, height: 18, borderBottomWidth: 2, borderRightWidth: 2, borderColor: "#C9A961" }}
+        style={{ bottom: -8, right: -8, width: 18, height: 18, borderBottomWidth: 2, borderRightWidth: 2, borderColor: "#A9CFC0" }}
       />
     </View>
   );
