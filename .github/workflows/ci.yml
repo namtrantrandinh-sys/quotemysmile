@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install
+        run: npm ci --no-audit --no-fund
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+  edge-fn-smoke:
+    name: edge-fn smoke (deployed)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only run on main; PRs from forks won't have the secret.
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Smoke test deployed functions
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: deno run --allow-net --allow-env scripts/smoke-test-edge-fns.ts
+
+  lint-migrations:
+    name: lint migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check migration filename ordering
+        run: |
+          set -e
+          last=""
+          for f in supabase/migrations/*.sql; do
+            base=$(basename "$f")
+            if [[ ! "$base" =~ ^[0-9]{4}_ ]]; then
+              echo "❌ $base must start with NNNN_"
+              exit 1
+            fi
+            if [[ -n "$last" && "$base" < "$last" ]]; then
+              echo "❌ $base sorts before $last — migrations must be monotonically named"
+              exit 1
+            fi
+            last="$base"
+          done
+          echo "✓ migrations ordered"

@@ -1,0 +1,1284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>QuoteMySmile · walkthrough</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=Cinzel:wght@400;500;600;700;800&family=Allura&family=Italiana&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bone: #f5f1e8;
+        --eggshell: #ede6d6;
+        --linen: #e5dcc8;
+        --champagne: #dccfb4;
+        --espresso: #2a2520;
+        --walnut: #4d423a;
+        --taupe: #8a7e70;
+        --sand: #bfb29f;
+        --gold: #c9a961;
+        --honey: #a8843d;
+        --forest: #4a6b4f;
+        --clay: #9e5e47;
+        --onyx: #1a1612;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        background: #1a1612;
+        color: var(--espresso);
+        font-family: "Inter", system-ui, sans-serif;
+        font-weight: 300;
+        min-height: 100vh;
+        padding: 32px 16px;
+      }
+      .serif { font-family: "Cormorant Garamond", Georgia, serif; }
+      .cap { letter-spacing: 0.08em; text-transform: uppercase; }
+      .editorial { letter-spacing: 0.18em; text-transform: uppercase; }
+
+      /* Switcher */
+      .switcher {
+        max-width: 1280px;
+        margin: 0 auto 32px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+        padding: 6px;
+        background: rgba(245, 241, 232, 0.06);
+        border: 1px solid rgba(245, 241, 232, 0.1);
+        border-radius: 4px;
+      }
+      .switcher button {
+        background: transparent;
+        border: 0;
+        padding: 10px 14px;
+        font-family: "Inter", sans-serif;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--bone);
+        cursor: pointer;
+        border-radius: 2px;
+        opacity: 0.6;
+      }
+      .switcher button.on {
+        background: var(--gold);
+        color: var(--espresso);
+        opacity: 1;
+      }
+
+      /* Phone frames */
+      .stage {
+        max-width: 1320px;
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        justify-content: center;
+      }
+      .phone {
+        width: 390px;
+        height: 780px;
+        background: var(--bone);
+        border-radius: 36px;
+        border: 10px solid #25201b;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+      }
+      .phone .notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 130px;
+        height: 28px;
+        background: #25201b;
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
+        z-index: 50;
+      }
+      .scroll {
+        height: 100%;
+        overflow-y: auto;
+        padding-top: 34px;
+      }
+      .phone .label {
+        position: absolute;
+        top: -28px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--bone);
+        opacity: 0.55;
+        white-space: nowrap;
+      }
+
+      .view { display: none; }
+      .view.active { display: block; }
+
+      .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 16px 22px; border-bottom: 1px solid var(--linen);
+      }
+      .wordmark {
+        font-family: "Italiana", "Cormorant Garamond", serif;
+        font-weight: 400;
+        font-size: 15px;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--espresso);
+        display: inline-flex;
+        align-items: baseline;
+        gap: 5px;
+      }
+      .wordmark em {
+        font-family: "Allura", cursive;
+        font-style: normal;
+        text-transform: none;
+        color: var(--gold);
+        font-weight: 400;
+        font-size: 30px;
+        line-height: 1;
+        letter-spacing: 0;
+        transform: translateY(5px) rotate(-3deg);
+        display: inline-block;
+        margin: 0 2px;
+      }
+      .wordmark-cap {
+        font-family: "Italiana", "Cormorant Garamond", serif;
+        font-weight: 400;
+        font-size: 13px;
+        letter-spacing: 0.10em;
+        text-transform: uppercase;
+        color: var(--espresso);
+      }
+      .wordmark-cap em {
+        font-family: "Allura", cursive;
+        font-style: normal;
+        color: var(--gold);
+        font-size: 22px;
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 400;
+        transform: translateY(5px);
+        display: inline-block;
+      }
+
+      .status, .meta {
+        font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--walnut);
+      }
+
+      .kicker { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--taupe); }
+      h1.hero {
+        font-family: "Cormorant Garamond", serif;
+        font-weight: 300; font-size: 44px; line-height: 1.04; color: var(--espresso);
+      }
+      h1.hero em { font-style: italic; color: var(--gold); }
+      p.blurb { font-size: 13px; line-height: 1.65; color: var(--walnut); }
+
+      .btn {
+        display: inline-block; font-family: "Inter", sans-serif;
+        font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+        padding: 12px 22px; border: 0; border-radius: 2px; cursor: pointer;
+      }
+      .btn-primary { background: var(--gold); color: var(--espresso); }
+      .btn-secondary { background: transparent; color: var(--espresso); border: 1px solid var(--espresso); }
+      .btn-ghost { background: transparent; color: var(--walnut); }
+      .btn-clay { background: var(--clay); color: var(--bone); }
+
+      /* SPLASH */
+      .splash {
+        position: absolute; inset: 0;
+        background: var(--bone);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        animation: splashOut 2.2s ease forwards;
+        animation-delay: 1.8s;
+        z-index: 30;
+        padding: 0 30px;
+        text-align: center;
+      }
+      @keyframes splashOut { to { opacity: 0; pointer-events: none; } }
+      .splash .estbar {
+        display: flex; align-items: center; gap: 8px;
+        opacity: 0;
+        animation: splashIn 0.6s ease 0.05s forwards;
+        margin-bottom: 24px;
+      }
+      .splash .estbar .line { width: 18px; height: 1px; background: var(--gold); }
+      .splash .estbar .kk {
+        font-family: "Inter", sans-serif;
+        font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--taupe);
+      }
+      .splash .mark-stack {
+        opacity: 0; transform: scale(0.96);
+        animation: splashIn 0.7s ease 0.15s forwards;
+        line-height: 1;
+        text-align: center;
+      }
+      .splash .mark-stack .q,
+      .splash .mark-stack .s {
+        font-family: "Italiana", "Cormorant Garamond", serif;
+        font-weight: 400;
+        font-size: 64px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--espresso);
+        display: block;
+        line-height: 1;
+      }
+      .splash .mark-stack .m {
+        font-family: "Allura", "Caveat", cursive;
+        font-weight: 400;
+        font-style: normal;
+        font-size: 96px;
+        letter-spacing: 0;
+        color: var(--gold);
+        display: block;
+        margin: -14px 0 -22px;
+        line-height: 1;
+        transform: rotate(-6deg);
+      }
+      .splash .rule { width: 42px; height: 1px; background: var(--gold); margin: 28px 0 18px; opacity: 0; animation: splashIn 0.6s ease 0.55s forwards; }
+      .splash .tag-italic {
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-size: 18px;
+        color: var(--walnut);
+        margin-bottom: 14px;
+        opacity: 0;
+        animation: splashIn 0.6s ease 0.8s forwards;
+      }
+      .splash .tag {
+        font-family: "Inter", sans-serif;
+        font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--taupe);
+        opacity: 0; animation: splashIn 0.6s ease 1.0s forwards;
+      }
+      @keyframes splashIn { to { opacity: 1; transform: scale(1); } }
+
+      /* ONBOARDING */
+      .onb { padding: 24px 22px 18px; height: 100%; display: flex; flex-direction: column; }
+      .onb .skip { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut); margin-bottom: 32px; text-align: right; }
+      .onb .num { font-family: "Cormorant Garamond", serif; font-size: 56px; color: var(--gold); line-height: 1; margin-bottom: 14px; }
+      .onb h2 { font-family: "Cormorant Garamond", serif; font-weight: 300; font-size: 42px; line-height: 1; color: var(--espresso); margin-bottom: 4px; }
+      .onb h2 em { font-style: italic; color: var(--gold); }
+      .onb .body { font-size: 13px; line-height: 1.7; color: var(--walnut); margin-top: 18px; }
+      .onb .dots { display: flex; gap: 8px; justify-content: center; margin: 22px 0 16px; }
+      .onb .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--linen); }
+      .onb .dot.on { width: 28px; background: var(--gold); border-radius: 4px; }
+      .onb .footer { margin-top: auto; }
+
+      /* WELCOME */
+      .hero-block { padding: 36px 24px 12px; text-align: center; }
+      .hero-block h1 {
+        font-family: "Italiana", "Playfair Display", serif; font-weight: 400; font-size: 46px; line-height: 1.04;
+        color: var(--espresso); margin: 12px 0 10px; letter-spacing: -0.005em;
+      }
+      .hero-block h1 em {
+        font-family: "Allura", cursive; font-style: normal; color: var(--gold); font-size: 64px;
+        font-weight: 400; display: inline-block; transform: rotate(-3deg); line-height: 0.9;
+      }
+      .hero-block .blurb { font-size: 12px; color: var(--walnut); line-height: 1.6; margin-bottom: 18px; padding: 0 16px; }
+      .roles { display: flex; gap: 8px; padding: 0 22px; }
+      .role-tile { flex: 1; border: 1px solid var(--linen); background: rgba(237, 230, 214, 0.4); padding: 18px 14px; }
+      .role-tile .rnum { font-family: "Cormorant Garamond", serif; color: var(--gold); font-size: 18px; margin-bottom: 14px; }
+      .role-tile .rlbl { font-family: "Cormorant Garamond", serif; font-size: 22px; color: var(--espresso); margin-bottom: 4px; }
+      .role-tile .rblurb { font-size: 11px; color: var(--taupe); line-height: 1.5; }
+      .signin-link { display: block; text-align: center; padding: 16px 0 18px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut); }
+      .steps {
+        margin: 8px 22px 0; padding: 22px 0;
+        border-top: 1px solid var(--linen);
+        display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
+      }
+      .step .n { font-family: "Cormorant Garamond", serif; color: var(--gold); font-size: 22px; margin-bottom: 6px; }
+      .step .l { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut); margin-bottom: 4px; }
+      .step .t { font-size: 11px; color: var(--taupe); line-height: 1.45; }
+      .legal-footer { display: flex; justify-content: space-between; padding: 16px 22px; border-top: 1px solid var(--linen); }
+
+      /* SIGN-IN */
+      .signin { padding: 32px 22px 22px; height: 100%; display: flex; flex-direction: column; }
+      .signin .back { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut); margin-bottom: 28px; }
+      .signin .kk { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--taupe); text-align: center; margin-bottom: 16px; }
+      .signin h2 { font-family: "Cormorant Garamond", serif; font-weight: 300; font-size: 42px; color: var(--espresso); text-align: center; line-height: 1; margin-bottom: 14px; }
+      .signin .helper { font-size: 12px; color: var(--walnut); text-align: center; line-height: 1.55; margin-bottom: 32px; padding: 0 14px; }
+      .field-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut); margin-bottom: 10px; }
+      .field-input { font-size: 16px; color: var(--espresso); border-bottom: 1px solid var(--linen); padding-bottom: 8px; }
+      .field-hint { font-size: 11px; color: var(--taupe); margin-top: 8px; }
+      .signin .footer { margin-top: auto; padding-top: 24px; text-align: center; }
+
+      /* CAPTURE / MOUTH MAP */
+      .capture { padding: 26px 22px; }
+      .mouthmap { display: flex; flex-direction: column; align-items: center; margin: 18px 0 24px; }
+      .arc { border: 2px solid var(--linen); border-bottom: 0; width: 200px; height: 36px; border-radius: 200px 200px 0 0; position: relative; }
+      .arc.done { border-color: var(--gold); background: rgba(201, 169, 97, 0.06); }
+      .arc.lower { border: 2px solid var(--linen); border-top: 0; border-radius: 0 0 200px 200px; }
+      .arc.lower.done { border-color: var(--gold); background: rgba(201, 169, 97, 0.06); }
+      .arc::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: var(--linen); }
+      .arc.done::after { background: var(--gold); }
+      .arc.lower::after { top: 4px; bottom: auto; }
+      .oval {
+        width: 170px; height: 52px; border: 2px solid var(--linen); border-radius: 100px;
+        display: flex; align-items: center; justify-content: center; margin: 4px 0;
+      }
+      .oval.done { border-color: var(--gold); background: rgba(201, 169, 97, 0.06); }
+      .oval .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--linen); }
+      .oval.done .dot { background: var(--gold); }
+      .problem-chip {
+        margin-top: 12px; border: 2px solid var(--linen); padding: 4px 14px; border-radius: 999px;
+        display: flex; align-items: center; gap: 6px;
+      }
+      .problem-chip.done { border-color: var(--gold); }
+      .problem-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--linen); }
+      .problem-chip.done .dot { background: var(--gold); }
+      .problem-chip .ttl { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut); }
+      .scan-row {
+        border: 1px solid var(--linen); padding: 16px 14px; margin-bottom: 8px;
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      .scan-row.done { border-color: var(--gold); background: rgba(201, 169, 97, 0.04); }
+      .scan-row .l { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--taupe); margin-bottom: 5px; }
+      .scan-row .t { font-family: "Cormorant Garamond", serif; font-size: 18px; color: var(--espresso); margin-bottom: 4px; }
+      .scan-row .h { font-size: 10px; color: var(--taupe); }
+      .scan-row .ic { font-family: "Cormorant Garamond", serif; font-size: 24px; color: var(--gold); }
+
+      /* CAMERA OVERLAY VIS */
+      .camera {
+        background: #1a1612; padding: 80px 0; text-align: center; color: var(--bone);
+        height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;
+      }
+      .camera .ttop { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.6; }
+      .camera .sname { font-family: "Cormorant Garamond", serif; font-size: 28px; margin: 6px 0 30px; }
+      .face-oval {
+        width: 220px; height: 280px; border: 2px solid rgba(245, 241, 232, 0.2); border-radius: 50%;
+        position: relative; display: flex; align-items: center; justify-content: center;
+      }
+      .face-oval::before, .face-oval::after {
+        content: ''; position: absolute; width: 220px; height: 280px; border-radius: 50%;
+      }
+      .face-oval::before { border: 1px solid rgba(201, 169, 97, 0.5); }
+      .face-oval::after {
+        border-top: 2px solid var(--gold); border-left: 2px solid var(--gold);
+        animation: scanSpin 2.4s linear infinite;
+      }
+      @keyframes scanSpin { to { transform: rotate(360deg); } }
+      .crosshair { position: absolute; }
+      .crosshair .h { width: 32px; height: 1px; background: rgba(245, 241, 232, 0.4); }
+      .crosshair .v { width: 1px; height: 32px; background: rgba(245, 241, 232, 0.4); position: absolute; left: 16px; top: -16px; }
+      .camera .hint { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); margin-top: 30px; }
+      .shutter { width: 64px; height: 64px; border-radius: 50%; background: var(--gold); border: 4px solid var(--bone); margin-top: 36px; }
+      .shutter-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone); opacity: 0.7; margin-top: 8px; }
+
+      /* URGENCY */
+      .urg-card {
+        border: 1px solid var(--linen); padding: 16px 14px; margin-bottom: 10px;
+        display: flex; align-items: center; justify-content: space-between;
+      }
+      .urg-card.on { border-color: var(--espresso); background: rgba(237, 230, 214, 0.4); }
+      .urg-card .l { font-family: "Cormorant Garamond", serif; font-size: 18px; color: var(--espresso); margin-bottom: 4px; }
+      .urg-card .h { font-size: 10px; color: var(--taupe); line-height: 1.4; }
+      .urg-card .w { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut); }
+      .urg-emergency { border: 2px solid rgba(158, 94, 71, 0.4); padding: 18px 14px; }
+      .urg-emergency .topp { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+      .urg-emergency .topp .ll { display: flex; align-items: center; gap: 8px; font-family: "Cormorant Garamond", serif; font-size: 22px; color: var(--clay); }
+      .urg-emergency .topp .ll::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--clay); }
+      .urg-emergency .topp .ww { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--clay); }
+      .urg-emergency .desc { font-size: 12px; color: var(--walnut); line-height: 1.55; margin-bottom: 12px; }
+      .urg-emergency .premium-title { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--clay); margin-bottom: 6px; }
+      .urg-emergency .premium { font-size: 12px; color: var(--walnut); line-height: 1.55; }
+
+      /* LOCATION */
+      .loc-status { background: rgba(237, 230, 214, 0.5); border: 1px solid var(--linen); padding: 22px 16px; text-align: center; margin: 16px 22px; }
+      .loc-status .ddot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--forest); margin-right: 6px; }
+      .loc-status .gps { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--taupe); }
+      .loc-status .sub { font-family: "Cormorant Garamond", serif; font-size: 28px; color: var(--espresso); margin: 6px 0 2px; }
+      .loc-status .st { font-size: 12px; color: var(--walnut); }
+      .loc-status .acc { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--taupe); margin-top: 6px; }
+      .slider-wrap { padding: 0 22px; margin: 18px 0; }
+      .slider-track { height: 3px; background: var(--linen); border-radius: 999px; position: relative; }
+      .slider-fill { height: 3px; background: var(--gold); border-radius: 999px; width: 35%; }
+      .slider-handle { position: absolute; top: -8px; left: 35%; transform: translateX(-50%); width: 18px; height: 18px; border-radius: 50%; background: var(--gold); border: 4px solid var(--bone); }
+      .slider-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--taupe); }
+      .count-block { padding: 18px 22px 12px; border-top: 1px solid var(--linen); margin: 0 22px; text-align: center; }
+      .count-block .kk { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--taupe); margin-bottom: 6px; }
+      .count-block .nn { font-family: "Cormorant Garamond", serif; font-size: 64px; color: var(--gold); line-height: 1; }
+      .count-block .uu { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut); margin-top: 4px; }
+
+      /* MAP — Google-style streets + buildings */
+      .map-stage { height: 460px; background: #e8e3d8; position: relative; overflow: hidden; }
+      .map-stage .gmap-tile {
+        position:absolute; inset:0;
+        background-image: url('https://maps.googleapis.com/maps/api/staticmap?center=-37.829,145.058&zoom=14&size=420x460&scale=2&maptype=roadmap&style=feature:poi.business|element:labels|visibility:on&style=element:labels|stylers:(visibility:on)');
+        background-size: cover;
+        background-position: center;
+        opacity: 0; /* off by default — needs a real key */
+      }
+      .map-bg { position: absolute; inset: 0; background: #f2efe6; }
+      .map-park { position: absolute; background: #d8e5cf; }
+      .map-water {
+        position: absolute; left: -10%; bottom: -15%; width: 80%; height: 55%;
+        background: #c7d8e3;
+        transform: skewY(-12deg);
+        border-radius: 40% 60% 60% 40%;
+      }
+      .map-street {
+        position: absolute; background: #ffffff;
+        box-shadow: 0 0 0 1px #d8d2c4;
+      }
+      .map-street.major { background: #fff5d9; box-shadow: 0 0 0 1px #d4c89f; }
+      .map-block {
+        position: absolute; background: #ebe6d8;
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+      }
+      .map-poi {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        display: flex; flex-direction: column; align-items: center; gap: 1px;
+      }
+      .map-poi .pdot { width: 4px; height: 4px; border-radius: 50%; background: #8a7e70; }
+      .map-poi .plbl {
+        font-size: 7px; letter-spacing: 0.08em; text-transform: uppercase;
+        color: #5d544a; background: rgba(242, 239, 230, 0.85); padding: 0 3px;
+        border-radius: 2px;
+        white-space: nowrap;
+      }
+      .map-label {
+        position: absolute;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 11px; color: #6b6055; font-style: italic;
+        opacity: 0.8;
+      }
+      .map-ring {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        width: 320px; height: 320px; border-radius: 50%;
+        border: 1.5px solid rgba(201, 169, 97, 0.65);
+        background: rgba(201, 169, 97, 0.08);
+        pointer-events: none;
+      }
+      .pin {
+        position: absolute; transform: translate(-50%, -100%);
+        display: flex; flex-direction: column; align-items: center;
+      }
+      .pin .price {
+        padding: 5px 9px;
+        background: var(--espresso); color: var(--bone);
+        border-radius: 2px;
+        font-family: "Cormorant Garamond", serif; font-size: 14px;
+        line-height: 1.2;
+      }
+      .pin.lowest .price { background: var(--gold); color: var(--espresso); }
+      .pin.final .price { background: var(--walnut); color: var(--bone); }
+      .pin .tail {
+        width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--espresso);
+      }
+      .pin.lowest .tail { border-top-color: var(--gold); }
+      .pin.final .tail { border-top-color: var(--walnut); }
+      .pin-patient {
+        position: absolute; transform: translate(-50%, -50%);
+        display: flex; flex-direction: column; align-items: center;
+      }
+      .pin-patient .dotg {
+        width: 14px; height: 14px; border-radius: 50%; background: var(--gold);
+        border: 4px solid var(--bone);
+      }
+      .pin-patient .lbl { font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--walnut); margin-top: 4px; background: var(--bone); padding: 1px 4px; }
+      .legend {
+        position: absolute; top: 12px; left: 12px;
+        background: var(--bone); border: 1px solid var(--linen); padding: 8px 10px;
+      }
+      .legend .lr { display: flex; align-items: center; gap: 6px; }
+      .legend .lr + .lr { margin-top: 4px; }
+      .legend .lr .dd { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+      .legend .lr .ss { width: 6px; height: 6px; background: var(--gold); }
+      .legend .lr .tx { font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--walnut); }
+
+      /* LIVE FEED CARDS */
+      .live-toggle { display: flex; justify-content: center; padding: 12px 0 18px; }
+      .pill {
+        display: flex; padding: 4px; background: var(--bone); border: 1px solid var(--linen); border-radius: 4px;
+      }
+      .pill button {
+        padding: 6px 14px; background: transparent; border: 0;
+        font-family: "Inter", sans-serif; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut);
+        cursor: pointer; border-radius: 2px;
+      }
+      .pill button.on { background: var(--espresso); color: var(--bone); }
+      .live-status { padding: 8px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--linen); }
+      .live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--forest); animation: pulse 1.6s ease-in-out infinite; margin-right: 6px; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+      .feed-title { padding: 24px 22px; text-align: center; }
+      .feed-title .k { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--taupe); margin-bottom: 8px; }
+      .feed-title h2 { font-family: "Cormorant Garamond", serif; font-weight: 300; font-size: 32px; color: var(--espresso); margin-bottom: 8px; }
+      .feed-title .sub { font-size: 11px; color: var(--walnut); }
+      .quote-card {
+        padding: 28px 22px; border-bottom: 1px solid var(--linen);
+        text-align: center;
+      }
+      .quote-card .emg-banner {
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--clay);
+        margin-bottom: 14px;
+      }
+      .quote-card .emg-banner::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--clay); }
+      .quote-card .topmeta {
+        display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+        font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--taupe);
+      }
+      .quote-card .topmeta .ji { color: var(--gold); }
+      .quote-card .topmeta .fl { color: var(--walnut); }
+      .quote-card .name { font-family: "Cormorant Garamond", serif; font-size: 19px; color: var(--walnut); }
+      .quote-card .sub2 { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--taupe); margin: 4px 0 22px; }
+      .quote-card .price { font-family: "Cormorant Garamond", serif; font-weight: 300; font-size: 64px; line-height: 1; color: var(--gold); }
+      .quote-card .price .gold-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); margin-left: 6px; margin-bottom: 6px; vertical-align: bottom; }
+      .quote-card .req { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--taupe); margin-top: 4px; }
+      .quote-card .disc { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--taupe); margin: 12px 0 18px; }
+      .quote-card .row { display: flex; justify-content: center; gap: 12px; font-size: 11px; color: var(--walnut); margin-bottom: 18px; }
+      .quote-card .actions { display: flex; justify-content: center; gap: 12px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+      .quote-card .actions a { color: var(--walnut); padding-bottom: 3px; border-bottom: 1px solid rgba(77, 66, 58, 0.4); text-decoration: none; }
+      .quote-card .actions a.book { color: var(--espresso); border-bottom-color: var(--gold); }
+
+      /* DENTIST GUIDE */
+      .guide { padding: 28px 22px; }
+      .guide h1 { font-family: "Cormorant Garamond", serif; font-weight: 300; font-size: 42px; color: var(--espresso); text-align: center; margin: 6px 0 18px; line-height: 1; }
+      .guide .topkk { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--taupe); text-align: center; }
+      .guide section { margin-top: 32px; }
+      .guide section h3 { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--taupe); margin-bottom: 14px; }
+      .guide section p { font-size: 13px; line-height: 1.65; color: var(--walnut); margin-bottom: 12px; }
+      .bullet { display: flex; gap: 14px; margin-bottom: 14px; }
+      .bullet .n { font-family: "Cormorant Garamond", serif; color: var(--gold); font-size: 16px; width: 24px; }
+      .bullet .t { font-family: "Cormorant Garamond", serif; color: var(--espresso); font-size: 15px; }
+      .bullet .x { font-size: 11px; color: var(--walnut); line-height: 1.55; margin-top: 4px; }
+      .callout-gold { border: 1px solid rgba(201, 169, 97, 0.4); background: rgba(201, 169, 97, 0.04); padding: 14px; margin-bottom: 14px; }
+      .callout-clay { border: 1px solid rgba(158, 94, 71, 0.35); background: rgba(158, 94, 71, 0.04); padding: 14px; }
+      .callout-clay .head { display: flex; align-items: center; gap: 6px; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--clay); margin-bottom: 8px; }
+      .callout-clay .head::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--clay); }
+      .callout-clay p, .callout-gold p { font-size: 12px; color: var(--walnut); line-height: 1.55; }
+      .callout-gold .ll { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--walnut); margin-bottom: 4px; }
+    </style>
+  </head>
+  <body>
+    <div class="switcher">
+      <button data-view="splash" class="on">01 · Splash</button>
+      <button data-view="onb">02 · Onboarding</button>
+      <button data-view="welcome">03 · Welcome</button>
+      <button data-view="signin">04 · Sign-in</button>
+      <button data-view="capture">05 · Mouth scan</button>
+      <button data-view="camera">06 · Camera</button>
+      <button data-view="loc">07 · GPS + radius</button>
+      <button data-view="urg">08 · Urgency</button>
+      <button data-view="live">09 · Live feed</button>
+      <button data-view="map">10 · Map view</button>
+      <button data-view="guide">11 · Dentist guide</button>
+    </div>
+
+    <div class="stage">
+      <!-- =================== SPLASH =================== -->
+      <section class="view active" data-view="splash">
+        <div class="phone">
+          <span class="label">01 · Splash</span>
+          <div class="notch"></div>
+          <div class="splash">
+            <div class="estbar">
+              <span class="line"></span>
+              <span class="kk">est. 2026 · au</span>
+              <span class="line"></span>
+            </div>
+            <div class="mark-stack">
+              <span class="q">QUOTE</span>
+              <span class="m">my</span>
+              <span class="s">SMILE</span>
+            </div>
+            <div class="rule"></div>
+            <div class="tag" style="font-family: 'Italiana', serif; font-size: 22px; letter-spacing: 0.01em; text-transform: none; color: var(--walnut); margin-bottom: 6px;">Your dream smile,</div>
+            <div class="tag-italic" style="font-size: 26px; color: var(--gold); margin: 0 0 18px; font-family: 'Allura', cursive;">in your hand.</div>
+            <div class="tag" style="line-height: 1.7;">Compare live dental quotes<br>&amp; choose the best on your screen.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== ONBOARDING =================== -->
+      <section class="view" data-view="onb">
+        <div class="phone">
+          <span class="label">02 · Onboarding</span>
+          <div class="notch"></div>
+          <div class="scroll onb">
+            <div class="skip">Skip</div>
+            <div style="margin-top: 60px;">
+              <div class="num">01</div>
+              <h2>Four guided</h2>
+              <h2><em>photos.</em></h2>
+              <p class="body">
+                Front smile, upper arch, lower arch, problem area.
+                Our on-camera guides tell you exactly how to frame each one.
+              </p>
+            </div>
+            <div class="dots">
+              <div class="dot on"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <div class="footer" style="text-align: center;">
+              <button class="btn btn-primary">Continue</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone">
+          <span class="label">02 · Onboarding · panel 3</span>
+          <div class="notch"></div>
+          <div class="scroll onb">
+            <div class="skip">Skip</div>
+            <div style="margin-top: 60px;">
+              <div class="num">03</div>
+              <h2>Watch quotes</h2>
+              <h2><em>arrive.</em></h2>
+              <p class="body">
+                Dentists send indicative quotes within your window — 15 minutes for
+                emergencies, up to three days for considered work. Each only allowed
+                one revision.
+              </p>
+            </div>
+            <div class="dots">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot on"></div>
+              <div class="dot"></div>
+            </div>
+            <div class="footer" style="text-align: center;">
+              <button class="btn btn-primary">Continue</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== WELCOME =================== -->
+      <section class="view" data-view="welcome">
+        <div class="phone">
+          <span class="label">03 · Welcome</span>
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="topbar">
+              <span class="wordmark">Quote<em>my</em>Smile</span>
+              <span class="status">Live demo</span>
+            </div>
+            <div class="hero-block">
+              <div class="kicker">Live dental quotes · Australia</div>
+              <h1>The price of<br />your smile,<br /><em>in your hand.</em></h1>
+              <p style="font-family:'Italiana',serif;font-size:22px;line-height:26px;color:var(--espresso);margin:8px 0 4px;">Dentists compete</p>
+              <p style="font-family:'Allura',cursive;font-size:36px;color:var(--gold);transform:rotate(-2deg);display:inline-block;margin-bottom:16px;line-height:1;">to give you the best quote.</p>
+              <p class="blurb" style="margin-bottom: 6px;">
+                No awkward phone calls. No "we'll quote you in person" runaround.
+              </p>
+              <p class="blurb">
+                Real prices, live, on your screen — from AHPRA-registered
+                dentists near you. <em style="font-style: italic; color: var(--gold);">Convenient. Competitive. Accurate.</em>
+              </p>
+              <div class="kicker" style="margin-top: 12px; margin-bottom: 14px;">Choose your path</div>
+            </div>
+            <div class="roles">
+              <div class="role-tile">
+                <div class="rnum">I</div>
+                <div class="rlbl">Patient</div>
+                <div class="rblurb">Get quotes from nearby dentists in minutes.</div>
+              </div>
+              <div class="role-tile">
+                <div class="rnum">II</div>
+                <div class="rlbl">Dentist</div>
+                <div class="rblurb">Quote live on patient requests in your area.</div>
+              </div>
+            </div>
+            <a href="#" class="signin-link">I already have an account · Sign in</a>
+            <div class="steps">
+              <div class="step"><div class="n">01</div><div class="l">Photo</div><div class="t">Guided capture from four angles.</div></div>
+              <div class="step"><div class="n">02</div><div class="l">Quote</div><div class="t">Live quotes within your window.</div></div>
+              <div class="step"><div class="n">03</div><div class="l">Choose</div><div class="t">You choose the best quote and service for you in minutes.</div></div>
+            </div>
+            <div class="legal-footer">
+              <span class="wordmark-cap">quote<em>my</em>smile</span>
+              <div style="display: flex; gap: 16px;">
+                <span class="status">Terms</span>
+                <span class="status">Privacy</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== SIGN IN =================== -->
+      <section class="view" data-view="signin">
+        <div class="phone">
+          <span class="label">04 · Sign-up · phone</span>
+          <div class="notch"></div>
+          <div class="scroll signin">
+            <div class="back">← Back</div>
+            <div class="kk">Create account</div>
+            <h2>Your number.</h2>
+            <p class="helper">
+              We'll send a 6-digit code by SMS. No password, no fuss.
+            </p>
+            <div class="field-label">Mobile number</div>
+            <div class="field-input">+61 412 345 678</div>
+            <div class="field-hint">Include +61 — Australian mobiles only.</div>
+            <div class="footer">
+              <button class="btn btn-primary">Send code</button>
+            </div>
+          </div>
+        </div>
+        <div class="phone">
+          <span class="label">04 · OTP verify</span>
+          <div class="notch"></div>
+          <div class="scroll signin">
+            <div class="back">← Back</div>
+            <div class="kk">Verify</div>
+            <h2>Enter the code.</h2>
+            <p class="helper">
+              Sent to +61 412 345 678. The code expires in 5 minutes.
+            </p>
+            <div class="field-label">6-digit code</div>
+            <div class="field-input" style="letter-spacing: 0.3em;">5 8 4 2 9 1</div>
+            <div class="footer">
+              <button class="btn btn-primary">Verify</button>
+              <div style="margin-top: 12px;">
+                <button class="btn btn-ghost">Change number</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone">
+          <span class="label">04 · First name</span>
+          <div class="notch"></div>
+          <div class="scroll signin">
+            <div class="back">← Back</div>
+            <div class="kk">Almost there</div>
+            <h2>What's your name?</h2>
+            <p class="helper">
+              We'll use this to introduce you to the dentist when you book.
+            </p>
+            <div class="field-label">Full name</div>
+            <div class="field-input">Sarah K</div>
+            <div class="field-hint">As you'd like the dentist to address you.</div>
+            <div class="footer">
+              <button class="btn btn-primary">Continue</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== CAPTURE / MOUTH MAP =================== -->
+      <section class="view" data-view="capture">
+        <div class="phone">
+          <span class="label">05 · Mouth scan</span>
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="topbar">
+              <span class="status">← Back</span>
+              <span class="status">02 of 06</span>
+            </div>
+            <div class="capture">
+              <div style="text-align: center;">
+                <div class="kicker">Filling + clean</div>
+                <h1 class="hero" style="font-size: 38px; margin: 10px 0 12px;">Map your mouth.</h1>
+                <p class="blurb" style="margin-bottom: 18px;">
+                  Four guided photos. We'll show you the angle, you tap to capture.
+                </p>
+              </div>
+              <div class="mouthmap">
+                <div class="arc done"></div>
+                <div class="oval done"><div class="dot"></div></div>
+                <div class="arc lower"></div>
+                <div class="problem-chip"><div class="dot"></div><div class="ttl">Problem area</div></div>
+                <div class="kicker" style="margin-top: 16px;">Mouth scan · 2 of 4 mapped</div>
+              </div>
+
+              <div class="scan-row done">
+                <div>
+                  <div class="l">Photo 1 of 4</div>
+                  <div class="t">Front smile</div>
+                  <div class="h">Quality 4.6 / 5 · tap to retake</div>
+                </div>
+                <div class="ic">✓</div>
+              </div>
+              <div class="scan-row done">
+                <div>
+                  <div class="l">Photo 2 of 4</div>
+                  <div class="t">Upper arch</div>
+                  <div class="h">Quality 4.4 / 5 · tap to retake</div>
+                </div>
+                <div class="ic">✓</div>
+              </div>
+              <div class="scan-row" style="border-color: var(--gold);">
+                <div>
+                  <div class="l">Photo 3 of 4</div>
+                  <div class="t">Lower arch</div>
+                  <div class="h">Open wide. Lower lip out of the way.</div>
+                </div>
+                <div class="ic">+</div>
+              </div>
+              <div class="scan-row">
+                <div>
+                  <div class="l">Photo 4 of 4</div>
+                  <div class="t">Problem area</div>
+                  <div class="h">Close-up of the spot that bothers you.</div>
+                </div>
+                <div class="ic">·</div>
+              </div>
+
+              <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-primary">Capture lower arch</button>
+                <div style="margin-top: 12px; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--taupe);">2 of 4 mapped</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== CAMERA =================== -->
+      <section class="view" data-view="camera">
+        <div class="phone">
+          <span class="label">06 · Camera · guided scan</span>
+          <div class="notch"></div>
+          <div class="camera">
+            <div style="position: absolute; top: 60px; left: 0; right: 0; text-align: center;">
+              <div class="ttop">Mouth scan · Photo 1 of 4</div>
+              <div class="sname">Front smile</div>
+            </div>
+            <div class="face-oval">
+              <div class="crosshair">
+                <div class="h"></div>
+                <div class="v"></div>
+              </div>
+            </div>
+            <div style="position: absolute; bottom: 220px; left: 0; right: 0; text-align: center;">
+              <div class="hint">· Centre your smile in the oval</div>
+            </div>
+            <div style="position: absolute; bottom: 60px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center;">
+              <div class="shutter"></div>
+              <div class="shutter-label">Tap to capture</div>
+            </div>
+            <div style="position: absolute; top: 24px; left: 22px;">
+              <span class="ttop" style="opacity: 0.8;">Cancel</span>
+            </div>
+            <div style="position: absolute; top: 24px; right: 22px;">
+              <span class="ttop" style="opacity: 0.7;">Natural light · no flash</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== LOCATION =================== -->
+      <section class="view" data-view="loc">
+        <div class="phone">
+          <span class="label">07 · GPS + radius</span>
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="topbar">
+              <span class="status">← Back</span>
+              <span class="status">04 of 06</span>
+            </div>
+            <div style="padding: 22px 22px 8px; text-align: center;">
+              <div class="kicker">Find dentists near you</div>
+              <h1 class="hero" style="font-size: 32px; margin: 12px 0 8px;">How far should we look?</h1>
+              <p class="blurb" style="margin-bottom: 6px;">
+                GPS picks up your location. Drag the dot to choose how many km.
+              </p>
+            </div>
+
+            <div class="loc-status">
+              <div class="gps"><span class="ddot"></span>GPS · Locked in</div>
+              <div class="sub">Camberwell</div>
+              <div class="st">VIC 3124</div>
+              <div class="acc">Accuracy ±12 m</div>
+            </div>
+
+            <div style="padding: 0 22px;">
+              <div class="field-label">Search radius</div>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-track">
+                <div class="slider-fill"></div>
+                <div class="slider-handle"></div>
+              </div>
+              <div class="slider-labels">
+                <span>2 km</span><span>30 km</span>
+              </div>
+              <div style="text-align: center; margin-top: 12px;">
+                <div class="kicker">Current</div>
+                <div style="font-family: 'Cormorant Garamond', serif; font-size: 36px; color: var(--gold); line-height: 1;">12 km</div>
+              </div>
+            </div>
+
+            <div class="count-block">
+              <div class="kk">Verified dentists in range</div>
+              <div class="nn">47</div>
+              <div class="uu">within 12 km</div>
+            </div>
+
+            <div style="text-align: center; padding: 18px 22px 22px;">
+              <button class="btn btn-primary">Send to 47 dentists</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== URGENCY =================== -->
+      <section class="view" data-view="urg">
+        <div class="phone">
+          <span class="label">08 · Urgency</span>
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="topbar">
+              <span class="status">← Back</span>
+              <span class="status">05 of 06</span>
+            </div>
+            <div style="padding: 22px 22px 14px; text-align: center;">
+              <div class="kicker">How fast?</div>
+              <h1 class="hero" style="font-size: 32px; margin: 12px 0 8px;">When do you need a quote?</h1>
+              <p class="blurb">
+                The shorter the window, the more dentists move on it.
+              </p>
+            </div>
+            <div style="padding: 0 22px;">
+              <div class="kicker" style="margin-bottom: 10px;">Standard</div>
+              <div class="urg-card">
+                <div><div class="l">Within 1 hour</div><div class="h">Standard fee.</div></div>
+                <div class="w">60 min</div>
+              </div>
+              <div class="urg-card">
+                <div><div class="l">A few hours</div><div class="h">Standard fee.</div></div>
+                <div class="w">3 hr</div>
+              </div>
+              <div class="urg-card on">
+                <div><div class="l">Today / 24 hours</div><div class="h">Highest volume of quotes.</div></div>
+                <div class="w">24 hr</div>
+              </div>
+              <div class="urg-card">
+                <div><div class="l">Within 3 days</div><div class="h">Best for considered work.</div></div>
+                <div class="w">3 d</div>
+              </div>
+
+              <div class="kicker" style="margin: 22px 0 10px; color: var(--clay);">Emergency</div>
+              <div class="urg-emergency">
+                <div class="topp">
+                  <div class="ll">Emergency · URGENT</div>
+                  <div class="ww">15 min</div>
+                </div>
+                <div class="desc">
+                  For real pain, swelling, broken or knocked-out teeth.
+                </div>
+                <div class="premium-title">Premium fee notice</div>
+                <div class="premium">
+                  Quotes 30–50% above standard. Dentists drop other appointments.
+                </div>
+              </div>
+
+              <div style="text-align: center; margin: 24px 0 28px;">
+                <button class="btn btn-primary">Continue</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== LIVE FEED =================== -->
+      <section class="view" data-view="live">
+        <div class="phone">
+          <span class="label">09 · Live feed</span>
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="live-status">
+              <span class="wordmark-cap">quote<em>my</em>smile</span>
+              <span class="status"><span class="live-dot"></span>Closes 24:48</span>
+            </div>
+            <div class="feed-title">
+              <div class="k">Your quotes · live</div>
+              <h2>3 quotes</h2>
+              <div class="sub">Streaming in from AHPRA-registered dentists near you.</div>
+              <div class="live-toggle">
+                <div class="pill">
+                  <button class="on">List</button>
+                  <button>Map</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="quote-card">
+              <div class="topmeta">
+                <div>Camberwell Dental <span class="fl">· Final</span></div>
+                <div>AHPRA 4567</div>
+              </div>
+              <div class="name">Dr Sarah Chen</div>
+              <div class="sub2">Camberwell, VIC</div>
+              <div class="price">$385</div>
+              <div class="req">Requoted from $410</div>
+              <div class="disc">Indicative · based on photos</div>
+              <div class="row"><span>2.1 km</span><span>·</span><span>Tomorrow 9 am</span><span>·</span><span>★ 4.9 (148)</span></div>
+              <div class="actions">
+                <a href="#">View breakdown</a><span style="color: var(--sand);">·</span>
+                <a href="#" class="book">Book consult →</a>
+              </div>
+            </div>
+
+            <div class="quote-card">
+              <div class="emg-banner">Emergency response · premium quote</div>
+              <div class="topmeta">
+                <div>Bright Dental</div>
+                <div>AHPRA 4321</div>
+              </div>
+              <div class="name">Dr Marcus Wei</div>
+              <div class="sub2">Kew, VIC</div>
+              <div class="price">$349<span class="gold-dot"></span></div>
+              <div class="disc">Indicative · based on photos</div>
+              <div class="row"><span>4.8 km</span><span>·</span><span>Today 4 pm</span><span>·</span><span>★ 4.8 (203)</span></div>
+              <div class="actions">
+                <a href="#">View breakdown</a><span style="color: var(--sand);">·</span>
+                <a href="#" class="book">Book consult →</a>
+              </div>
+            </div>
+
+            <div class="quote-card">
+              <div class="topmeta">
+                <div>Smile Co <span class="ji">· Just in</span></div>
+                <div>AHPRA 5678</div>
+              </div>
+              <div class="name">Dr Aisha Patel</div>
+              <div class="sub2">Hawthorn, VIC</div>
+              <div class="price">$420</div>
+              <div class="disc">Indicative · based on photos</div>
+              <div class="row"><span>3.4 km</span><span>·</span><span>Thu 2 pm</span><span>·</span><span>★ 4.7 (92)</span></div>
+              <div class="actions">
+                <a href="#">View breakdown</a><span style="color: var(--sand);">·</span>
+                <a href="#" class="book">Book consult →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== MAP =================== -->
+      <section class="view" data-view="map">
+        <div class="phone">
+          <span class="label">10 · Map view</span>
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="live-status">
+              <span class="wordmark-cap">quote<em>my</em>smile</span>
+              <span class="status"><span class="live-dot"></span>Closes 24:48</span>
+            </div>
+            <div class="feed-title">
+              <div class="k">Your quotes · map</div>
+              <h2>3 quotes</h2>
+              <div class="live-toggle">
+                <div class="pill">
+                  <button>List</button>
+                  <button class="on">Map</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="map-stage">
+              <div class="map-bg"></div>
+
+              <!-- Park -->
+              <div class="map-park" style="left: 8%; top: 8%; width: 22%; height: 18%; border-radius: 8px;"></div>
+              <div class="map-park" style="right: 6%; top: 60%; width: 18%; height: 14%; border-radius: 6px;"></div>
+
+              <!-- Water (river curve) -->
+              <div class="map-water"></div>
+
+              <!-- Streets - major -->
+              <div class="map-street major" style="left: 0; top: 38%; right: 0; height: 5px;"></div>
+              <div class="map-street major" style="left: 50%; top: 0; bottom: 0; width: 5px;"></div>
+              <!-- minor -->
+              <div class="map-street" style="left: 0; top: 18%; right: 0; height: 3px;"></div>
+              <div class="map-street" style="left: 0; top: 62%; right: 0; height: 3px;"></div>
+              <div class="map-street" style="left: 0; top: 82%; right: 0; height: 3px;"></div>
+              <div class="map-street" style="left: 22%; top: 0; bottom: 0; width: 3px;"></div>
+              <div class="map-street" style="left: 75%; top: 0; bottom: 0; width: 3px;"></div>
+
+              <!-- Building blocks -->
+              <div class="map-block" style="left: 32%; top: 22%; width: 16%; height: 12%;"></div>
+              <div class="map-block" style="left: 55%; top: 22%; width: 18%; height: 12%;"></div>
+              <div class="map-block" style="left: 32%; top: 42%; width: 16%; height: 16%;"></div>
+              <div class="map-block" style="left: 55%; top: 42%; width: 18%; height: 16%;"></div>
+              <div class="map-block" style="left: 78%; top: 42%; width: 15%; height: 16%;"></div>
+              <div class="map-block" style="left: 25%; top: 66%; width: 22%; height: 12%;"></div>
+
+              <!-- Area labels -->
+              <div class="map-label" style="left: 12%; top: 4%;">Kew Junction</div>
+              <div class="map-label" style="left: 60%; top: 28%;">Camberwell</div>
+              <div class="map-label" style="left: 25%; top: 75%;">Hawthorn</div>
+
+              <!-- POIs (surrounding businesses) -->
+              <div class="map-poi" style="left: 18%; top: 30%;">
+                <div class="pdot"></div>
+                <div class="plbl">Coles</div>
+              </div>
+              <div class="map-poi" style="left: 42%; top: 20%;">
+                <div class="pdot"></div>
+                <div class="plbl">Café Macchiato</div>
+              </div>
+              <div class="map-poi" style="left: 70%; top: 35%;">
+                <div class="pdot"></div>
+                <div class="plbl">Burke Rd Pharmacy</div>
+              </div>
+              <div class="map-poi" style="left: 28%; top: 50%;">
+                <div class="pdot"></div>
+                <div class="plbl">Aldi</div>
+              </div>
+              <div class="map-poi" style="left: 65%; top: 70%;">
+                <div class="pdot"></div>
+                <div class="plbl">Glenferrie Station</div>
+              </div>
+
+              <!-- Radius ring -->
+              <div class="map-ring"></div>
+
+              <!-- Legend -->
+              <div class="legend">
+                <div class="lr"><span class="dd"></span><span class="tx">You</span></div>
+                <div class="lr"><span class="ss"></span><span class="tx">Lowest</span></div>
+              </div>
+
+              <!-- Patient pin -->
+              <div class="pin-patient" style="left: 50%; top: 50%;">
+                <div class="dotg"></div>
+                <div class="lbl">You</div>
+              </div>
+
+              <!-- Dentist pins -->
+              <div class="pin final" style="left: 62%; top: 30%;">
+                <div class="price">$385</div>
+                <div class="tail"></div>
+              </div>
+              <div class="pin lowest" style="left: 28%; top: 22%;">
+                <div class="price">$349</div>
+                <div class="tail"></div>
+              </div>
+              <div class="pin" style="left: 38%; top: 72%;">
+                <div class="price">$420</div>
+                <div class="tail"></div>
+              </div>
+            </div>
+
+            <div style="padding: 18px 22px; border-bottom: 1px solid var(--linen); background: rgba(237, 230, 214, 0.4);">
+              <div style="display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--taupe);">
+                <span>Bright Dental · Kew</span><span>4.8 km</span>
+              </div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 8px;">
+                <div>
+                  <div style="font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--walnut);">Dr Marcus Wei</div>
+                  <div style="font-size: 10px; color: var(--taupe); margin-top: 2px;">Today 4:00 pm</div>
+                </div>
+                <div style="font-family: 'Cormorant Garamond', serif; font-size: 32px; color: var(--gold);">$349</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== DENTIST GUIDE =================== -->
+      <section class="view" data-view="guide">
+        <div class="phone">
+          <span class="label">11 · Dentist guide</span>
+          <div class="notch"></div>
+          <div class="scroll">
+            <div class="topbar">
+              <span class="status">← Back</span>
+              <span class="status">Dentist guide</span>
+            </div>
+            <div class="guide">
+              <div class="topkk">quote<em style="font-style:italic;color:var(--gold);">my</em>smile for dentists</div>
+              <h1>Quote with confidence.</h1>
+              <p style="font-size: 13px; color: var(--walnut); text-align: center; line-height: 1.65;">
+                An AHPRA-aware marketplace that brings patients to your chair — only
+                the ones who are ready to book.
+              </p>
+
+              <section>
+                <h3>The one-requote rule</h3>
+                <div class="callout-gold">
+                  <div class="ll">Hard cap · enforced by the database</div>
+                  <p>
+                    You may submit one initial quote per request and adjust it
+                    <em style="font-style: italic; color: var(--gold); font-family: 'Cormorant Garamond', serif;">exactly once</em>.
+                    After the requote, your quote is locked as <span style="color: var(--gold);">Final</span> for the rest of the window.
+                  </p>
+                </div>
+                <p style="font-size: 12px; color: var(--walnut); line-height: 1.6;">
+                  Use the requote when a sharper competitor arrives, or when you
+                  free up an earlier slot.
+                </p>
+              </section>
+
+              <section>
+                <h3>How to win the quote</h3>
+                <div class="bullet">
+                  <div class="n">·</div>
+                  <div>
+                    <div class="t">Be sharp on availability</div>
+                    <div class="x">Same-day or next-morning slots win 28% of bookings.</div>
+                  </div>
+                </div>
+                <div class="bullet">
+                  <div class="n">·</div>
+                  <div>
+                    <div class="t">Itemise generously</div>
+                    <div class="x">Bundle exam + x-ray + scale + clean instead of leaving extras unclear.</div>
+                  </div>
+                </div>
+                <div class="bullet">
+                  <div class="n">·</div>
+                  <div>
+                    <div class="t">Quote fast</div>
+                    <div class="x">Tier-1 dentists (&lt;5 km, &lt;5 min) get priority placement.</div>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3>Emergency requests</h3>
+                <div class="callout-clay">
+                  <div class="head">URGENT · PRIORITY</div>
+                  <p>
+                    Emergency requests use a 15-minute window. Patients have
+                    explicitly acknowledged a premium fee structure.
+                  </p>
+                  <p style="margin-top: 8px;">
+                    Quote 30–50% above standard for emergency work — patients
+                    expect it and have agreed to it before the request was sent.
+                  </p>
+                </div>
+              </section>
+
+              <div style="text-align: center; margin: 28px 0 20px;">
+                <button class="btn btn-primary">Got it</button>
+                <div style="margin-top: 12px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--taupe);">
+                  Free for the first 90 days · cancel any time
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const btns = document.querySelectorAll('.switcher button');
+      const views = document.querySelectorAll('.view');
+      btns.forEach(b => b.addEventListener('click', () => {
+        const which = b.getAttribute('data-view');
+        btns.forEach(x => x.classList.toggle('on', x === b));
+        views.forEach(v => v.classList.toggle('active', v.getAttribute('data-view') === which));
+        window.scrollTo(0, 0);
+      }));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Launch screen — 2048×2048 master, the splash plugin lets Expo crop it down.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 2048 2048"
+     width="2048" height="2048">
+  <defs>
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=Italiana&amp;family=Allura&amp;display=swap');
+      .bg     { fill: #F5F1E8; }
+      .cap    { font-family: 'Italiana', serif;
+                font-size: 168px; letter-spacing: 12px;
+                fill: #2A2520; text-anchor: middle; }
+      .script { font-family: 'Allura', cursive;
+                font-size: 320px; fill: #C9A961;
+                text-anchor: middle; }
+      .rule   { stroke: #C9A961; stroke-width: 2; }
+      .kicker { font-family: 'Italiana', serif; font-size: 26px;
+                letter-spacing: 10px; fill: #8A7E6F; text-anchor: middle; }
+    </style>
+  </defs>
+  <rect class="bg" x="0" y="0" width="2048" height="2048"/>
+
+  <text class="kicker" x="1024" y="940">EST. 2026 · AU</text>
+  <line class="rule" x1="950" y1="965" x2="1098" y2="965"/>
+
+  <text class="cap" x="1024" y="1150">QUOTE</text>
+  <g transform="translate(1024 1340) rotate(-6)">
+    <text class="script" x="0" y="0">my</text>
+  </g>
+  <text class="cap" x="1024" y="1500">SMILE</text>
+
+  <line class="rule" x1="950" y1="1600" x2="1098" y2="1600"/>
+  <text class="kicker" x="1024" y="1640">YOUR DREAM SMILE · IN YOUR HAND</text>
+</svg>

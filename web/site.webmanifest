@@ -1,0 +1,19 @@
+{
+  "name": "QuoteMySmile",
+  "short_name": "QMS",
+  "description": "Live dental quotes from AHPRA-registered dentists near you.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F5F1E8",
+  "theme_color": "#F5F1E8",
+  "lang": "en-AU",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.tsbuildinfo
+*.log
+.DS_Store
+.env*
+!.env.example
+
+# Secrets — never commit
+*.pem
+*.key
+*.keystore
+google-services.json
+GoogleService-Info.plist
+store/play-service-account.json
+supabase/.env
+supabase/.temp/
+
+# Tasks + native build
+.claude/scheduled_tasks.json
+ios/Pods/
+android/.gradle/
+android/build/
+android/app/build/
+package.json.tmp
+

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Android adaptive-icon foreground — drawn smaller than the canvas so it sits
+  inside the 432×432 safe zone (108dp × 4) inside a 1024×1024 layer.
+  Pair with a flat #F5F1E8 background layer in Android Studio.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1024 1024"
+     width="1024" height="1024">
+  <defs>
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=Italiana&amp;family=Allura&amp;display=swap');
+      .cap   { font-family: 'Italiana', serif;
+               font-size: 108px; letter-spacing: 7px;
+               fill: #2A2520; text-anchor: middle; }
+      .script { font-family: 'Allura', cursive;
+                font-size: 198px; fill: #C9A961;
+                text-anchor: middle; }
+    </style>
+  </defs>
+  <g transform="translate(0 0)">
+    <text class="cap" x="512" y="450">QUOTE</text>
+    <g transform="translate(512 596) rotate(-6)">
+      <text class="script" x="0" y="0">my</text>
+    </g>
+    <text class="cap" x="512" y="740">SMILE</text>
+  </g>
+</svg>

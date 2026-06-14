@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Android notification icon — must be white-on-transparent silhouette only.
+  Android will tint it with our brand accent (#C9A961 set in expo-notifications
+  plugin config in app.json).
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 96 96"
+     width="96" height="96">
+  <g fill="#FFFFFF">
+    <!-- Allura-style cursive 'm' inside a soft circle silhouette -->
+    <circle cx="48" cy="48" r="42" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+    <text x="48" y="62"
+          font-family="Allura, cursive"
+          font-size="56"
+          text-anchor="middle"
+          fill="#FFFFFF">m</text>
+  </g>
+</svg>

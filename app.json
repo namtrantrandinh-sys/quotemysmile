@@ -1,0 +1,105 @@
+{
+  "expo": {
+    "name": "QuoteMySmile",
+    "slug": "quotemysmile",
+    "scheme": "qms",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "runtimeVersion": { "policy": "appVersion" },
+    "updates": {
+      "url": "https://u.expo.dev/REPLACE_WITH_EAS_PROJECT_ID",
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    },
+    "owner": "REPLACE_WITH_EXPO_OWNER",
+    "splash": {
+      "backgroundColor": "#F5F1E8"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.quotemysmile.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "QuoteMySmile uses your location to find dentists nearby. We never track in the background and never sell your location.",
+        "NSLocationAccuracyAuthorizationDescription": "Precise location is used to match you with the closest dentists.",
+        "NSCameraUsageDescription": "QuoteMySmile uses your camera to capture guided photos of your teeth for accurate quotes.",
+        "NSPhotoLibraryAddUsageDescription": "Save your dental quotes and consult details to your photo library."
+      },
+      "config": {
+        "googleMapsApiKey": "REPLACE_WITH_IOS_GOOGLE_MAPS_KEY"
+      }
+    },
+    "android": {
+      "package": "com.quotemysmile.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "REPLACE_WITH_ANDROID_GOOGLE_MAPS_KEY"
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "QuoteMySmile uses your location to find dentists nearby. We never track in the background and never sell location data."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "QuoteMySmile uses your camera to capture guided photos of your teeth for accurate quotes."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1",
+            "useFrameworks": "static",
+            "privacyManifestPath": "./store/PrivacyInfo.xcprivacy"
+          },
+          "android": {
+            "minSdkVersion": 24,
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34
+          }
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.quotemysmile.app",
+          "enableGooglePay": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#C9A961",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

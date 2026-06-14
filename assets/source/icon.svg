@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  QuoteMySmile app icon — 1024×1024.
+  Bone background, espresso wordmark, gold "my" in Allura script,
+  thin gold rule below the mark for the editorial-masthead feel.
+
+  Italiana + Allura are loaded inline via Google Fonts so the SVG
+  renders identically across rasterisers (sharp, Inkscape, rsvg-convert).
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1024 1024"
+     width="1024" height="1024">
+  <defs>
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=Italiana&amp;family=Allura&amp;display=swap');
+      .bg    { fill: #F5F1E8; }
+      .ring  { fill: none; stroke: #C9A961; stroke-width: 6; opacity: 0.35; }
+      .cap   { font-family: 'Italiana', 'Cormorant Garamond', serif;
+               font-size: 152px; letter-spacing: 9px;
+               fill: #2A2520; text-anchor: middle; }
+      .script { font-family: 'Allura', cursive;
+                font-size: 268px; fill: #C9A961;
+                text-anchor: middle; }
+      .rule  { stroke: #C9A961; stroke-width: 3; }
+    </style>
+  </defs>
+
+  <!-- Background plate -->
+  <rect class="bg" x="0" y="0" width="1024" height="1024" rx="220" ry="220"/>
+
+  <!-- Soft gold ring -->
+  <circle class="ring" cx="512" cy="512" r="420"/>
+
+  <!-- QUOTE -->
+  <text class="cap" x="512" y="380">QUOTE</text>
+
+  <!-- my (script, slight tilt) -->
+  <g transform="translate(512 600) rotate(-6)">
+    <text class="script" x="0" y="0">my</text>
+  </g>
+
+  <!-- SMILE -->
+  <text class="cap" x="512" y="800">SMILE</text>
+
+  <!-- Bottom rule -->
+  <line class="rule" x1="412" y1="900" x2="612" y2="900"/>
+</svg>
