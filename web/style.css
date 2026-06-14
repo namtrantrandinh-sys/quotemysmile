@@ -47,19 +47,21 @@ img { max-width: 100%; display: block; }
   font-family: "Allura", cursive;
   font-style: normal;
   font-weight: 400;
-  font-size: 38px;
+  font-size: 48px;
   letter-spacing: 0;
   color: var(--gold);
-  transform: translateY(6px) rotate(-3deg);
-  margin: 0 6px;
+  transform: translateY(8px) rotate(-3deg);
+  margin: 0 10px;
   display: inline-block;
   text-transform: none;
+  line-height: 1;
 }
 .wordmark.sm { font-size: 14px; letter-spacing: 0.20em; }
 .wordmark.sm em {
-  font-size: 28px;
-  margin: 0 4px;
-  transform: translateY(4px) rotate(-3deg);
+  font-size: 34px;
+  margin: 0 6px;
+  transform: translateY(5px) rotate(-3deg);
+  line-height: 1;
 }
 
 /* ============================================================ */
