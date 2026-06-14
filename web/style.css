@@ -28,27 +28,33 @@ img { max-width: 100%; display: block; }
 /* ============================================================ */
 /* Wordmark                                                     */
 /* ============================================================ */
+/* Unified Allura script wordmark — one continuous signature. */
 .wordmark {
-  font-family: "Italiana", serif;
-  font-size: 18px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-family: "Allura", cursive;
+  font-weight: 400;
+  font-size: 44px;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--espresso);
+  line-height: 1;
   display: inline-flex;
   align-items: baseline;
-  gap: 5px;
+  gap: 0;
+  white-space: nowrap;
 }
 .wordmark em {
   font-family: "Allura", cursive;
   font-style: normal;
-  text-transform: none;
+  font-weight: 400;
+  font-size: 44px;
+  letter-spacing: 0;
   color: var(--gold);
-  font-size: 36px;
-  transform: translateY(6px) rotate(-3deg);
-  margin: 0 2px;
+  transform: rotate(-2deg);
+  margin: 0 4px;
+  display: inline-block;
 }
-.wordmark.sm { font-size: 13px; }
-.wordmark.sm em { font-size: 26px; transform: translateY(4px) rotate(-3deg); }
+.wordmark.sm { font-size: 30px; }
+.wordmark.sm em { font-size: 30px; margin: 0 3px; }
 
 /* ============================================================ */
 /* Topbar                                                       */
@@ -289,22 +295,26 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   margin-bottom: 18px;
 }
 .screen-wordmark {
-  font-family: "Italiana", serif;
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-family: "Inter", -apple-system, sans-serif;
+  font-weight: 200;
+  font-size: 10px;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
   color: var(--espresso);
   display: inline-flex;
   align-items: baseline;
-  gap: 3px;
+  gap: 0;
 }
 .screen-wordmark em {
   font-family: "Allura", cursive;
   font-style: normal;
   text-transform: none;
   color: var(--gold);
-  font-size: 20px;
-  transform: translateY(3px) rotate(-3deg);
+  font-size: 22px;
+  letter-spacing: 0;
+  transform: translateY(4px) rotate(-2deg);
+  margin: 0 4px 0 5px;
+  font-weight: 400;
 }
 .screen-dot {
   font-size: 8px;
@@ -390,6 +400,417 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 }
 
 /* ============================================================ */
+/* Feature gallery — three smaller phones in a row              */
+/* ============================================================ */
+.feature-gallery {
+  padding: 96px 0;
+  border-bottom: 1px solid var(--linen);
+}
+.feature-gallery .display {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.feature-gallery .lede {
+  text-align: center;
+  margin: 0 auto 56px;
+}
+.feature-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 48px;
+  align-items: end;
+}
+.feature-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.feature-col .phone-mini {
+  width: 240px;
+  height: 480px;
+  background: var(--espresso);
+  border-radius: 36px;
+  padding: 10px;
+  box-shadow:
+    0 20px 40px -16px rgba(42, 37, 32, 0.20),
+    0 8px 18px -6px rgba(42, 37, 32, 0.12);
+  position: relative;
+  margin-bottom: 32px;
+}
+.feature-col .phone-mini .phone-notch {
+  top: 12px;
+  width: 88px;
+  height: 20px;
+  border-radius: 0 0 14px 14px;
+}
+.feature-col .phone-mini .phone-screen {
+  border-radius: 26px;
+  padding: 20px 16px 16px;
+}
+.feature-col h3 {
+  font-family: "Italiana", serif;
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--espresso);
+  margin: 0 0 8px;
+}
+.feature-col p {
+  color: var(--walnut);
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+/* ------------- Geolocation phone ------------- */
+.scr-gps .gps-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--walnut);
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.scr-gps .gps-status::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: var(--forest);
+  border-radius: 50%;
+}
+.scr-gps .suburb {
+  font-family: "Italiana", serif;
+  font-size: 26px;
+  text-align: center;
+  color: var(--espresso);
+  margin: 0 0 2px;
+}
+.scr-gps .suburb-meta {
+  text-align: center;
+  font-size: 10px;
+  color: var(--taupe);
+  letter-spacing: 0.06em;
+  margin-bottom: 18px;
+}
+.scr-gps .map-stage {
+  position: relative;
+  height: 200px;
+  background: linear-gradient(135deg, #f1ecdc 0%, #ede5cd 100%);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.scr-gps .grid-line {
+  position: absolute;
+  background: rgba(201, 169, 97, 0.15);
+}
+.scr-gps .grid-v1 { left: 28%; top: 0; width: 1px; height: 100%; }
+.scr-gps .grid-v2 { left: 60%; top: 0; width: 1px; height: 100%; }
+.scr-gps .grid-h1 { top: 32%; left: 0; height: 1px; width: 100%; }
+.scr-gps .grid-h2 { top: 64%; left: 0; height: 1px; width: 100%; }
+.scr-gps .radius-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+.scr-gps .you-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  background: var(--gold);
+  border: 3px solid var(--bone);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(201, 169, 97, 0.18);
+}
+.scr-gps .clinic-pin {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--espresso);
+}
+.scr-gps .c1 { left: 20%; top: 30%; }
+.scr-gps .c2 { left: 72%; top: 38%; }
+.scr-gps .c3 { left: 30%; top: 68%; }
+.scr-gps .c4 { left: 60%; top: 70%; }
+.scr-gps .c5 { left: 78%; top: 62%; }
+.scr-gps .radius-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--taupe);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.scr-gps .slider {
+  height: 1px;
+  background: var(--linen);
+  position: relative;
+  margin: 12px 0 18px;
+}
+.scr-gps .slider::after {
+  content: "";
+  position: absolute;
+  left: 40%;
+  top: -5px;
+  width: 11px;
+  height: 11px;
+  background: var(--gold);
+  border-radius: 50%;
+}
+.scr-gps .slider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 1px;
+  width: 40%;
+  background: var(--gold);
+}
+.scr-gps .count {
+  text-align: center;
+  font-family: "Italiana", serif;
+  font-size: 32px;
+  color: var(--gold);
+  line-height: 1;
+}
+.scr-gps .count-label {
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--taupe);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ------------- Photo guide phone ------------- */
+.scr-photo {
+  background: #0E0C0A !important;
+  color: var(--bone);
+  padding: 16px 14px !important;
+  height: 460px;
+  position: relative;
+}
+.scr-photo .top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(245, 241, 232, 0.5);
+}
+.scr-photo .step-label {
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: rgba(245, 241, 232, 0.55);
+  text-transform: uppercase;
+  margin: 18px 0 4px;
+}
+.scr-photo h4 {
+  font-family: "Italiana", serif;
+  font-size: 26px;
+  font-weight: 400;
+  text-align: center;
+  margin: 0 0 26px;
+  color: var(--bone);
+}
+.scr-photo .guide {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scr-photo .guide-ring-outer {
+  position: absolute;
+  width: 160px;
+  height: 110px;
+  border: 1px dashed rgba(201, 169, 97, 0.6);
+  border-radius: 60% / 50%;
+}
+.scr-photo .guide-ring-inner {
+  position: absolute;
+  width: 100px;
+  height: 60px;
+  border: 1px solid rgba(201, 169, 97, 0.45);
+  border-radius: 60% / 50%;
+}
+.scr-photo .crosshair {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-left: 1px solid var(--gold);
+  border-top: 1px solid var(--gold);
+}
+.scr-photo .ch-tl { top: 8px; left: 8px; }
+.scr-photo .ch-tr { top: 8px; right: 8px; transform: scaleX(-1); }
+.scr-photo .ch-bl { bottom: 8px; left: 8px; transform: scaleY(-1); }
+.scr-photo .ch-br { bottom: 8px; right: 8px; transform: scale(-1, -1); }
+.scr-photo .progress {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 28px 0 16px;
+}
+.scr-photo .dot {
+  width: 26px;
+  height: 3px;
+  background: rgba(245, 241, 232, 0.18);
+  border-radius: 2px;
+}
+.scr-photo .dot.done { background: var(--gold); }
+.scr-photo .dot.active { background: rgba(201, 169, 97, 0.55); }
+.scr-photo .shutter-ring {
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  margin: 14px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scr-photo .shutter {
+  width: 38px;
+  height: 38px;
+  background: var(--gold);
+  border-radius: 50%;
+}
+.scr-photo .footnote {
+  text-align: center;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: rgba(245, 241, 232, 0.45);
+  text-transform: uppercase;
+  margin-top: 14px;
+}
+
+/* ------------- Booking confirm phone ------------- */
+.scr-book .check {
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  margin: 22px auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  font-family: "Italiana", serif;
+  font-size: 24px;
+}
+.scr-book .status {
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--taupe);
+  text-transform: uppercase;
+}
+.scr-book h4 {
+  font-family: "Italiana", serif;
+  font-size: 28px;
+  text-align: center;
+  margin: 6px 0 20px;
+  color: var(--espresso);
+  font-weight: 400;
+  line-height: 1.05;
+}
+.scr-book .booking-card {
+  background: var(--eggshell);
+  border: 1px solid var(--linen);
+  padding: 16px 14px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.scr-book .booking-card .clinic {
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  color: var(--espresso);
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.scr-book .booking-card .dentist {
+  font-size: 10px;
+  color: var(--taupe);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.scr-book .booking-card .slot {
+  font-family: "Italiana", serif;
+  font-size: 20px;
+  color: var(--gold);
+  line-height: 1.15;
+}
+.scr-book .deposit-strip {
+  border: 1px solid var(--gold);
+  background: rgba(201, 169, 97, 0.05);
+  padding: 10px 14px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.scr-book .deposit-strip .label {
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--walnut);
+  margin-bottom: 2px;
+}
+.scr-book .deposit-strip .amount {
+  font-family: "Italiana", serif;
+  color: var(--gold);
+  font-size: 18px;
+}
+.scr-book .deposit-strip .sub {
+  font-size: 8px;
+  color: var(--taupe);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.scr-book .action-row {
+  display: flex;
+  gap: 6px;
+}
+.scr-book .action {
+  flex: 1;
+  border: 1px solid var(--linen);
+  background: var(--bone);
+  padding: 9px 0;
+  text-align: center;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--walnut);
+}
+.scr-book .action.primary {
+  background: var(--espresso);
+  border-color: var(--espresso);
+  color: var(--bone);
+}
+
+@media (max-width: 900px) {
+  .feature-row { grid-template-columns: 1fr; gap: 56px; }
+}
+
+/* ============================================================ */
 /* Editorial line icons — gold, thin stroke, 32×32 viewBox      */
 /* ============================================================ */
 .icon {
@@ -397,13 +818,28 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   height: 28px;
   stroke: var(--gold);
   fill: none;
-  stroke-width: 1.5;
+  stroke-width: 1;
   stroke-linecap: round;
   stroke-linejoin: round;
   flex-shrink: 0;
+  opacity: 0.95;
 }
-.icon-lg { width: 44px; height: 44px; stroke-width: 1.3; }
-.icon-xl { width: 64px; height: 64px; stroke-width: 1.1; }
+.icon-lg { width: 44px; height: 44px; stroke-width: 0.85; }
+.icon-xl { width: 56px; height: 56px; stroke-width: 0.75; }
+
+/* XL icon for the 3 steps gets an enclosing thin circle to feel like a
+   numismatic medal — sets the editorial tone */
+.prop .icon-xl-wrap {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 22px;
+  border: 1px solid var(--linen);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bone);
+}
 
 /* Trust list rows use a leading icon */
 .trust li {

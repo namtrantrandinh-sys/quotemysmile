@@ -3,29 +3,28 @@ import { Text, View } from "react-native";
 type Size = "sm" | "md" | "lg" | "xl";
 
 /**
- * QMS wordmark — Italiana editorial caps + Allura signature script.
- * Italiana is the high-contrast, fashion-magazine-thin serif that pairs
- * naturally with Allura's flourished script, so the three pieces read as one
- * masthead instead of a novel cover sandwiching a signature.
+ * QMS wordmark — modern luxury register.
+ * Inter Light at extreme letter-spacing for QUOTE / SMILE (calm, geometric,
+ * Glossier / Aēsop / RMS Beauty palette), with Allura "my" carrying the
+ * personality. Reads as a clinical-luxury brand mark, not a book spine.
  */
 export function Wordmark({ size = "md" }: { size?: Size }) {
-  const base = size === "xl" ? 30 : size === "lg" ? 22 : size === "sm" ? 14 : 17;
-  const scriptBoost = base * 1.9;
+  const base = size === "xl" ? 22 : size === "lg" ? 17 : size === "sm" ? 11 : 14;
+  const scriptBoost = base * 2.2;
 
   return (
     <View
       style={{
         flexDirection: "row",
         alignItems: "baseline",
-        gap: 4,
       }}
     >
       <Text
         style={{
-          fontFamily: "Italiana",
+          fontFamily: "Inter-Light",
           fontSize: base,
           lineHeight: base,
-          letterSpacing: base * 0.08,
+          letterSpacing: base * 0.32,
           textTransform: "uppercase",
           color: "#2A2520",
         }}
@@ -38,17 +37,18 @@ export function Wordmark({ size = "md" }: { size?: Size }) {
           fontSize: scriptBoost,
           lineHeight: scriptBoost,
           color: "#C9A961",
-          transform: [{ translateY: 5 }, { rotate: "-3deg" }],
+          marginHorizontal: base * 0.4,
+          transform: [{ translateY: 5 }, { rotate: "-2deg" }],
         }}
       >
         my
       </Text>
       <Text
         style={{
-          fontFamily: "Italiana",
+          fontFamily: "Inter-Light",
           fontSize: base,
           lineHeight: base,
-          letterSpacing: base * 0.08,
+          letterSpacing: base * 0.32,
           textTransform: "uppercase",
           color: "#2A2520",
         }}
