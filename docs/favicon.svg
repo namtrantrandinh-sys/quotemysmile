@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- QuoteMySmile favicon: bold mint smile with Amazon-style arrowheads on each end -->
+  <!-- QuoteMySmile favicon: mirrored Amazon-style smile arrows (both ends arrow tips) -->
   <defs>
     <radialGradient id="qms-bg" cx="35%" cy="30%" r="85%">
       <stop offset="0%" stop-color="#FBF8F0"/>
@@ -10,28 +10,26 @@
   <rect x="0" y="0" width="32" height="32" rx="7" ry="7" fill="url(#qms-bg)"/>
 
   <!-- Sparkle dot (top-right, mint) -->
-  <circle cx="24.5" cy="7.5" r="1.5" fill="#5FA89B"/>
+  <circle cx="25.5" cy="6.5" r="1.4" fill="#5FA89B"/>
 
-  <!-- Bold mint smile arc — rounded right end naturally; left end gets arrowhead -->
-  <path d="M 6 13 Q 16 28 26 13"
+  <!-- Bold mint smile arc — gently curving from upper-left to upper-right -->
+  <path d="M 5 13 Q 16 27 27 13"
         fill="none"
         stroke="#4A8C82"
-        stroke-width="3.4"
-        stroke-linecap="round"/>
+        stroke-width="3.6"
+        stroke-linecap="butt"/>
 
-  <!-- LEFT arrowhead — small chevron pointing up-left from where the smile starts -->
-  <path d="M 4 14.2 L 6 13 L 6.6 15.4"
+  <!-- LEFT arrowhead — Amazon-style flared tip on the left end of the smile -->
+  <path d="M 5 13 L 2 10 L 7.5 10.5 Z"
         fill="#4A8C82"
         stroke="#4A8C82"
-        stroke-width="1.4"
-        stroke-linejoin="round"
-        stroke-linecap="round"/>
+        stroke-width="0.6"
+        stroke-linejoin="round"/>
 
-  <!-- RIGHT arrowhead — small chevron pointing up-right (mirrors Amazon's arrow tip) -->
-  <path d="M 28 14.2 L 26 13 L 25.4 15.4"
+  <!-- RIGHT arrowhead — Amazon-style flared tip on the right end (mirrored) -->
+  <path d="M 27 13 L 30 10 L 24.5 10.5 Z"
         fill="#4A8C82"
         stroke="#4A8C82"
-        stroke-width="1.4"
-        stroke-linejoin="round"
-        stroke-linecap="round"/>
+        stroke-width="0.6"
+        stroke-linejoin="round"/>
 </svg>
