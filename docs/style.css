@@ -28,35 +28,39 @@ img { max-width: 100%; display: block; }
 /* ============================================================ */
 /* Wordmark                                                     */
 /* ============================================================ */
-/* Unified Allura script wordmark — one continuous signature.
-   Quote (espresso) · my (mint) · Smile (espresso) — all in Allura. */
+/* Initial wordmark — Italiana editorial caps + Allura signature "my". */
 .wordmark {
-  font-family: "Allura", cursive;
+  font-family: "Italiana", "Cormorant Garamond", serif;
   font-weight: 400;
-  font-size: 44px;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--espresso);
+  font-size: 15px;
   line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--espresso);
   display: inline-flex;
   align-items: baseline;
-  gap: 0;
+  gap: 5px;
   white-space: nowrap;
 }
 .wordmark em {
   font-family: "Allura", cursive;
   font-style: normal;
   font-weight: 400;
-  font-size: 44px;
+  font-size: 30px;
   letter-spacing: 0;
   color: var(--gold);
-  transform: rotate(-2deg);
-  margin: 0 4px;
+  transform: translateY(5px) rotate(-3deg);
+  margin: 0 2px;
   display: inline-block;
+  text-transform: none;
   line-height: 1;
 }
-.wordmark.sm { font-size: 30px; }
-.wordmark.sm em { font-size: 30px; margin: 0 3px; }
+.wordmark.sm { font-size: 13px; letter-spacing: 0.10em; }
+.wordmark.sm em {
+  font-size: 26px;
+  transform: translateY(4px) rotate(-3deg);
+  margin: 0 1px;
+}
 
 /* ============================================================ */
 /* Topbar                                                       */
