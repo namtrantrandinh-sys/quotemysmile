@@ -57,15 +57,21 @@ export default function WelcomeScreen() {
         <Animated.View style={{ opacity: headerOpacity }}>
           <View className="px-8 py-6 flex-row items-center justify-between border-b border-linen">
             <Wordmark size="md" />
-            <View className="flex-row items-center gap-6">
-              <Pressable onPress={() => router.push("/live")}>
-                <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans">
+            <View className="flex-row items-center gap-2">
+              <Pressable
+                onPress={() => router.push("/live")}
+                className="px-3.5 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+              >
+                <Text className="text-[11px] tracking-cap uppercase text-espresso font-sans">
                   Live demo
                 </Text>
               </Pressable>
               {signedIn ? (
-                <Pressable onPress={() => router.push("/inbox")}>
-                  <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans">
+                <Pressable
+                  onPress={() => router.push("/inbox")}
+                  className="px-3.5 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+                >
+                  <Text className="text-[11px] tracking-cap uppercase text-espresso font-sans">
                     Inbox
                   </Text>
                 </Pressable>
@@ -181,13 +187,13 @@ export default function WelcomeScreen() {
               </View>
               <View className="mt-6 items-center">
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="md"
                   onPress={() =>
                     router.push({ pathname: "/sign-in", params: { mode: "signin" } })
                   }
                 >
-                  I already have an account · Sign in
+                  Sign in
                 </Button>
               </View>
             </View>
@@ -211,7 +217,7 @@ export default function WelcomeScreen() {
                 </Button>
               </View>
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="md"
                 onPress={async () => {
                   await signOut();
@@ -291,21 +297,30 @@ export default function WelcomeScreen() {
         {/* Footer */}
         <View className="px-8 py-10 border-t border-linen flex-row items-center justify-between">
           <Wordmark size="sm" />
-          <View className="flex-row gap-5">
+          <View className="flex-row gap-2">
             {signedIn ? (
-              <Pressable onPress={() => router.push("/settings")}>
-                <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans">
+              <Pressable
+                onPress={() => router.push("/settings")}
+                className="px-3 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+              >
+                <Text className="text-[10px] tracking-editorial uppercase text-espresso font-sans">
                   Settings
                 </Text>
               </Pressable>
             ) : null}
-            <Pressable onPress={() => router.push("/legal/terms")}>
-              <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans">
+            <Pressable
+              onPress={() => router.push("/legal/terms")}
+              className="px-3 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+            >
+              <Text className="text-[10px] tracking-editorial uppercase text-espresso font-sans">
                 Terms
               </Text>
             </Pressable>
-            <Pressable onPress={() => router.push("/legal/privacy")}>
-              <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans">
+            <Pressable
+              onPress={() => router.push("/legal/privacy")}
+              className="px-3 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+            >
+              <Text className="text-[10px] tracking-editorial uppercase text-espresso font-sans">
                 Privacy
               </Text>
             </Pressable>
