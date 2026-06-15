@@ -4,7 +4,6 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "_comment": "EAS Build profiles. Run with `eas build --profile <name>`.",
     "development": {
       "developmentClient": true,
       "distribution": "internal",
@@ -49,8 +48,8 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "REPLACE_WITH_APPLE_TEAM_ID",
+        "ascAppId": "6780367407",
+        "appleTeamId": "V4U45AQABU",
         "bundleIdentifier": "com.quotemysmile.app"
       },
       "android": {
@@ -60,8 +59,8 @@
     },
     "preview": {
       "ios": {
-        "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "REPLACE_WITH_APPLE_TEAM_ID"
+        "ascAppId": "6780367407",
+        "appleTeamId": "V4U45AQABU"
       }
     }
   }
