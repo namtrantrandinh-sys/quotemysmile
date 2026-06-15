@@ -126,3 +126,36 @@ aa300ca  Search Console: add verification file + wordmark my flourish size up
 - Dentist stats `requestsReceived` is a heuristic.
 
 Site is live, mint is on, premium-dental positioning is in, audit P0s are closed, repo is clean. Sleep well.
+
+---
+
+## Polish wave — 2026-06-15 (autonomous, Claude in Chrome)
+
+Run executed end-to-end via the Chrome MCP — no taps from you required.
+
+**Verified live:**
+
+- **Rich Results test** — `4 valid items detected` (FAQ, Organization, Review snippets, Software Apps). Crawled 2026-06-15 11:32 AEST.
+- **Sitemap** — Search Console status `Success`, 6 discovered pages from `/sitemap.xml`.
+- **OpenGraph debugger** — `og:image` 1200×630 PNG loads cleanly, `twitter:card` summary_large_image set, title 43 chars.
+- **Description hygiene** — trimmed 163 → 144 chars, within Google's truncation window.
+- **`og:site_name`** added — Discord / chat cards no longer render "anonymous".
+- **AA contrast on bone** — `--taupe` `#8a7e6f` (3.50:1) → `#6e6457` (5.05:1). Only failing audit in prior 87/100 a11y, so next Lighthouse pass should land 100. (Couldn't re-poll PSI directly — anonymous PSI API daily quota was exhausted by today's runs; on-page CSS verified via curl.)
+- **Broken Google Fonts URL** swept across all 8 HTML pages.
+- **Canonicals** — every page points to its `.html` path; sitemap-vs-canonical 404 conflicts gone.
+- **Icon variants** — favicon-32, apple-touch 180×180, maskable 192/512 wired into `site.webmanifest`.
+- **FOUT prevention** — `html { background: #f5f1e8; color-scheme: light; }` so first paint is on-brand cream not white.
+
+**Commits pushed tonight (polish wave):**
+
+```
+7b50980  Web polish: Schema.org, broken font URL fix, canonical sweep, AA contrast, icon variants
+a6c7dca  Web: tighten meta description + add og:site_name (fixes social-card hygiene)
+```
+
+**Blocked, still:**
+
+- iOS Simulator boot — `xcrun: error: unable to find utility "simctl", not a developer tool`. Install Command Line Tools (`xcode-select --install`) when you wake up.
+- EAS TestFlight build — needs your Apple Team ID.
+- `.github/workflows/` restoration — needs PAT with `workflow` scope (currently stashed at `.github-stash/`).
+
