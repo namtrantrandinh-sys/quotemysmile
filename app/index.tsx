@@ -283,7 +283,7 @@ export default function WelcomeScreen() {
               AHPRA-registered dentists nearby send indicative quotes within thirty minutes. Itemised. Transparent.
             </Step>
             <Step n="03" title="Choose">
-              Book a consult with the dentist that suits. Final fees confirmed at your clinical examination.
+              Pick the quote that suits. Each one is signed by an AHPRA-registered dentist — in practice, the chairside fee matches your quote.
             </Step>
           </View>
         </Animated.View>
