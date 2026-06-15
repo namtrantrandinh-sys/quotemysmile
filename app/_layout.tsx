@@ -42,7 +42,8 @@ import {
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AnimatedSplash } from "@/components/AnimatedSplash";
-import { hasSeenOnboarding } from "@/lib/firstLaunch";
+import { hasSeenOnboarding, markOnboardingSeen } from "@/lib/firstLaunch";
+import { supabase } from "@/lib/supabase";
 import { hydrateIntake } from "@/lib/intakeStore";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
@@ -120,11 +121,25 @@ export default function RootLayout() {
       !segments[0] ||
       segments[0] === ("(tabs)" as any) ||
       (segments as any).length === 0;
-    if (onRoot) {
-      hasSeenOnboarding().then((seen) => {
-        if (!seen) router.replace("/onboarding");
-      });
-    }
+    if (!onRoot) return;
+
+    // Skip onboarding if EITHER:
+    //   (a) the user has already completed it on this device, OR
+    //   (b) the user is already signed in (has an account) — covers fresh
+    //       installs and new devices for existing customers.
+    void Promise.all([
+      hasSeenOnboarding(),
+      supabase.auth.getSession().then((r) => !!r.data.session).catch(() => false),
+    ]).then(([seen, signedIn]) => {
+      if (signedIn && !seen) {
+        // First time on this device but they already have an account —
+        // record it so they don't get prompted again on this device.
+        void markOnboardingSeen();
+      }
+      if (!seen && !signedIn) {
+        router.replace("/onboarding");
+      }
+    });
   }, [splashDone, hasRouted, router, segments]);
 
   if (!loaded) return null;
