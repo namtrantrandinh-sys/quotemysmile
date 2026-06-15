@@ -1,35 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- QuoteMySmile favicon: mirrored Amazon-style smile arrows (both ends arrow tips) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="32" height="32">
+  <!-- QuoteMySmile favicon: white smile with hook tips on each end, mint gradient background -->
   <defs>
-    <radialGradient id="qms-bg" cx="35%" cy="30%" r="85%">
-      <stop offset="0%" stop-color="#FBF8F0"/>
-      <stop offset="100%" stop-color="#F5F1E8"/>
+    <linearGradient id="qms-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4A8C82"/>
+      <stop offset="55%" stop-color="#5FA89B"/>
+      <stop offset="100%" stop-color="#A9CFC0"/>
+    </linearGradient>
+    <radialGradient id="qms-shine" cx="25%" cy="22%" r="55%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect x="0" y="0" width="32" height="32" rx="7" ry="7" fill="url(#qms-bg)"/>
 
-  <!-- Sparkle dot (top-right, mint) -->
-  <circle cx="25.5" cy="6.5" r="1.4" fill="#5FA89B"/>
+  <!-- Background -->
+  <rect x="0" y="0" width="64" height="64" rx="14" ry="14" fill="url(#qms-bg)"/>
+  <rect x="0" y="0" width="64" height="64" rx="14" ry="14" fill="url(#qms-shine)"/>
 
-  <!-- Bold mint smile arc — gently curving from upper-left to upper-right -->
-  <path d="M 5 13 Q 16 27 27 13"
+  <!-- Sparkle dot (top-right) -->
+  <circle cx="54" cy="11" r="2.4" fill="#ffffff" opacity="0.85"/>
+
+  <!-- White smile arc — bold, rounded ends -->
+  <path d="M 14 28 Q 32 50 50 28"
         fill="none"
-        stroke="#4A8C82"
-        stroke-width="3.6"
-        stroke-linecap="butt"/>
+        stroke="#ffffff"
+        stroke-width="6"
+        stroke-linecap="round"/>
 
-  <!-- LEFT arrowhead — Amazon-style flared tip on the left end of the smile -->
-  <path d="M 5 13 L 2 10 L 7.5 10.5 Z"
-        fill="#4A8C82"
-        stroke="#4A8C82"
-        stroke-width="0.6"
-        stroke-linejoin="round"/>
+  <!-- LEFT hook — small curve flicking up from the left end of the smile -->
+  <path d="M 14 28 Q 11 23 14 19"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="5"
+        stroke-linecap="round"/>
 
-  <!-- RIGHT arrowhead — Amazon-style flared tip on the right end (mirrored) -->
-  <path d="M 27 13 L 30 10 L 24.5 10.5 Z"
-        fill="#4A8C82"
-        stroke="#4A8C82"
-        stroke-width="0.6"
-        stroke-linejoin="round"/>
+  <!-- RIGHT hook — small curve flicking up from the right end of the smile -->
+  <path d="M 50 28 Q 53 23 50 19"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="5"
+        stroke-linecap="round"/>
 </svg>
