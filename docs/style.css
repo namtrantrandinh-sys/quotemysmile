@@ -53,34 +53,45 @@ img { max-width: 100%; display: block; }
   position: relative;
   padding-bottom: 14px;
 }
-/* Amazon-style smile under QUOTE…SMILE — mint, sharp triangular tips at BOTH ends. */
+/* Amazon-style smile under QUOTE…SMILE — mint, sweeping curve with hook-points at BOTH ends. */
 .wordmark::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 13px;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 16' preserveAspectRatio='none'><path d='M 18 6 Q 70 22 122 6' fill='none' stroke='%234A8C82' stroke-width='3' stroke-linecap='butt'/><path d='M 6 1 L 22 9 L 18 14 Z' fill='%234A8C82'/><path d='M 134 1 L 118 9 L 122 14 Z' fill='%234A8C82'/></svg>") center/100% 100% no-repeat;
+  height: 15px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 32' preserveAspectRatio='none'><path d='M 14 4 Q 8 12 12 22 Q 16 14 26 16 Q 100 38 174 16 Q 184 14 188 22 Q 192 12 186 4 Q 178 13 168 14 Q 100 30 32 14 Q 22 13 14 4 Z' fill='%234A8C82'/></svg>") center/100% 100% no-repeat;
   pointer-events: none;
 }
 .wordmark em {
   font-family: "Allura", cursive;
   font-style: normal;
   font-weight: 400;
-  font-size: 30px;
+  font-size: 22px;
   letter-spacing: 0;
-  color: var(--gold);
-  transform: translateY(5px) rotate(-3deg);
+  color: #4A8C82;
   margin: 0 2px;
   display: inline-block;
   text-transform: none;
   line-height: 1;
+  vertical-align: baseline;
+}
+/* Hover: keep "my" mint, never default link blue/black underline */
+a.wordmark:hover,
+a.wordmark:hover em,
+a.wordmark:focus,
+a.wordmark:focus em {
+  color: var(--espresso);
+  text-decoration: none;
+}
+a.wordmark:hover em,
+a.wordmark:focus em {
+  color: #4A8C82;
 }
 .wordmark.sm { font-size: 13px; letter-spacing: 0.10em; padding-bottom: 11px; }
 .wordmark.sm em {
-  font-size: 26px;
-  transform: translateY(4px) rotate(-3deg);
+  font-size: 20px;
   margin: 0 1px;
 }
 .wordmark.sm::after { height: 9px; }
