@@ -3,7 +3,9 @@ import { View, Text, ScrollView, Pressable } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { QuoteCard } from "@/components/QuoteCard";
-import type { Quote } from "@/lib/types";
+import type { Quote, Urgency } from "@/lib/types";
+import { URGENCY_META } from "@/lib/types";
+import { getRequest } from "@/lib/services/requests";
 import { LiveBadge } from "@/components/LiveBadge";
 import { Disclaimer } from "@/components/Disclaimer";
 import { Wordmark } from "@/components/Wordmark";
@@ -88,6 +90,31 @@ export default function LiveFeedScreen() {
     const t = setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
   }, []);
+
+  // Real-request path: derive the actual remaining window from the request's
+  // created_at + urgency rather than the demo fallback. If the request was
+  // submitted long enough ago that the window has elapsed, clamp to 0 so the
+  // UI immediately shows "Window closed" instead of running a fake countdown.
+  useEffect(() => {
+    if (!request) return;
+    let cancelled = false;
+    getRequest(request)
+      .then((row: any) => {
+        if (cancelled || !row) return;
+        const urgency = (row.urgency as Urgency) ?? "few";
+        const closesInMin = URGENCY_META[urgency]?.closesInMin ?? 180;
+        const createdAt = new Date(row.created_at).getTime();
+        const elapsedSec = Math.floor((Date.now() - createdAt) / 1000);
+        const remaining = closesInMin * 60 - elapsedSec;
+        setSecondsLeft(Math.max(0, Math.min(closesInMin * 60, remaining)));
+      })
+      .catch(() => {
+        // Leave the demo countdown alone if the fetch fails (offline / RLS).
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [request]);
 
   // When the window expires, prevent further booking + show closed state.
   const closed = secondsLeft === 0;

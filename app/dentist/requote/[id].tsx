@@ -31,6 +31,7 @@ export default function RequoteScreen() {
   const [phase, setPhase] = useState<"edit" | "locked">("edit");
   const [current, setCurrent] = useState(385);
   const [lowestCompetitor, setLowestCompetitor] = useState(349);
+  const [clinicName, setClinicName] = useState("Camberwell Dental");
 
   // Load the real quote being requoted + the lowest live competitor on
   // the same request. Without this, the dentist edited demo data and
@@ -46,6 +47,7 @@ export default function RequoteScreen() {
           setItems(q.items_json as AdaItem[]);
         }
         setNote(q.note ?? "");
+        if (q.clinics?.name) setClinicName(q.clinics.name);
         if (q.request_id) {
           const peers: any[] = await listQuotesForRequest(q.request_id);
           const others = peers
@@ -191,7 +193,7 @@ export default function RequoteScreen() {
 
             <View className="border-y border-linen w-full max-w-md py-8 items-center mb-10">
               <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mb-2">
-                Camberwell Dental · Final
+                {clinicName} · Final
               </Text>
               <Text className="font-display text-5xl text-gold mb-1">${newTotal}</Text>
               <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans">

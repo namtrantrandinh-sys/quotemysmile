@@ -146,6 +146,15 @@ export default function BookScreen() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session && q.requestId && q.clinicId) {
+        // Guard before creating any backend rows so we don't leave orphan
+        // pending bookings if Stripe SDK isn't ready (e.g. mid-hydration on web).
+        if (!stripe) {
+          setFailure({
+            title: "Payment provider unavailable",
+            body: "Apple Pay / Google Pay isn't ready yet. Try again in a moment.",
+          });
+          return;
+        }
         // Real path — kick off Stripe PaymentIntent + create pending booking row.
         const { clientSecret, bookingId } = await createDepositIntent({
           quoteId: q.id,
@@ -153,9 +162,6 @@ export default function BookScreen() {
           slotIso: slot,
           depositAud,
         });
-        if (!stripe) {
-          throw new Error("Payment provider unavailable. Try again shortly.");
-        }
         const { error: initErr } = await stripe.initPaymentSheet({
           paymentIntentClientSecret: clientSecret,
           merchantDisplayName: "QuoteMySmile",
