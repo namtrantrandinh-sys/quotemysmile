@@ -48,6 +48,14 @@ import { StripeProvider } from "@stripe/stripe-react-native";
 
 const STRIPE_PUBLISHABLE_KEY =
   process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
+// Stripe SDK crashes on empty / placeholder / malformed keys.
+// Real Stripe keys are pk_test_xxx or pk_live_xxx (≥80 chars, alphanumeric only).
+const HAS_STRIPE_KEY =
+  (STRIPE_PUBLISHABLE_KEY.startsWith("pk_test_") ||
+    STRIPE_PUBLISHABLE_KEY.startsWith("pk_live_")) &&
+  STRIPE_PUBLISHABLE_KEY.length > 30 &&
+  !STRIPE_PUBLISHABLE_KEY.includes("REPLACE") &&
+  !STRIPE_PUBLISHABLE_KEY.includes("YOUR_KEY");
 
 SplashScreen.preventAutoHideAsync();
 
@@ -112,25 +120,33 @@ export default function RootLayout() {
 
   if (!loaded) return null;
 
+  const tree = (
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: "#F5F1E8" },
+          animation: "fade",
+        }}
+      />
+      {!splashDone ? (
+        <AnimatedSplash onDone={() => setSplashDone(true)} />
+      ) : null}
+    </>
+  );
+
   return (
     <SafeAreaProvider>
-      <StripeProvider
-        publishableKey={STRIPE_PUBLISHABLE_KEY}
-        merchantIdentifier="merchant.com.quotemysmile.app"
-      >
-        <>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: "#F5F1E8" },
-              animation: "fade",
-            }}
-          />
-          {!splashDone ? (
-            <AnimatedSplash onDone={() => setSplashDone(true)} />
-          ) : null}
-        </>
-      </StripeProvider>
+      {HAS_STRIPE_KEY ? (
+        <StripeProvider
+          publishableKey={STRIPE_PUBLISHABLE_KEY}
+          merchantIdentifier="merchant.com.quotemysmile.app"
+        >
+          {tree}
+        </StripeProvider>
+      ) : (
+        tree
+      )}
     </SafeAreaProvider>
   );
 }
