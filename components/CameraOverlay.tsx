@@ -24,12 +24,23 @@ export function CameraOverlay({
 }: Props) {
   return (
     <View className="absolute inset-0 items-center justify-center pointer-events-none">
-      {/* Top — slot title */}
-      <View className="absolute top-16 left-0 right-0 items-center px-6">
+      {/* Top — slot title. Sits BELOW the Cancel/Natural-light/Flip
+          control row (which already uses SafeAreaView ≈ 90px on notch
+          devices). Drop further down to avoid overlap. */}
+      <View className="absolute top-32 left-0 right-0 items-center px-6">
         <Text className="text-[10px] tracking-editorial uppercase text-bone/70 font-sans mb-1">
           Mouth scan · Photo {slotIndex} of {total}
         </Text>
-        <Text className="font-display text-3xl text-bone">{slotName}</Text>
+        <Text
+          className="font-display text-3xl text-bone"
+          style={{
+            textShadowColor: "rgba(0,0,0,0.55)",
+            textShadowOffset: { width: 0, height: 1 },
+            textShadowRadius: 8,
+          }}
+        >
+          {slotName}
+        </Text>
       </View>
 
       {/* Guide */}
@@ -59,8 +70,8 @@ export function CameraOverlay({
       {/* Corner brackets */}
       <View className="absolute bottom-32 left-8 h-6 w-6 border-l border-b border-bone/30" />
       <View className="absolute bottom-32 right-8 h-6 w-6 border-r border-b border-bone/30" />
-      <View className="absolute top-32 left-8 h-6 w-6 border-l border-t border-bone/30" />
-      <View className="absolute top-32 right-8 h-6 w-6 border-r border-t border-bone/30" />
+      <View className="absolute left-8 h-6 w-6 border-l border-t border-bone/30" style={{ top: 200 }} />
+      <View className="absolute right-8 h-6 w-6 border-r border-t border-bone/30" style={{ top: 200 }} />
     </View>
   );
 }
