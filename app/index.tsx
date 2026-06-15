@@ -103,7 +103,6 @@ export default function WelcomeScreen() {
               color: "#A9CFC0",
               textAlign: "center",
               marginBottom: 24,
-              transform: [{ rotate: "-3deg" }],
             }}
           >
             in your hand.

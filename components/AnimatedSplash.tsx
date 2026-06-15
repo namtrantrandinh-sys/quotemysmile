@@ -184,7 +184,6 @@ export function AnimatedSplash({ onDone }: Props) {
             color: "#A9CFC0",
             textAlign: "center",
             marginBottom: 18,
-            transform: [{ rotate: "-3deg" }],
           }}
         >
           in your hand.
