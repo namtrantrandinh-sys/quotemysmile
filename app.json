@@ -30,7 +30,8 @@
         "NSLocationAccuracyAuthorizationDescription": "Precise location is used to match you with the closest dentists.",
         "NSCameraUsageDescription": "QuoteMySmile uses your camera to capture guided photos of your teeth for accurate quotes.",
         "NSMicrophoneUsageDescription": "QuoteMySmile uses your microphone only when you choose to record a short video clip of your teeth instead of a photo.",
-        "NSPhotoLibraryAddUsageDescription": "Save your dental quotes and consult details to your photo library."
+        "NSPhotoLibraryAddUsageDescription": "Save your dental quotes and consult details to your photo library.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "config": {
         "googleMapsApiKey": "REPLACE_WITH_IOS_GOOGLE_MAPS_KEY"
@@ -39,6 +40,14 @@
     "android": {
       "package": "com.quotemysmile.app",
       "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "CAMERA",
@@ -108,6 +117,9 @@
     ],
     "experiments": {
       "typedRoutes": false
+    },
+    "updates": {
+      "url": "https://u.expo.dev/376c8cbe-b615-415f-9f86-a60b7eac39db"
     }
   }
 }
