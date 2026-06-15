@@ -34,8 +34,7 @@
     "production": {
       "autoIncrement": true,
       "ios": {
-        "resourceClass": "medium",
-        "image": "macos-sonoma-14.6-xcode-16.0"
+        "resourceClass": "medium"
       },
       "android": {
         "buildType": "app-bundle"
