@@ -32,6 +32,13 @@ import {
 } from "@expo-google-fonts/cinzel";
 import { Allura_400Regular } from "@expo-google-fonts/allura";
 import { Italiana_400Regular } from "@expo-google-fonts/italiana";
+import {
+  Lora_400Regular,
+  Lora_500Medium,
+  Lora_600SemiBold,
+  Lora_400Regular_Italic,
+  Lora_500Medium_Italic,
+} from "@expo-google-fonts/lora";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AnimatedSplash } from "@/components/AnimatedSplash";
@@ -66,6 +73,11 @@ export default function RootLayout() {
     "Cinzel-Bold": Cinzel_700Bold,
     Allura: Allura_400Regular,
     Italiana: Italiana_400Regular,
+    Lora: Lora_400Regular,
+    "Lora-Medium": Lora_500Medium,
+    "Lora-SemiBold": Lora_600SemiBold,
+    "Lora-Italic": Lora_400Regular_Italic,
+    "Lora-MediumItalic": Lora_500Medium_Italic,
   });
 
   const [splashDone, setSplashDone] = useState(false);

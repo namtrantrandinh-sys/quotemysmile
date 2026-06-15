@@ -29,8 +29,11 @@ module.exports = {
         slate: "#332D26",
       },
       fontFamily: {
-        display: ["CormorantGaramond"],
-        "display-italic": ["CormorantGaramond-Italic"],
+        display: ["Lora"],
+        "display-medium": ["Lora-Medium"],
+        "display-semibold": ["Lora-SemiBold"],
+        "display-italic": ["Lora-Italic"],
+        "display-medium-italic": ["Lora-MediumItalic"],
         sans: ["Inter"],
         "sans-medium": ["Inter-Medium"],
       },
