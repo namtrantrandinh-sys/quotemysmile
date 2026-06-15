@@ -34,7 +34,8 @@
     "production": {
       "autoIncrement": true,
       "ios": {
-        "resourceClass": "medium"
+        "resourceClass": "medium",
+        "image": "latest"
       },
       "android": {
         "buildType": "app-bundle"
