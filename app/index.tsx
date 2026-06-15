@@ -52,7 +52,7 @@ export default function WelcomeScreen() {
   }, [signedIn]);
 
   return (
-    <SafeAreaView className="flex-1 bg-bone">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "#8BC4B2" }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <Animated.View style={{ opacity: headerOpacity }}>
           <View className="px-8 py-6 flex-row items-center justify-between border-b border-linen">
@@ -100,7 +100,7 @@ export default function WelcomeScreen() {
               fontFamily: "Allura",
               fontSize: 68,
               lineHeight: 72,
-              color: "#A9CFC0",
+              color: "#FFFFFF",
               textAlign: "center",
               marginBottom: 24,
             }}
@@ -112,8 +112,8 @@ export default function WelcomeScreen() {
           <MaterialCommunityIcons
             name="tooth-outline"
             size={36}
-            color="#5FA89B"
-            style={{ marginTop: 24, marginBottom: 16, opacity: 0.85 }}
+            color="#FFFFFF"
+            style={{ marginTop: 24, marginBottom: 16, opacity: 0.92 }}
           />
           <Text
             style={{
@@ -132,7 +132,7 @@ export default function WelcomeScreen() {
             style={{
               fontFamily: "Allura",
               fontSize: 38,
-              color: "#A9CFC0",
+              color: "#FFFFFF",
               textAlign: "center",
               marginBottom: 16,
               transform: [{ rotate: "-2deg" }],
@@ -320,7 +320,7 @@ export default function WelcomeScreen() {
 function Step({ n, title, children }: { n: string; title: string; children: string }) {
   return (
     <View>
-      <Text className="font-display text-3xl text-gold mb-3">{n}</Text>
+      <Text className="font-display text-3xl mb-3" style={{ color: "#FFFFFF" }}>{n}</Text>
       <Text className="text-xs tracking-cap uppercase text-walnut font-sans mb-2">{title}</Text>
       <Text className="text-sm text-taupe font-sans leading-relaxed">{children}</Text>
     </View>
