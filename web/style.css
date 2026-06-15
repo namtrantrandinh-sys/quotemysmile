@@ -50,6 +50,19 @@ img { max-width: 100%; display: block; }
   align-items: baseline;
   gap: 5px;
   white-space: nowrap;
+  position: relative;
+  padding-bottom: 14px;
+}
+/* Amazon-style smile curve under QUOTE…SMILE — mint, rounded, slight dot end. */
+.wordmark::after {
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: 0;
+  height: 9px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 12' preserveAspectRatio='none'><path d='M 2 3 C 28 14, 92 14, 118 3' fill='none' stroke='%23A9CFC0' stroke-width='2' stroke-linecap='round'/><circle cx='118' cy='3' r='1.4' fill='%23A9CFC0'/></svg>") center/100% 100% no-repeat;
+  pointer-events: none;
 }
 .wordmark em {
   font-family: "Allura", cursive;
@@ -64,12 +77,13 @@ img { max-width: 100%; display: block; }
   text-transform: none;
   line-height: 1;
 }
-.wordmark.sm { font-size: 13px; letter-spacing: 0.10em; }
+.wordmark.sm { font-size: 13px; letter-spacing: 0.10em; padding-bottom: 11px; }
 .wordmark.sm em {
   font-size: 26px;
   transform: translateY(4px) rotate(-3deg);
   margin: 0 1px;
 }
+.wordmark.sm::after { height: 7px; }
 
 /* ============================================================ */
 /* Topbar                                                       */
