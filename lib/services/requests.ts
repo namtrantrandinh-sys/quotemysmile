@@ -25,6 +25,15 @@ export type SubmitRequestInput = {
 };
 
 export async function submitRequest(input: SubmitRequestInput) {
+  // Friendly auth check — RLS would block anyway but the error string is
+  // cryptic. This lets the caller surface "Sign in first" instead.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("Sign in to submit a request — your photos won't be lost.");
+  }
+
   const urgency = input.urgency ?? "24h";
   const minutes = URGENCY_META[urgency].closesInMin;
   const closesAt = new Date(Date.now() + minutes * 60_000).toISOString();

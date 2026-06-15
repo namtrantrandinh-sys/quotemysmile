@@ -112,8 +112,25 @@ export default function QuoteDetailScreen() {
           <Text className="font-display text-2xl text-walnut mb-3">{q.dentistName}</Text>
           <VerifiedBadge ahpraNo={q.ahpraNo} size="md" />
 
-          <Text className="font-display text-[88px] text-gold leading-none mt-10">
-            ${q.total}
+          <Text
+            className="font-display text-gold leading-none mt-10"
+            // Scale down for >4-digit totals so $12,450 doesn't overflow
+            // the screen on small phones. 88 → 64 → 52 → 44.
+            style={{
+              fontSize:
+                q.total >= 100000
+                  ? 44
+                  : q.total >= 10000
+                    ? 52
+                    : q.total >= 1000
+                      ? 72
+                      : 88,
+            }}
+            adjustsFontSizeToFit
+            numberOfLines={1}
+            allowFontScaling={false}
+          >
+            ${q.total.toLocaleString("en-AU")}
           </Text>
           <Text className="text-[11px] tracking-cap uppercase text-taupe font-sans mt-2 mb-2">
             Total · indicative
