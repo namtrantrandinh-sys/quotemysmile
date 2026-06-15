@@ -60,10 +60,11 @@ img { max-width: 100%; display: block; }
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  background-image: url("/favicon.svg");
+  background-image: url("/icon-192.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  border-radius: 5px;
 }
 /* Amazon-style smile under QUOTE…SMILE — mint, sweeping curve with hook-points at BOTH ends. */
 .wordmark::after {
@@ -199,8 +200,9 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 18px;
   letter-spacing: 0.04em;
-  color: var(--gold);
+  color: #2F6F66;
 }
+.centered-link a:hover { color: #1F4F47; }
 
 /* ============================================================ */
 /* HERO with phone mockup                                        */
@@ -272,9 +274,10 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 .cta-link {
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 18px;
-  color: var(--gold);
+  color: #2F6F66;
   letter-spacing: 0.02em;
 }
+.cta-link:hover { color: #1F4F47; }
 
 /* QR card */
 .qr-wrap { display: flex; justify-content: center; margin: 28px 0 18px; }
