@@ -11,8 +11,10 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   CameraView,
+  type CameraType,
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
@@ -38,7 +40,13 @@ export default function CaptureScreen() {
   const [recording, setRecording] = useState(false);
   const [snapping, setSnapping] = useState(false);
   const [mode, setMode] = useState<"photo" | "video">("photo");
+  // Default to BACK camera for every shot — dental photos need the rear
+  // sensor (higher resolution + better light). User can flip manually.
+  const [facing, setFacing] = useState<CameraType>("back");
   const cameraRef = useRef<CameraView | null>(null);
+  // Tracks whether the user pressed Cancel during a pending snap so we can
+  // suppress the auto-advance that would otherwise reopen the camera.
+  const cancelledRef = useRef(false);
 
   const openSettings = () => {
     if (Platform.OS === "ios") {
@@ -65,7 +73,21 @@ export default function CaptureScreen() {
         return;
       }
     }
+    cancelledRef.current = false;
+    setFacing("back"); // every fresh open starts with the rear camera
     setActiveSlot(slotId);
+  };
+
+  const cancelCapture = () => {
+    cancelledRef.current = true;
+    if (recording) {
+      try {
+        cameraRef.current?.stopRecording();
+      } catch {}
+    }
+    setRecording(false);
+    setSnapping(false);
+    setActiveSlot(null);
   };
 
   const snap = async () => {
@@ -83,18 +105,26 @@ export default function CaptureScreen() {
           ),
         ),
       ]);
+      // If the user pressed Cancel mid-snap, drop the captured image and
+      // bail out — do NOT auto-advance to the next slot.
+      if (cancelledRef.current) return;
       if (result?.uri) await photos.capture(activeSlot, result.uri);
+      const completedSlot = activeSlot;
       setActiveSlot(null);
-      // Auto-advance: open next un-captured slot
-      const next = photos.slots.find((s) => !s.uri && s.id !== activeSlot);
-      if (next) {
-        setTimeout(() => openCamera(next.id), 600);
+      // Auto-advance: open next un-captured slot (unless user has cancelled)
+      const next = photos.slots.find((s) => !s.uri && s.id !== completedSlot);
+      if (next && !cancelledRef.current) {
+        setTimeout(() => {
+          if (!cancelledRef.current) openCamera(next.id);
+        }, 600);
       }
     } catch (e) {
-      Alert.alert(
-        "Couldn't capture",
-        e instanceof Error ? e.message : "Try once more.",
-      );
+      if (!cancelledRef.current) {
+        Alert.alert(
+          "Couldn't capture",
+          e instanceof Error ? e.message : "Try once more.",
+        );
+      }
     } finally {
       setSnapping(false);
     }
@@ -159,7 +189,7 @@ export default function CaptureScreen() {
   };
 
   const activeSlotObj = activeSlot != null ? photos.slots[activeSlot - 1] : null;
-  const facing = activeSlotObj?.name === "front-smile" ? "front" : "back";
+  const flipCamera = () => setFacing((f) => (f === "back" ? "front" : "back"));
 
   return (
     <SafeAreaView className="flex-1 bg-bone">
@@ -238,13 +268,14 @@ export default function CaptureScreen() {
         <Modal
           visible={activeSlot !== null}
           animationType="slide"
-          onRequestClose={() => {
-            if (recording) return; // can't dismiss mid-record
-            setActiveSlot(null);
-          }}
+          onRequestClose={() => cancelCapture()}
         >
           <View className="flex-1 bg-onyx">
+            {/* Remount CameraView on mode change. Switching picture↔video
+                on a live CameraView is what was freezing the preview;
+                a fresh mount lets the encoder configure cleanly. */}
             <CameraView
+              key={`${mode}-${facing}`}
               ref={cameraRef}
               style={{ flex: 1 }}
               facing={facing}
@@ -258,21 +289,80 @@ export default function CaptureScreen() {
                 guideShape={activeSlotObj.guideShape}
               />
             ) : null}
-            <View className="absolute top-0 left-0 right-0 px-6 pt-12 flex-row justify-between">
-              <Pressable
-                onPress={() => {
-                  if (recording) return;
-                  setActiveSlot(null);
+
+            {/* Top bar — uses SafeAreaView so Cancel + status sit BELOW
+                the Dynamic Island / notch on iPhone. */}
+            <SafeAreaView
+              edges={["top"]}
+              pointerEvents="box-none"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+              }}
+            >
+              <View
+                style={{
+                  paddingHorizontal: 20,
+                  paddingTop: 12,
+                  paddingBottom: 8,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                <Text className="text-[11px] tracking-cap uppercase text-bone font-sans">
-                  {recording ? "Recording…" : "Cancel"}
+                <Pressable
+                  onPress={cancelCapture}
+                  hitSlop={12}
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 999,
+                  }}
+                >
+                  <Text className="text-[12px] tracking-cap uppercase text-bone font-sans">
+                    {recording ? "Stop & exit" : "Cancel"}
+                  </Text>
+                </Pressable>
+                <Text
+                  className="text-[11px] tracking-cap uppercase text-bone font-sans"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 999,
+                  }}
+                >
+                  Natural light
                 </Text>
-              </Pressable>
-              <Text className="text-[11px] tracking-cap uppercase text-bone font-sans">
-                Natural light · no flash
-              </Text>
-            </View>
+                {/* Flip camera button — top right of the top row, only
+                    when not recording (flipping mid-record kills the file). */}
+                <Pressable
+                  onPress={() => {
+                    if (recording) return;
+                    flipCamera();
+                  }}
+                  hitSlop={12}
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: recording ? 0.4 : 1,
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="camera-flip-outline"
+                    size={18}
+                    color="#FFFFFF"
+                  />
+                </Pressable>
+              </View>
+            </SafeAreaView>
 
             {/* Photo / Video mode toggle */}
             {!recording ? (
