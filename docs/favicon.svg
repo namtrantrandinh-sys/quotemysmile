@@ -1,41 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- QuoteMySmile favicon: white smile + dimple dots on teal gradient -->
+  <!-- QuoteMySmile favicon: bold mint smile with Amazon-style arrowheads on each end -->
   <defs>
-    <linearGradient id="qms-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4A8C82"/>
-      <stop offset="55%" stop-color="#5FA89B"/>
-      <stop offset="100%" stop-color="#A9CFC0"/>
-    </linearGradient>
-    <radialGradient id="qms-shine" cx="22%" cy="20%" r="55%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.32"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    <radialGradient id="qms-bg" cx="35%" cy="30%" r="85%">
+      <stop offset="0%" stop-color="#FBF8F0"/>
+      <stop offset="100%" stop-color="#F5F1E8"/>
     </radialGradient>
   </defs>
   <rect x="0" y="0" width="32" height="32" rx="7" ry="7" fill="url(#qms-bg)"/>
-  <rect x="0" y="0" width="32" height="32" rx="7" ry="7" fill="url(#qms-shine)"/>
 
-  <!-- Sparkle dot (top-right) -->
-  <circle cx="24.5" cy="7.5" r="1.4" fill="#ffffff" opacity="0.85"/>
+  <!-- Sparkle dot (top-right, mint) -->
+  <circle cx="24.5" cy="7.5" r="1.5" fill="#5FA89B"/>
 
-  <!-- LEFT dimple dot -->
-  <circle cx="5.5" cy="13.5" r="1.7" fill="#ffffff"/>
-
-  <!-- Smile curve: confident upturned arc, rounded caps -->
-  <path d="M 8 14.5 Q 16 26 24 14.5"
+  <!-- Bold mint smile arc — rounded right end naturally; left end gets arrowhead -->
+  <path d="M 6 13 Q 16 28 26 13"
         fill="none"
-        stroke="#ffffff"
-        stroke-width="3"
+        stroke="#4A8C82"
+        stroke-width="3.4"
         stroke-linecap="round"/>
 
-  <!-- RIGHT dimple dot -->
-  <circle cx="26.5" cy="13.5" r="1.7" fill="#ffffff"/>
+  <!-- LEFT arrowhead — small chevron pointing up-left from where the smile starts -->
+  <path d="M 4 14.2 L 6 13 L 6.6 15.4"
+        fill="#4A8C82"
+        stroke="#4A8C82"
+        stroke-width="1.4"
+        stroke-linejoin="round"
+        stroke-linecap="round"/>
 
-  <!-- Subtle inner highlight on smile (tooth-like depth) -->
-  <path d="M 10 15.2 Q 16 22.8 22 15.2"
-        fill="none"
-        stroke="#ffffff"
-        stroke-width="0.5"
-        stroke-linecap="round"
-        opacity="0.55"/>
+  <!-- RIGHT arrowhead — small chevron pointing up-right (mirrors Amazon's arrow tip) -->
+  <path d="M 28 14.2 L 26 13 L 25.4 15.4"
+        fill="#4A8C82"
+        stroke="#4A8C82"
+        stroke-width="1.4"
+        stroke-linejoin="round"
+        stroke-linecap="round"/>
 </svg>
