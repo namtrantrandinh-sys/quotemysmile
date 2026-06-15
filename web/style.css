@@ -1203,9 +1203,27 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 }
 
 /* ============================================================ */
-/* Trust                                                         */
+/* Trust — teal gradient panel with white type                   */
 /* ============================================================ */
-.trust { padding: 96px 0; border-bottom: 1px solid var(--linen); }
+.trust {
+  padding: 96px 6vw;
+  margin: 0;
+  border-bottom: 0;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,0.10), transparent 60%),
+    radial-gradient(110% 90% at 100% 100%, rgba(255,255,255,0.08), transparent 55%),
+    linear-gradient(135deg, #4A8C82 0%, #5FA89B 40%, #7DBDB0 80%, #A9CFC0 100%);
+  color: #ffffff;
+  position: relative;
+  isolation: isolate;
+}
+.trust .display { color: #ffffff; }
+.trust .display em {
+  color: #ffffff;
+  /* keep the Allura script feel but white + subtle ink */
+  text-shadow: 0 1px 0 rgba(0, 50, 45, 0.18);
+}
+.trust .lede { color: rgba(255, 255, 255, 0.92); }
 .trust ul {
   padding: 0;
   list-style: none;
@@ -1213,17 +1231,23 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 }
 .trust li {
   padding: 22px 0;
-  border-bottom: 1px solid var(--linen);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
   font-size: 16px;
-  color: var(--walnut);
+  color: rgba(255, 255, 255, 0.92);
   line-height: 1.6;
 }
+.trust li:last-child { border-bottom: 0; }
 .trust li strong {
-  color: var(--espresso);
-  font-weight: 500;
+  color: #ffffff;
+  font-weight: 600;
   display: block;
   margin-bottom: 2px;
+  letter-spacing: 0.005em;
 }
+/* Icons re-stroke to white inside the teal panel */
+.trust .icon { stroke: #ffffff; opacity: 0.92; }
+.trust .icon circle[fill="#A9CFC0"],
+.trust .icon [fill="#A9CFC0"] { fill: #ffffff; }
 
 /* ============================================================ */
 /* FAQ                                                           */
