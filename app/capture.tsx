@@ -40,9 +40,10 @@ export default function CaptureScreen() {
   const [recording, setRecording] = useState(false);
   const [snapping, setSnapping] = useState(false);
   const [mode, setMode] = useState<"photo" | "video">("photo");
-  // Default to BACK camera for every shot — dental photos need the rear
-  // sensor (higher resolution + better light). User can flip manually.
-  const [facing, setFacing] = useState<CameraType>("back");
+  // Default to FRONT camera — patients are photographing their own mouth,
+  // so the selfie sensor is the natural starting position (no awkward arm
+  // flip to see the screen). Flip button is always available.
+  const [facing, setFacing] = useState<CameraType>("front");
   const cameraRef = useRef<CameraView | null>(null);
   // Tracks whether the user pressed Cancel during a pending snap so we can
   // suppress the auto-advance that would otherwise reopen the camera.
@@ -74,7 +75,7 @@ export default function CaptureScreen() {
       }
     }
     cancelledRef.current = false;
-    setFacing("back"); // every fresh open starts with the rear camera
+    setFacing("front"); // every fresh open starts with the selfie camera
     setActiveSlot(slotId);
   };
 
