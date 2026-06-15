@@ -9,11 +9,18 @@ import MapView, {
 } from "react-native-maps";
 import type { Quote } from "@/lib/types";
 
-// Switch to Google Maps when the platform key is present. This unlocks
-// up-to-date business listings, buildings, and POIs on iOS too.
+// Switch to Google Maps when a REAL platform key is present. Placeholder
+// values like REPLACE_WITH_… would otherwise crash the native map view.
+function isRealMapsKey(v: string | undefined): boolean {
+  if (!v) return false;
+  if (v.includes("REPLACE")) return false;
+  if (v.includes("YOUR_KEY")) return false;
+  // Real Google Maps keys are 39 chars long, AI... format.
+  return v.length >= 30;
+}
 const GOOGLE_KEY_PRESENT = Platform.select({
-  ios: !!process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY_IOS,
-  android: !!process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY_ANDROID,
+  ios: isRealMapsKey(process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY_IOS),
+  android: isRealMapsKey(process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY_ANDROID),
   default: false,
 });
 const PROVIDER = GOOGLE_KEY_PRESENT ? PROVIDER_GOOGLE : PROVIDER_DEFAULT;
