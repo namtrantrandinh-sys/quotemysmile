@@ -53,15 +53,15 @@ img { max-width: 100%; display: block; }
   position: relative;
   padding-bottom: 14px;
 }
-/* Amazon-style smile curve under QUOTE…SMILE — mint, with arrowhead tips on BOTH ends. */
+/* Amazon-style smile under QUOTE…SMILE — mint, sharp triangular tips at BOTH ends. */
 .wordmark::after {
   content: "";
   position: absolute;
-  left: 2%;
-  right: 2%;
+  left: 0;
+  right: 0;
   bottom: 0;
-  height: 11px;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 14' preserveAspectRatio='none'><path d='M 8 4 C 35 17, 105 17, 132 4' fill='none' stroke='%234A8C82' stroke-width='2.2' stroke-linecap='butt'/><path d='M 8 4 L 2 1 L 11 1 Z' fill='%234A8C82'/><path d='M 132 4 L 138 1 L 129 1 Z' fill='%234A8C82'/></svg>") center/100% 100% no-repeat;
+  height: 13px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 16' preserveAspectRatio='none'><path d='M 18 6 Q 70 22 122 6' fill='none' stroke='%234A8C82' stroke-width='3' stroke-linecap='butt'/><path d='M 6 1 L 22 9 L 18 14 Z' fill='%234A8C82'/><path d='M 134 1 L 118 9 L 122 14 Z' fill='%234A8C82'/></svg>") center/100% 100% no-repeat;
   pointer-events: none;
 }
 .wordmark em {
