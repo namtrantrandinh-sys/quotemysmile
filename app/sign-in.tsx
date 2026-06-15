@@ -36,12 +36,25 @@ export default function SignInScreen() {
   const mode = params.mode === "signin" ? "signin" : "signup";
 
   const [phase, setPhase] = useState<"phone" | "otp" | "profile">("phone");
-  const [phone, setPhone] = useState("+61");
+  const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
 
   const isReview = looksLikeReviewEmail(phone);
+
+  // Normalise to E.164: digits only, prefixed with "+". Australian users
+  // commonly type "0412…" or "+61 412 345 678" — both need to become
+  // "+61412345678" before Supabase/Twilio will accept it.
+  const normalisePhone = (raw: string): string => {
+    const digits = raw.replace(/\D/g, "");
+    if (raw.trim().startsWith("+")) return "+" + digits;
+    // Bare AU mobile like "0412345678" → drop leading 0, prepend +61.
+    if (digits.startsWith("0") && digits.length === 10) return "+61" + digits.slice(1);
+    // Already starts with country code 61 but no +.
+    if (digits.startsWith("61") && digits.length >= 11) return "+" + digits;
+    return "+" + digits;
+  };
 
   const send = async () => {
     setBusy(true);
@@ -52,14 +65,31 @@ export default function SignInScreen() {
         setPhase("otp");
         return;
       }
-      if (phone.replace(/\D/g, "").length < 10) {
-        Alert.alert("Check your number", "Include +61 and your full mobile.");
+      const e164 = normalisePhone(phone);
+      // AU mobile in E.164 is +614XXXXXXXX = 12 chars. Allow some slack
+      // for other valid country codes too.
+      if (e164.replace(/\D/g, "").length < 10) {
+        Alert.alert(
+          "Check your number",
+          "Enter your full mobile, e.g. 0412 345 678 or +61 412 345 678.",
+        );
         return;
       }
-      await signInWithPhone(phone);
+      // Update local state to the cleaned format so the OTP screen + the
+      // resend button see the same E.164 value.
+      setPhone(e164);
+      await signInWithPhone(e164);
       setPhase("otp");
     } catch (e) {
-      Alert.alert("Couldn't send code", e instanceof Error ? e.message : "Try again.");
+      const msg = e instanceof Error ? e.message : "Try again.";
+      const looksLikeTwilioBlocked =
+        /unsupported|invalid.*phone|sms not configured|provider/i.test(msg);
+      Alert.alert(
+        "Couldn't send code",
+        looksLikeTwilioBlocked
+          ? `${msg}\n\nIf you're testing the app, you can sign in with the email ${REVIEW_EMAIL} — we'll send the code by email instead.`
+          : msg,
+      );
     } finally {
       setBusy(false);
     }
@@ -167,17 +197,17 @@ export default function SignInScreen() {
           {phase === "phone" ? (
             <>
               <FieldLabel
-                label={isReview ? "Review email" : "Mobile number"}
+                label={isReview ? "Email" : "Mobile number"}
                 hint={
                   isReview
-                    ? "App Review path — magic link via email."
-                    : "Include +61 — Australian mobiles only."
+                    ? "Email magic-link path (no SMS)."
+                    : "AU mobile — 04XX XXX XXX or +61 4XX XXX XXX."
                 }
               >
                 <TextField
                   value={phone}
                   onChangeText={setPhone}
-                  placeholder="+61 412 345 678"
+                  placeholder={isReview ? "you@example.com" : "0412 345 678"}
                   keyboardType={isReview ? "email-address" : "phone-pad"}
                 />
               </FieldLabel>
