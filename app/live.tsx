@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -74,7 +74,25 @@ export default function LiveFeedScreen() {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const ackRef = useRef<boolean>(false);
   const [view, setView] = useState<"list" | "map">("list");
+  const [sortBy, setSortBy] = useState<"price" | "distance" | "rating">("price");
   const [ticker, setTicker] = useState<TickerItem[]>([]);
+
+  // Apply the active sort to the streaming quote list. Stable enough that
+  // a new quote arriving doesn't cause the entire list to leap; we use a
+  // shallow copy so React.memo on QuoteCard still optimises re-renders.
+  const sortedQuotes = useMemo(() => {
+    const arr = [...quotes];
+    if (sortBy === "price") {
+      arr.sort((a, b) => a.total - b.total);
+    } else if (sortBy === "distance") {
+      arr.sort((a, b) => a.distanceKm - b.distanceKm);
+    } else if (sortBy === "rating") {
+      // Bayesian-ish: high rating + many reviews wins over high rating + 1 review.
+      const score = (q: Quote) => q.rating * Math.log10(1 + q.reviewCount);
+      arr.sort((a, b) => score(b) - score(a));
+    }
+    return arr;
+  }, [quotes, sortBy]);
   const loc = useLocation({ auto: true });
   const patientPin = loc.coords ?? PATIENT_PIN;
 
@@ -277,12 +295,49 @@ export default function LiveFeedScreen() {
               { id: "map", label: "Map" },
             ]}
           />
+
+          {/* Sort — only meaningful when there is more than one quote */}
+          {quotes.length > 1 ? (
+            <View className="mt-6 flex-row gap-2">
+              {[
+                { id: "price", label: "Lowest price" },
+                { id: "distance", label: "Closest" },
+                { id: "rating", label: "Top rated" },
+              ].map((opt) => {
+                const active = sortBy === opt.id;
+                return (
+                  <Pressable
+                    key={opt.id}
+                    onPress={() => {
+                      hapticTap("light");
+                      setSortBy(opt.id as "price" | "distance" | "rating");
+                    }}
+                    className={
+                      active
+                        ? "px-4 py-1.5 rounded-full bg-espresso"
+                        : "px-4 py-1.5 rounded-full border border-linen"
+                    }
+                  >
+                    <Text
+                      className={
+                        active
+                          ? "text-[11px] tracking-cap uppercase text-bone font-sans"
+                          : "text-[11px] tracking-cap uppercase text-walnut font-sans"
+                      }
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
         </View>
 
         {view === "map" ? (
           <View className="w-full max-w-2xl self-center mb-8">
             <QuotesMap
-              quotes={quotes}
+              quotes={sortedQuotes}
               patient={{ lat: patientPin.lat, lng: patientPin.lng }}
               radiusKm={10}
               onQuoteSelect={(q) =>
@@ -320,7 +375,7 @@ export default function LiveFeedScreen() {
               </Text>
             </View>
           ) : (
-            quotes.map((q) => <QuoteCard key={q.id} q={q} />)
+            sortedQuotes.map((q) => <QuoteCard key={q.id} q={q} />)
           )}
 
           {typing && !initialLoading ? (
