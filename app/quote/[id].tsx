@@ -34,7 +34,13 @@ export default function QuoteDetailScreen() {
 
   useEffect(() => {
     if (!id) return;
-    fetchQuote(id)
+    // 10s hard timeout so a hanging fetch doesn't leave the user on a
+    // blank "Quote · loading" screen indefinitely. The catch branch
+    // falls back to sample data so they always see something.
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Quote fetch timed out")), 10_000),
+    );
+    Promise.race([fetchQuote(id), timeout])
       .then((row: any) => {
         if (!row) {
           // Fall back to demo data when not signed in / no row found

@@ -48,10 +48,20 @@ export default function DentistSettings() {
   const { profile } = useUserProfile();
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = async () => {
-    const c = (await getMyClinic()) as unknown as Clinic | null;
-    setClinic(c);
+    try {
+      setLoadError(null);
+      const c = (await getMyClinic()) as unknown as Clinic | null;
+      setClinic(c);
+    } catch (e) {
+      setLoadError(
+        e instanceof Error
+          ? e.message
+          : "Couldn't load your clinic — check your connection and retry.",
+      );
+    }
   };
   useEffect(() => {
     void load();
@@ -115,6 +125,21 @@ export default function DentistSettings() {
     <SafeAreaView className="flex-1 bg-bone">
       <BackBar title="Settings" />
       <ScrollView>
+        {loadError ? (
+          <View className="mx-8 mt-4 border border-clay/40 bg-clay/5 p-4">
+            <Text className="text-[10px] tracking-cap uppercase text-clay font-sans mb-2">
+              Couldn't load settings
+            </Text>
+            <Text className="text-sm text-walnut font-sans leading-relaxed mb-3">
+              {loadError}
+            </Text>
+            <Pressable onPress={load} className="self-start">
+              <Text className="text-[11px] tracking-cap uppercase text-gold font-sans">
+                Retry ›
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
         <View className="px-8 pt-12 pb-8 items-center">
           <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mb-3">
             {clinic?.name ?? "Your clinic"}

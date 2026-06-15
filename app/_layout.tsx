@@ -36,6 +36,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { hasSeenOnboarding } from "@/lib/firstLaunch";
+import { hydrateIntake } from "@/lib/intakeStore";
 import { StripeProvider } from "@stripe/stripe-react-native";
 
 const STRIPE_PUBLISHABLE_KEY =
@@ -75,6 +76,12 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
+
+  useEffect(() => {
+    // Restore any in-progress intake from disk so a backgrounded capture
+    // session can resume on next launch. Fire-and-forget; failure is safe.
+    void hydrateIntake();
+  }, []);
 
   useEffect(() => {
     if (!splashDone || hasRouted) return;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,9 +8,14 @@ import { Checkbox } from "@/components/Checkbox";
 import { FieldLabel } from "@/components/FieldLabel";
 import { TextField } from "@/components/TextField";
 import { REQUOTE_NOTICE } from "@/lib/copy";
-import { requoteOnce } from "@/lib/services/quotes";
+import {
+  requoteOnce,
+  getQuote,
+  listQuotesForRequest,
+} from "@/lib/services/quotes";
+import type { AdaItem } from "@/lib/types";
 
-const ORIGINAL_ITEMS = [
+const FALLBACK_ITEMS: AdaItem[] = [
   { code: "011", label: "Comprehensive exam", amount: 75 },
   { code: "022", label: "X-ray, intraoral", amount: 45 },
   { code: "111", label: "Scale + clean", amount: 120 },
@@ -20,13 +25,41 @@ const ORIGINAL_ITEMS = [
 export default function RequoteScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [items, setItems] = useState(ORIGINAL_ITEMS);
+  const [items, setItems] = useState<AdaItem[]>(FALLBACK_ITEMS);
   const [note, setNote] = useState("");
   const [ack, setAck] = useState(false);
   const [phase, setPhase] = useState<"edit" | "locked">("edit");
+  const [current, setCurrent] = useState(385);
+  const [lowestCompetitor, setLowestCompetitor] = useState(349);
 
-  const current = 385;
-  const lowestCompetitor = 349;
+  // Load the real quote being requoted + the lowest live competitor on
+  // the same request. Without this, the dentist edited demo data and
+  // any changes were silently lost on submit.
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        const q: any = await getQuote(id);
+        if (!q) return;
+        setCurrent(q.total ?? 385);
+        if (Array.isArray(q.items_json) && q.items_json.length > 0) {
+          setItems(q.items_json as AdaItem[]);
+        }
+        setNote(q.note ?? "");
+        if (q.request_id) {
+          const peers: any[] = await listQuotesForRequest(q.request_id);
+          const others = peers
+            .filter((p) => p.id !== q.id && (p.status === "live" || p.status === "final"))
+            .map((p) => p.total as number)
+            .sort((a, b) => a - b);
+          if (others.length > 0) setLowestCompetitor(others[0]);
+        }
+      } catch {
+        // Keep fallback items + numbers visible.
+      }
+    })();
+  }, [id]);
+
   const newTotal = items.reduce((s, it) => s + it.amount, 0);
 
   return (

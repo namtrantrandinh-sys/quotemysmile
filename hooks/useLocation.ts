@@ -107,10 +107,20 @@ export function useLocation(options: Options = {}) {
         return;
       }
 
-      // Initial high-accuracy fix
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.BestForNavigation,
-      });
+      // Initial high-accuracy fix, with a 30-second hard timeout so we
+      // don't strand the user on an indeterminate loading state if the
+      // system never returns from the permission prompt.
+      const loc = await Promise.race<Location.LocationObject>([
+        Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.BestForNavigation,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("GPS timed out — try again in a moment.")),
+            30_000,
+          ),
+        ),
+      ]);
       await applyFix(loc);
 
       // Optional watch — fires when the user moves > 5 metres

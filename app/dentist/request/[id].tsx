@@ -92,6 +92,17 @@ export default function IncomingRequestScreen() {
     }
     try {
       if (profile?.ahpra_no) {
+        // Guard: a quote without a real name shows as "Dentist" on the
+        // patient side. Refuse to submit until the dentist has a name on
+        // file (set during onboarding).
+        const dentistName = (profile.full_name ?? "").trim();
+        if (!dentistName) {
+          Alert.alert(
+            "Add your name",
+            "Open Settings and add the name you'd like patients to see before quoting.",
+          );
+          return;
+        }
         const clinic = await getMyClinic();
         if (!clinic) {
           Alert.alert("No clinic", "Finish onboarding to add a clinic first.");
@@ -106,7 +117,7 @@ export default function IncomingRequestScreen() {
           note,
           ahpraNo: profile.ahpra_no,
           ahpraRegType: (profile.ahpra_reg_type as "General" | "Specialist") ?? "General",
-          dentistNameAtQuote: profile.full_name,
+          dentistNameAtQuote: dentistName,
           emergencyPremiumPct,
         });
       }
