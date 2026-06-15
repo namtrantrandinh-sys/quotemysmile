@@ -54,16 +54,16 @@ img { max-width: 100%; display: block; }
   gap: 0;
   white-space: nowrap;
   position: relative;
-  padding-bottom: 64px;
+  padding-bottom: 42px;
 }
-/* Transparent-background brand-mint smile.png as the underline — large and prominent. */
+/* Transparent-background smile.png underline — sits closer to wordmark, slightly smaller. */
 .wordmark::after {
   content: "";
   position: absolute;
-  left: -16%;
-  right: -16%;
-  bottom: -12px;
-  height: 72px;
+  left: -12%;
+  right: -12%;
+  bottom: 6px;
+  height: 56px;
   background: url("/smile.png?v=v3") center/contain no-repeat;
   pointer-events: none;
 }
@@ -92,12 +92,12 @@ a.wordmark:hover em,
 a.wordmark:focus em {
   color: #4A8C82;
 }
-.wordmark.sm { font-size: 13px; letter-spacing: 0.10em; padding-bottom: 52px; gap: 0; }
+.wordmark.sm { font-size: 13px; letter-spacing: 0.10em; padding-bottom: 32px; gap: 0; }
 .wordmark.sm em {
   font-size: 20px;
   margin: 0 1px;
 }
-.wordmark.sm::after { height: 56px; bottom: -8px; }
+.wordmark.sm::after { height: 44px; bottom: 4px; }
 
 /* ============================================================ */
 /* Topbar                                                       */
