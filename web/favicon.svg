@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- QuoteMySmile favicon: white smile arc on teal gradient -->
+  <!-- QuoteMySmile favicon: white smile with dimple creases on teal gradient -->
   <defs>
     <linearGradient id="qms-bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#4A8C82"/>
@@ -8,22 +8,40 @@
       <stop offset="100%" stop-color="#A9CFC0"/>
     </linearGradient>
     <radialGradient id="qms-shine" cx="22%" cy="20%" r="55%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.32"/>
       <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <!-- Rounded square so it works inside Safari/iOS rounded mask AND square Android maskable -->
   <rect x="0" y="0" width="32" height="32" rx="7" ry="7" fill="url(#qms-bg)"/>
   <rect x="0" y="0" width="32" height="32" rx="7" ry="7" fill="url(#qms-shine)"/>
+
   <!-- Sparkle dot (top-right) -->
-  <circle cx="24.5" cy="8.5" r="1.4" fill="#ffffff" opacity="0.85"/>
+  <circle cx="24.5" cy="8" r="1.4" fill="#ffffff" opacity="0.85"/>
+
+  <!-- Dimple crease — LEFT (small upward hook above the smile end) -->
+  <path d="M 6.2 14.2 Q 7 11.6 8.6 12.5"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        opacity="0.95"/>
+
   <!-- Smile curve: confident upturned arc, rounded caps -->
   <path d="M 7 14 Q 16 26 25 14"
         fill="none"
         stroke="#ffffff"
         stroke-width="3"
         stroke-linecap="round"/>
-  <!-- Subtle inner highlight for depth -->
+
+  <!-- Dimple crease — RIGHT (small upward hook above the smile end) -->
+  <path d="M 25.8 14.2 Q 25 11.6 23.4 12.5"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        opacity="0.95"/>
+
+  <!-- Subtle inner highlight for tooth-like depth -->
   <path d="M 9 14.8 Q 16 23 23 14.8"
         fill="none"
         stroke="#ffffff"
