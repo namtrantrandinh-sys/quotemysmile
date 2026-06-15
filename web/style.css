@@ -47,11 +47,23 @@ img { max-width: 100%; display: block; }
   text-transform: uppercase;
   color: var(--espresso);
   display: inline-flex;
-  align-items: baseline;
-  gap: 5px;
+  align-items: center;
+  gap: 8px;
   white-space: nowrap;
   position: relative;
   padding-bottom: 14px;
+}
+/* Smile favicon icon inline before the wordmark — same design as the browser-tab favicon */
+.wordmark::before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  background-image: url("/favicon.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 /* Amazon-style smile under QUOTE…SMILE — mint, sweeping curve with hook-points at BOTH ends. */
 .wordmark::after {
@@ -89,11 +101,12 @@ a.wordmark:hover em,
 a.wordmark:focus em {
   color: #4A8C82;
 }
-.wordmark.sm { font-size: 13px; letter-spacing: 0.10em; padding-bottom: 11px; }
+.wordmark.sm { font-size: 13px; letter-spacing: 0.10em; padding-bottom: 11px; gap: 6px; }
 .wordmark.sm em {
   font-size: 20px;
   margin: 0 1px;
 }
+.wordmark.sm::before { width: 20px; height: 20px; }
 .wordmark.sm::after { height: 9px; }
 
 /* ============================================================ */
