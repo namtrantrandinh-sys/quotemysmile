@@ -60,21 +60,24 @@ Date: 2026-06-15
 
 ## Open from audit — to address next
 
-These are tracked separately so we don't ship them all in one wave:
+**Fixed in this session (P1/P2 wave)**:
 
-**P1 (next-session)**
-- `app/live.tsx:46` — add runtime bounds check on `activeSlot - 1` indexing (currently safe by static analysis but defensive).
-- `app/location.tsx` — add 30 s GPS-timeout fallback when the system permission prompt never returns.
-- `app/urgency.tsx:149-151` — reset `emergencyAck` when user switches off emergency.
-- `app/quote/[id].tsx:88-94` — add 10 s fetch timeout + Retry button.
-- `app/book.tsx:59` — guard against null `stripe` before `initPaymentSheet`.
-- `app/dentist/request/[id].tsx:94` — assert `profile.full_name` is non-empty at submit time.
-- `app/dentist/settings.tsx:48-54` — render error state if profile or clinic fetch fails.
-- `lib/services/bookings.ts:141-144` — switch `.maybeSingle()` to `.single()` for cancelBooking.
+| Severity | File | Fix |
+| --- | --- | --- |
+| P1 | `hooks/useLocation.ts` | 30 s hard timeout on `getCurrentPositionAsync` — Promise.race against a reject — so a never-returning permission prompt no longer strands the user. |
+| P1 | `app/quote/[id].tsx` | 10 s Promise.race timeout — falls back to sample data instead of blank loading screen. |
+| P1 | `app/book.tsx` | Stripe null guard verified — was already in place. |
+| P1 | `app/dentist/request/[id].tsx` | Refuses quote submit when `profile.full_name` is blank, surfaces an Alert pointing to Settings. |
+| P1 | `app/dentist/settings.tsx` | Load failures now caught and rendered as a clay error banner with a Retry button. |
+| P2 | `app/dentist/requote/[id].tsx` | Loads the actual quote row + lowest competitor instead of hard-coded demo values. |
+| P2 | `lib/intakeStore.ts` + `app/_layout.tsx` | Mirrors every write to AsyncStorage; `hydrateIntake()` runs at app boot so a backgrounded capture session resumes mid-flow. |
 
-**P2 (polish)**
-- `app/dentist/requote/[id].tsx:28-29` — fetch the actual quote row instead of showing hardcoded demo values.
-- `lib/intakeStore.ts` — persist to AsyncStorage so a backgrounded capture isn't lost.
+**Verified false alarms**:
+- `app/capture.tsx:46` — `activeSlot - 1` already protected by `?.` chaining.
+- `app/urgency.tsx:149` — `setEmergencyAck(false)` already exists on switch.
+- `lib/services/bookings.ts:141` — `.maybeSingle()` is correct here; we explicitly handle the not-found case in the next line.
+
+**Still to do (P2 next session)**:
 - `app/quote/[id].tsx:108-110` — make the big "$X" responsive for >$9999 quotes.
 - Standardise routing pattern: always use `{ pathname, params }` form.
 
