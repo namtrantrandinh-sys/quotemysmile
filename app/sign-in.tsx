@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, ScrollView, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BackBar } from "@/components/BackBar";
+import { WaterBanner } from "@/components/WaterBanner";
 import { Button } from "@/components/Button";
 import { FieldLabel } from "@/components/FieldLabel";
 import { TextField } from "@/components/TextField";
@@ -157,10 +157,10 @@ export default function SignInScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-bone">
-      <BackBar />
+    <View className="flex-1 bg-bone">
+      <WaterBanner />
       <ScrollView>
-        <View className="px-8 pt-16 pb-8 items-center">
+        <View className="px-8 pt-24 pb-8 items-center">
           <Wordmark size="md" />
           <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mt-10 mb-6">
             {phase === "phone"
@@ -258,6 +258,6 @@ export default function SignInScreen() {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
