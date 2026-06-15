@@ -40,7 +40,12 @@ export default function BookingDetailScreen() {
     );
   }
 
-  const hoursUntil = (new Date(b.slot).getTime() - Date.now()) / 3600_000;
+  // Clamp to 0 — a slot in the past would otherwise show a negative
+  // "X hours until cancellation" string in the policy block.
+  const hoursUntil = Math.max(
+    0,
+    (new Date(b.slot).getTime() - Date.now()) / 3600_000,
+  );
   const eligibleRefund = hoursUntil >= b.cancellation_window_hours;
   const slotLabel = new Date(b.slot).toLocaleString("en-AU", {
     weekday: "long",

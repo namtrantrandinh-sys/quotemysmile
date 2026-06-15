@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { View, Text, Pressable, ScrollView, Modal } from "react-native";
+import { View, Text, Pressable, ScrollView, Modal, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -179,10 +179,21 @@ export default function CaptureScreen() {
                 openCamera(photos.nextSlot?.id ?? 1);
                 return;
               }
+              // Type-safe collection: only include slots with a real uri.
+              // Previously `.map(s => s.uri!).filter(Boolean)` could drop
+              // an empty slot and silently shift downstream indices.
+              const photoUris = photos.slots
+                .map((s) => s.uri)
+                .filter((u): u is string => !!u);
+              if (photoUris.length !== photos.slots.length) {
+                Alert.alert(
+                  "Photo missing",
+                  "One of the photos didn't save. Please retake the empty slot.",
+                );
+                return;
+              }
               setIntake({
-                photoUris: photos.slots
-                  .map((s) => s.uri!)
-                  .filter(Boolean),
+                photoUris,
                 photoQualityScore: photos.overallQuality,
               });
               router.push({ pathname: "/symptoms", params: { c: params.c } });

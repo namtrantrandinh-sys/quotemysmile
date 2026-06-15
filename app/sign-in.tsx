@@ -73,14 +73,27 @@ export default function SignInScreen() {
       } else {
         await verifyPhoneOtp(phone, code);
       }
-      // Check if profile exists
-      const { data: { user } } = await supabase.auth.getUser();
+      // Check if profile exists. RLS trigger may not have completed the
+      // upsert yet, so retry briefly before sending the user to the
+      // role-completion screen (avoids prompting twice on a slow network).
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("No session after verify");
-      const { data: profile } = await supabase
-        .from("users")
-        .select("id, role, full_name")
-        .eq("id", user.id)
-        .maybeSingle();
+      let profile: { id: string; role: string; full_name: string | null } | null =
+        null;
+      for (let i = 0; i < 3; i++) {
+        const { data } = await supabase
+          .from("users")
+          .select("id, role, full_name")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (data) {
+          profile = data;
+          break;
+        }
+        if (i < 2) await new Promise((r) => setTimeout(r, 600));
+      }
       if (!profile) {
         setPhase("profile");
       } else {

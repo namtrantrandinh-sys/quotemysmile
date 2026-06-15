@@ -138,6 +138,12 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (error) return new Response(error.message, { status: 500 });
+    // No booking row for this PI — surface as 404 so Stripe stops retrying
+    // a payload that targets a deleted/missing booking, instead of silently
+    // succeeding with no state change.
+    if (!updated) {
+      return new Response("Booking not found for PI " + piId, { status: 404 });
+    }
 
     // Dispatch push notifications for visible state transitions. Fire-and-forget.
     if (updated?.id && bookingNext) {

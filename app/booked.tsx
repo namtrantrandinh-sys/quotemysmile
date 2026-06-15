@@ -74,11 +74,18 @@ export default function BookedScreen() {
               variant="secondary"
               size="md"
               onPress={() => {
+                // Build the real iCal date strings from the booking slot.
+                // Previously this used a hardcoded 2026-06-15 date, which
+                // landed every patient on the same wrong day in the calendar.
+                const start = slot ? new Date(slot) : new Date();
+                const end = new Date(start.getTime() + 60 * 60 * 1000);
+                const fmt = (d: Date) =>
+                  d.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
                 const dt = encodeURIComponent(when);
                 const t = encodeURIComponent(
                   `QuoteMySmile: ${q.clinicName} — ${q.dentistName}`,
                 );
-                const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${t}&dates=20260615T090000Z/20260615T100000Z&details=${dt}`;
+                const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${t}&dates=${fmt(start)}/${fmt(end)}&details=${dt}`;
                 Linking.openURL(url).catch(() =>
                   Alert.alert("Couldn't open calendar"),
                 );

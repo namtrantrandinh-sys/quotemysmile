@@ -62,8 +62,16 @@ export default function SubmittingScreen() {
           urgency: intake.urgency,
         });
 
-        // Upload photos in parallel
-        const slotNames = ["front-smile", "upper-arch", "problem-area"];
+        // Upload photos in parallel — slot names must match the four
+        // capture slots in usePhotoCapture.ts (front-smile, upper-arch,
+        // lower-arch, problem-area). Previously the lower-arch label was
+        // missing and a photo would silently be filed as `photo-2`.
+        const slotNames = [
+          "front-smile",
+          "upper-arch",
+          "lower-arch",
+          "problem-area",
+        ] as const;
         const uploads = (intake.photoUris ?? []).map((uri, i) =>
           uploadRequestPhoto({
             requestId: created.id,

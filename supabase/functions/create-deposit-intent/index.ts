@@ -28,8 +28,11 @@ Deno.serve(async (req) => {
 
   try {
     const { quoteId, requestId, slotIso, depositCents } = await req.json();
-    if (!quoteId || !requestId || !slotIso || !depositCents) {
+    if (!quoteId || !requestId || !slotIso || depositCents == null) {
       return json({ error: "quoteId, requestId, slotIso, depositCents required" }, 400);
+    }
+    if (typeof depositCents !== "number" || depositCents < 100 || depositCents > 1_000_00) {
+      return json({ error: "depositCents must be between 100 and 100000" }, 400);
     }
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
