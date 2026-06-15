@@ -28,20 +28,18 @@ img { max-width: 100%; display: block; }
 /* ============================================================ */
 /* Wordmark                                                     */
 /* ============================================================ */
-/* Wordmark — premium-dental register.
-   Inter Light wide-tracked caps reads "clinical-luxury skincare" —
-   Aēsop / RMS / Le Labo / Smile Direct's premium tier.
-   The Allura script "my" stays as the only flourish. */
+/* Unified Allura script wordmark — one continuous signature.
+   Quote (espresso) · my (mint) · Smile (espresso) — all in Allura. */
 .wordmark {
-  font-family: "Inter", -apple-system, sans-serif;
-  font-weight: 200;
-  font-size: 13px;
-  letter-spacing: 0.36em;
-  text-transform: uppercase;
+  font-family: "Allura", cursive;
+  font-weight: 400;
+  font-size: 44px;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--espresso);
   line-height: 1;
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0;
   white-space: nowrap;
 }
@@ -49,22 +47,16 @@ img { max-width: 100%; display: block; }
   font-family: "Allura", cursive;
   font-style: normal;
   font-weight: 400;
-  font-size: 42px;
+  font-size: 44px;
   letter-spacing: 0;
   color: var(--gold);
-  transform: translateY(8px) rotate(-3deg);
-  margin: 0 10px;
+  transform: rotate(-2deg);
+  margin: 0 4px;
   display: inline-block;
-  text-transform: none;
   line-height: 1;
 }
-.wordmark.sm { font-size: 10px; letter-spacing: 0.38em; }
-.wordmark.sm em {
-  font-size: 30px;
-  margin: 0 7px;
-  transform: translateY(6px) rotate(-3deg);
-  line-height: 1;
-}
+.wordmark.sm { font-size: 30px; }
+.wordmark.sm em { font-size: 30px; margin: 0 3px; }
 
 /* ============================================================ */
 /* Topbar                                                       */
@@ -959,7 +951,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 .prop .n { color: var(--gold); }
 
 /* ============================================================ */
-/* Value props                                                   */
+/* Value props — premium-dental cards                           */
 /* ============================================================ */
 .props {
   padding: 96px 0;
@@ -971,32 +963,217 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 .prop-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px;
-  margin: 48px 0 0;
+  gap: 24px;
+  margin: 56px 0 0;
   text-align: left;
 }
 .prop {
-  padding: 28px 26px;
+  position: relative;
+  padding: 0;
   border: 1px solid var(--linen);
-  background: var(--eggshell);
+  background: #fbf7ed;
+  transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.2, 0.7, 0.3, 1),
+              border-color 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.prop:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+  box-shadow:
+    0 28px 56px -28px rgba(42, 37, 32, 0.18),
+    0 12px 24px -12px rgba(169, 207, 192, 0.25);
+}
+/* Top visual stripe with the icon and a faint dental gradient */
+.prop .visual {
+  position: relative;
+  height: 200px;
+  background:
+    radial-gradient(circle at 28% 30%, rgba(169, 207, 192, 0.22) 0%, transparent 55%),
+    linear-gradient(160deg, #f1ecdc 0%, #ede5cd 100%);
+  border-bottom: 1px solid var(--linen);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.prop .visual::after {
+  /* faint molar contour as a watermark */
+  content: "";
+  position: absolute;
+  right: -28px;
+  bottom: -30px;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(42, 37, 32, 0.05) 0%, transparent 60%);
+}
+.prop .visual .icon-xl-wrap {
+  margin: 0;
+  width: 96px;
+  height: 96px;
+  background: var(--bone);
+  border: 1px solid var(--linen);
+  box-shadow: 0 12px 24px -10px rgba(42, 37, 32, 0.10);
+}
+.prop .body {
+  padding: 28px 26px 30px;
+  position: relative;
 }
 .prop .n {
-  display: block;
-  font-family: "Italiana", serif;
-  font-size: 13px;
-  letter-spacing: 0.18em;
+  display: inline-block;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.22em;
   color: var(--gold);
-  margin-bottom: 18px;
+  margin-bottom: 14px;
+  padding: 4px 0;
+  border-top: 1px solid var(--gold);
 }
 .prop h3 {
   font-family: "Italiana", serif;
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 400;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   color: var(--espresso);
+  letter-spacing: -0.005em;
 }
-.prop p { margin: 0; color: var(--walnut); font-size: 15px; }
+.prop p { margin: 0; color: var(--walnut); font-size: 15px; line-height: 1.55; }
+/* Tiny meta row at bottom — keeps each card unique */
+.prop .meta {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--linen);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--taupe);
+}
+.prop .meta strong {
+  color: var(--espresso);
+  font-weight: 500;
+}
 @media (max-width: 720px) { .prop-grid { grid-template-columns: 1fr; gap: 18px; } }
+
+/* ============================================================ */
+/* Positioning banner                                            */
+/* ============================================================ */
+.positioning {
+  padding: 96px 0;
+  border-bottom: 1px solid var(--linen);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+.positioning .badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.positioning .badge-row span {
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  background: var(--bone);
+  border: 1px solid var(--linen);
+  color: var(--walnut);
+}
+.positioning .badge-row span.gold {
+  background: rgba(169, 207, 192, 0.18);
+  border-color: var(--gold);
+  color: #2f7d6b;
+}
+.positioning .headline {
+  font-family: "Italiana", serif;
+  font-size: clamp(36px, 4.6vw, 56px);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--espresso);
+  margin: 0;
+}
+.positioning .headline em {
+  font-family: "Allura", cursive;
+  font-style: normal;
+  color: var(--gold);
+  font-size: 1.55em;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.positioning .ribbon {
+  position: relative;
+  background:
+    linear-gradient(150deg, rgba(169, 207, 192, 0.22) 0%, rgba(169, 207, 192, 0) 70%),
+    var(--eggshell);
+  border: 1px solid var(--linen);
+  padding: 40px 36px;
+}
+.positioning .ribbon::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 36px;
+  width: 4px;
+  height: 56px;
+  background: var(--gold);
+}
+.positioning .ribbon .small {
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin: 0 0 14px;
+}
+.positioning .ribbon p {
+  font-family: "Italiana", serif;
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--espresso);
+  margin: 0;
+}
+.positioning .ribbon p em {
+  font-family: "Allura", cursive;
+  font-style: normal;
+  color: var(--gold);
+  font-size: 1.4em;
+  letter-spacing: 0;
+}
+.positioning .stats {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.positioning .stats .stat {
+  text-align: center;
+}
+.positioning .stats .stat .big {
+  font-family: "Italiana", serif;
+  font-size: 32px;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.positioning .stats .stat .label {
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--taupe);
+}
+@media (max-width: 800px) {
+  .positioning { grid-template-columns: 1fr; gap: 40px; padding: 64px 0; }
+}
 
 /* ============================================================ */
 /* Trust                                                         */
