@@ -64,7 +64,7 @@ img { max-width: 100%; display: block; }
   right: -16%;
   bottom: -12px;
   height: 72px;
-  background: url("/smile.png") center/contain no-repeat;
+  background: url("/smile.png?v=v3") center/contain no-repeat;
   pointer-events: none;
 }
 .wordmark em {
