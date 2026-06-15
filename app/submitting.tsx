@@ -72,13 +72,18 @@ export default function SubmittingScreen() {
           "lower-arch",
           "problem-area",
         ] as const;
-        const uploads = (intake.photoUris ?? []).map((uri, i) =>
-          uploadRequestPhoto({
+        // If the slot was captured as video, the uri ends with .mov / .mp4.
+        // Detect by extension and route through the video upload path so
+        // the content-type and file extension match.
+        const uploads = (intake.photoUris ?? []).map((uri, i) => {
+          const isVideo = /\.(mov|mp4|m4v)$/i.test(uri);
+          return uploadRequestPhoto({
             requestId: created.id,
             slotName: slotNames[i] ?? `photo-${i}`,
             fileUri: uri,
-          }),
-        );
+            kind: isVideo ? "video" : "photo",
+          });
+        });
         const results = await Promise.all(uploads);
         const photoPaths = results.map((r) => r.path);
 

@@ -34,6 +34,7 @@ export type PhotoSlot = {
   qualityScore?: number;
   qualityFlags?: Array<"blurry" | "dark" | "bright" | "off-centre" | "good">;
   capturedAt?: string;
+  kind?: "photo" | "video";
 };
 
 const INITIAL: PhotoSlot[] = [
@@ -98,32 +99,48 @@ function scoreCapture(meta: { width: number; height: number }): {
 export function usePhotoCapture() {
   const [slots, setSlots] = useState<PhotoSlot[]>(INITIAL);
 
-  const capture = useCallback(async (slotId: number, rawUri: string) => {
-    try {
-      const processed = await processCapture(rawUri);
-      const { score, flags } = scoreCapture({
-        width: processed.width,
-        height: processed.height,
-      });
-      setSlots((current) =>
-        current.map((s) =>
-          s.id === slotId
-            ? {
-                ...s,
-                uri: processed.uri,
+  const capture = useCallback(
+    async (
+      slotId: number,
+      rawUri: string,
+      kind: "photo" | "video" = "photo",
+    ) => {
+      try {
+        // Video is stored as-is — compressing a MOV through the image
+        // manipulator would corrupt it. Photos get the 1200px JPEG pass.
+        const processed =
+          kind === "video"
+            ? { uri: rawUri, width: 0, height: 0 }
+            : await processCapture(rawUri);
+        const { score, flags } =
+          kind === "video"
+            ? { score: 5, flags: ["good"] as PhotoSlot["qualityFlags"] }
+            : scoreCapture({
                 width: processed.width,
                 height: processed.height,
-                qualityScore: score,
-                qualityFlags: flags,
-                capturedAt: new Date().toISOString(),
-              }
-            : s,
-        ),
-      );
-    } catch (e) {
-      console.warn("[QMS] photo capture failed", e);
-    }
-  }, []);
+              });
+        setSlots((current) =>
+          current.map((s) =>
+            s.id === slotId
+              ? {
+                  ...s,
+                  uri: processed.uri,
+                  width: processed.width,
+                  height: processed.height,
+                  qualityScore: score,
+                  qualityFlags: flags,
+                  capturedAt: new Date().toISOString(),
+                  kind,
+                }
+              : s,
+          ),
+        );
+      } catch (e) {
+        console.warn("[QMS] capture failed", e);
+      }
+    },
+    [],
+  );
 
   const retake = useCallback((slotId: number) => {
     setSlots((current) =>

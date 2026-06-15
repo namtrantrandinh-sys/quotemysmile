@@ -1,8 +1,21 @@
 import { useRef, useState } from "react";
-import { View, Text, Pressable, ScrollView, Modal, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  Modal,
+  Alert,
+  Linking,
+  Platform,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import {
+  CameraView,
+  useCameraPermissions,
+  useMicrophonePermissions,
+} from "expo-camera";
 import { BackBar } from "@/components/BackBar";
 import { Button } from "@/components/Button";
 import { ProgressDots } from "@/components/ProgressDots";
@@ -20,27 +33,129 @@ export default function CaptureScreen() {
   const category = getCategory(params.c ?? "");
   const photos = usePhotoCapture();
   const [permission, requestPermission] = useCameraPermissions();
+  const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [snapping, setSnapping] = useState(false);
+  const [mode, setMode] = useState<"photo" | "video">("photo");
   const cameraRef = useRef<CameraView | null>(null);
+
+  const openSettings = () => {
+    if (Platform.OS === "ios") {
+      Linking.openURL("app-settings:").catch(() => {});
+    } else {
+      Linking.openSettings().catch(() => {});
+    }
+  };
 
   const openCamera = async (slotId: number) => {
     if (!permission?.granted) {
       const r = await requestPermission();
-      if (!r.granted) return;
+      if (!r.granted) {
+        // iOS only re-prompts once; after that it's "denied" forever
+        // until the user toggles it in Settings. Surface the path.
+        Alert.alert(
+          "Camera access needed",
+          "QuoteMySmile uses your camera for the four guided photos. Enable it in Settings to continue.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: openSettings },
+          ],
+        );
+        return;
+      }
     }
     setActiveSlot(slotId);
   };
 
   const snap = async () => {
-    if (!cameraRef.current || activeSlot == null) return;
-    const result = await cameraRef.current.takePictureAsync({ quality: 0.9 });
-    if (result?.uri) await photos.capture(activeSlot, result.uri);
-    setActiveSlot(null);
-    // Auto-advance: open next un-captured slot
-    const next = photos.slots.find((s) => !s.uri && s.id !== activeSlot);
-    if (next) {
-      setTimeout(() => openCamera(next.id), 600);
+    if (!cameraRef.current || activeSlot == null || snapping) return;
+    setSnapping(true);
+    try {
+      // 8 s timeout so a wedged camera (rare but real on older devices)
+      // can't lock the snap button in a spinning state forever.
+      const result = await Promise.race<{ uri: string } | undefined>([
+        cameraRef.current.takePictureAsync({ quality: 0.9 }),
+        new Promise<undefined>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Camera timed out — try again.")),
+            8_000,
+          ),
+        ),
+      ]);
+      if (result?.uri) await photos.capture(activeSlot, result.uri);
+      setActiveSlot(null);
+      // Auto-advance: open next un-captured slot
+      const next = photos.slots.find((s) => !s.uri && s.id !== activeSlot);
+      if (next) {
+        setTimeout(() => openCamera(next.id), 600);
+      }
+    } catch (e) {
+      Alert.alert(
+        "Couldn't capture",
+        e instanceof Error ? e.message : "Try once more.",
+      );
+    } finally {
+      setSnapping(false);
     }
+  };
+
+  const startRecording = async () => {
+    if (!cameraRef.current || activeSlot == null) return;
+    // Video also needs microphone permission on iOS.
+    if (!micPermission?.granted) {
+      const r = await requestMicPermission();
+      if (!r.granted) {
+        Alert.alert(
+          "Microphone access needed",
+          "Video uses the microphone. Enable it in Settings to record.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: openSettings },
+          ],
+        );
+        return;
+      }
+    }
+    setRecording(true);
+    try {
+      const result = await cameraRef.current.recordAsync({
+        maxDuration: 15,
+      });
+      if (result?.uri) {
+        await photos.capture(activeSlot, result.uri, "video");
+      }
+    } catch (e) {
+      Alert.alert(
+        "Couldn't record",
+        e instanceof Error ? e.message : "Try once more.",
+      );
+    } finally {
+      setRecording(false);
+      setActiveSlot(null);
+    }
+  };
+
+  const stopRecording = () => {
+    cameraRef.current?.stopRecording();
+  };
+
+  const handleRetake = (slotId: number) => {
+    Alert.alert(
+      "Retake this photo?",
+      "Your current photo will be replaced.",
+      [
+        { text: "Keep current", style: "cancel" },
+        {
+          text: "Retake",
+          style: "destructive",
+          onPress: () => {
+            photos.retake(slotId);
+            openCamera(slotId);
+          },
+        },
+      ],
+    );
   };
 
   const activeSlotObj = activeSlot != null ? photos.slots[activeSlot - 1] : null;
@@ -94,7 +209,7 @@ export default function CaptureScreen() {
           {photos.slots.map((s) => (
             <Pressable
               key={s.id}
-              onPress={() => (s.uri ? photos.retake(s.id) : openCamera(s.id))}
+              onPress={() => (s.uri ? handleRetake(s.id) : openCamera(s.id))}
               className={`border ${
                 s.uri ? "border-gold bg-gold/5" : "border-linen bg-eggshell/40"
               } px-6 py-6 flex-row items-center justify-between active:bg-eggshell`}
@@ -123,10 +238,18 @@ export default function CaptureScreen() {
         <Modal
           visible={activeSlot !== null}
           animationType="slide"
-          onRequestClose={() => setActiveSlot(null)}
+          onRequestClose={() => {
+            if (recording) return; // can't dismiss mid-record
+            setActiveSlot(null);
+          }}
         >
           <View className="flex-1 bg-onyx">
-            <CameraView ref={cameraRef} style={{ flex: 1 }} facing={facing} />
+            <CameraView
+              ref={cameraRef}
+              style={{ flex: 1 }}
+              facing={facing}
+              mode={mode === "photo" ? "picture" : "video"}
+            />
             {activeSlot !== null && activeSlotObj ? (
               <CameraOverlay
                 slotName={activeSlotObj.label}
@@ -136,22 +259,74 @@ export default function CaptureScreen() {
               />
             ) : null}
             <View className="absolute top-0 left-0 right-0 px-6 pt-12 flex-row justify-between">
-              <Pressable onPress={() => setActiveSlot(null)}>
+              <Pressable
+                onPress={() => {
+                  if (recording) return;
+                  setActiveSlot(null);
+                }}
+              >
                 <Text className="text-[11px] tracking-cap uppercase text-bone font-sans">
-                  Cancel
+                  {recording ? "Recording…" : "Cancel"}
                 </Text>
               </Pressable>
               <Text className="text-[11px] tracking-cap uppercase text-bone font-sans">
                 Natural light · no flash
               </Text>
             </View>
+
+            {/* Photo / Video mode toggle */}
+            {!recording ? (
+              <View className="absolute bottom-44 left-0 right-0 flex-row justify-center">
+                <View className="flex-row bg-onyx/60 border border-bone/20 rounded-full px-1 py-1">
+                  <Pressable
+                    onPress={() => setMode("photo")}
+                    className={`px-5 py-2 rounded-full ${mode === "photo" ? "bg-bone" : ""}`}
+                  >
+                    <Text
+                      className={`text-[11px] tracking-cap uppercase font-sans ${mode === "photo" ? "text-espresso" : "text-bone"}`}
+                    >
+                      Photo
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setMode("video")}
+                    className={`px-5 py-2 rounded-full ${mode === "video" ? "bg-bone" : ""}`}
+                  >
+                    <Text
+                      className={`text-[11px] tracking-cap uppercase font-sans ${mode === "video" ? "text-espresso" : "text-bone"}`}
+                    >
+                      Video
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
+
             <View className="absolute bottom-0 left-0 right-0 pb-12 items-center">
-              <Pressable
-                onPress={snap}
-                className="h-20 w-20 rounded-full bg-gold border-4 border-bone active:bg-honey"
-              />
+              {mode === "video" ? (
+                <Pressable
+                  onPress={recording ? stopRecording : startRecording}
+                  className={`h-20 w-20 rounded-full ${recording ? "bg-clay" : "bg-gold"} border-4 border-bone active:opacity-80 items-center justify-center`}
+                >
+                  {recording ? (
+                    <View className="h-7 w-7 bg-bone rounded-sm" />
+                  ) : null}
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={snap}
+                  disabled={snapping}
+                  className={`h-20 w-20 rounded-full bg-gold border-4 border-bone active:bg-honey ${snapping ? "opacity-50" : ""}`}
+                />
+              )}
               <Text className="text-[11px] tracking-cap uppercase text-bone font-sans mt-4">
-                Tap to capture
+                {snapping
+                  ? "Capturing…"
+                  : recording
+                    ? "Tap to stop · 15 s max"
+                    : mode === "video"
+                      ? "Tap to record · 15 s"
+                      : "Tap to capture"}
               </Text>
             </View>
           </View>

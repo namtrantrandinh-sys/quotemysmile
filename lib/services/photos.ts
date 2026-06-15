@@ -8,13 +8,17 @@ export async function uploadRequestPhoto(input: {
   requestId: string;
   slotName: string;
   fileUri: string;
+  kind?: "photo" | "video";
 }) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not signed in");
 
-  const path = `${user.id}/${input.requestId}/${input.slotName}.jpg`;
+  const kind = input.kind ?? "photo";
+  const ext = kind === "video" ? "mp4" : "jpg";
+  const contentType = kind === "video" ? "video/mp4" : "image/jpeg";
+  const path = `${user.id}/${input.requestId}/${input.slotName}.${ext}`;
 
   // React Native fetch -> blob is the supported path
   const res = await fetch(input.fileUri);
@@ -23,7 +27,7 @@ export async function uploadRequestPhoto(input: {
   const { error } = await supabase.storage
     .from("request-photos")
     .upload(path, blob, {
-      contentType: "image/jpeg",
+      contentType,
       upsert: true,
     });
   if (error) throw error;
