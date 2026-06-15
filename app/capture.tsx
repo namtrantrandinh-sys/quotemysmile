@@ -18,6 +18,7 @@ import {
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 import { BackBar } from "@/components/BackBar";
 import { Button } from "@/components/Button";
 import { ProgressDots } from "@/components/ProgressDots";
@@ -37,7 +38,6 @@ export default function CaptureScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
-  const [recording, setRecording] = useState(false);
   const [snapping, setSnapping] = useState(false);
   const [mode, setMode] = useState<"photo" | "video">("photo");
   // Default to FRONT camera — patients are photographing their own mouth,
@@ -81,12 +81,6 @@ export default function CaptureScreen() {
 
   const cancelCapture = () => {
     cancelledRef.current = true;
-    if (recording) {
-      try {
-        cameraRef.current?.stopRecording();
-      } catch {}
-    }
-    setRecording(false);
     setSnapping(false);
     setActiveSlot(null);
   };
@@ -131,9 +125,14 @@ export default function CaptureScreen() {
     }
   };
 
-  const startRecording = async () => {
-    if (!cameraRef.current || activeSlot == null) return;
-    // Video also needs microphone permission on iOS.
+  // Video recording uses the OS's native camera UI via expo-image-picker.
+  // expo-camera v56's in-app recordAsync has a known iOS-side hang when
+  // mixed with picture mode + new arch disabled. The OS recorder is rock
+  // solid: tap Record, tap Stop, returns a clean .mov.
+  const recordVideo = async () => {
+    if (activeSlot == null) return;
+    const slotId = activeSlot;
+    // Video needs microphone too.
     if (!micPermission?.granted) {
       const r = await requestMicPermission();
       if (!r.granted) {
@@ -148,27 +147,34 @@ export default function CaptureScreen() {
         return;
       }
     }
-    setRecording(true);
-    try {
-      const result = await cameraRef.current.recordAsync({
-        maxDuration: 15,
-      });
-      if (result?.uri) {
-        await photos.capture(activeSlot, result.uri, "video");
+    // Close our in-app camera modal so the OS recorder can take over the
+    // screen cleanly. Otherwise iOS surfaces a "Camera already in use"
+    // hardware lock and the OS recorder shows a black preview.
+    setActiveSlot(null);
+    // Defer one tick so the modal teardown finishes before the picker mounts.
+    setTimeout(async () => {
+      try {
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ["videos"],
+          videoMaxDuration: 15,
+          quality: 0.85,
+          cameraType:
+            facing === "front"
+              ? ImagePicker.CameraType.front
+              : ImagePicker.CameraType.back,
+        });
+        if (result.canceled || !result.assets?.[0]?.uri) return;
+        await photos.capture(slotId, result.assets[0].uri, "video");
+        // Auto-advance to the next un-captured slot, like the photo flow.
+        const nextSlot = photos.slots.find((s) => !s.uri && s.id !== slotId);
+        if (nextSlot) setTimeout(() => openCamera(nextSlot.id), 400);
+      } catch (e) {
+        Alert.alert(
+          "Couldn't record",
+          e instanceof Error ? e.message : "Try once more.",
+        );
       }
-    } catch (e) {
-      Alert.alert(
-        "Couldn't record",
-        e instanceof Error ? e.message : "Try once more.",
-      );
-    } finally {
-      setRecording(false);
-      setActiveSlot(null);
-    }
-  };
-
-  const stopRecording = () => {
-    cameraRef.current?.stopRecording();
+    }, 150);
   };
 
   const handleRetake = (slotId: number) => {
@@ -335,15 +341,14 @@ export default function CaptureScreen() {
           onRequestClose={() => cancelCapture()}
         >
           <View className="flex-1 bg-onyx">
-            {/* Remount CameraView on mode change. Switching picture↔video
-                on a live CameraView is what was freezing the preview;
-                a fresh mount lets the encoder configure cleanly. */}
+            {/* Always mount CameraView in picture mode — video uses the
+                OS's native recorder which appears in its own screen. */}
             <CameraView
-              key={`${mode}-${facing}`}
+              key={`picture-${facing}`}
               ref={cameraRef}
               style={{ flex: 1 }}
               facing={facing}
-              mode={mode === "photo" ? "picture" : "video"}
+              mode="picture"
             />
             {activeSlot !== null && activeSlotObj ? (
               <CameraOverlay
@@ -387,7 +392,7 @@ export default function CaptureScreen() {
                   }}
                 >
                   <Text className="text-[12px] tracking-cap uppercase text-bone font-sans">
-                    {recording ? "Stop & exit" : "Cancel"}
+                    Cancel
                   </Text>
                 </Pressable>
                 <Text
@@ -401,13 +406,9 @@ export default function CaptureScreen() {
                 >
                   Natural light
                 </Text>
-                {/* Flip camera button — top right of the top row, only
-                    when not recording (flipping mid-record kills the file). */}
+                {/* Flip camera button — top right of the top row. */}
                 <Pressable
-                  onPress={() => {
-                    if (recording) return;
-                    flipCamera();
-                  }}
+                  onPress={flipCamera}
                   hitSlop={12}
                   style={{
                     backgroundColor: "rgba(0,0,0,0.45)",
@@ -416,7 +417,6 @@ export default function CaptureScreen() {
                     borderRadius: 18,
                     alignItems: "center",
                     justifyContent: "center",
-                    opacity: recording ? 0.4 : 1,
                   }}
                 >
                   <MaterialCommunityIcons
@@ -429,8 +429,7 @@ export default function CaptureScreen() {
             </SafeAreaView>
 
             {/* Photo / Video mode toggle */}
-            {!recording ? (
-              <View className="absolute bottom-44 left-0 right-0 flex-row justify-center">
+            <View className="absolute bottom-44 left-0 right-0 flex-row justify-center">
                 <View className="flex-row bg-onyx/60 border border-bone/20 rounded-full px-1 py-1">
                   <Pressable
                     onPress={() => setMode("photo")}
@@ -454,17 +453,14 @@ export default function CaptureScreen() {
                   </Pressable>
                 </View>
               </View>
-            ) : null}
 
             <View className="absolute bottom-0 left-0 right-0 pb-12 items-center">
               {mode === "video" ? (
                 <Pressable
-                  onPress={recording ? stopRecording : startRecording}
-                  className={`h-20 w-20 rounded-full ${recording ? "bg-clay" : "bg-gold"} border-4 border-bone active:opacity-80 items-center justify-center`}
+                  onPress={recordVideo}
+                  className="h-20 w-20 rounded-full bg-clay border-4 border-bone active:opacity-80 items-center justify-center"
                 >
-                  {recording ? (
-                    <View className="h-7 w-7 bg-bone rounded-sm" />
-                  ) : null}
+                  <View className="h-7 w-7 bg-bone rounded-full" />
                 </Pressable>
               ) : (
                 <Pressable
@@ -476,11 +472,9 @@ export default function CaptureScreen() {
               <Text className="text-[11px] tracking-cap uppercase text-bone font-sans mt-4">
                 {snapping
                   ? "Capturing…"
-                  : recording
-                    ? "Tap to stop · 15 s max"
-                    : mode === "video"
-                      ? "Tap to record · 15 s"
-                      : "Tap to capture"}
+                  : mode === "video"
+                    ? "Tap to record · 15 s max"
+                    : "Tap to capture"}
               </Text>
             </View>
           </View>
