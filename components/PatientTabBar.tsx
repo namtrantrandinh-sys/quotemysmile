@@ -1,14 +1,20 @@
-import { View, Text, Pressable } from "react-native";
+import { useState } from "react";
+import { View, Text, Pressable, type LayoutChangeEvent } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
+import Svg, {
+  Path,
+  Defs,
+  LinearGradient as SvgLinearGradient,
+  Stop,
+  RadialGradient,
+  Rect,
+} from "react-native-svg";
 
 /**
- * Liquid-glass bottom tab bar — mint tinted, frosted-blur background,
- * floating raised camera button in the centre with a soft mint halo.
- *
- * Reference: iOS-style "liquid glass" / Control Centre treatment, brand
- * recoloured to mint.
+ * Bottom tab bar with a true SVG-carved notch cradling the floating
+ * camera button. Gradient is multi-stop mint-to-deep-teal, halo is a
+ * soft radial glow that emits warmth without overpowering the icon.
  */
 type SideTab = {
   key: "home" | "inbox";
@@ -37,12 +43,62 @@ const SIDE_TABS: SideTab[] = [
 
 const CAPTURE_HREF = "/categories";
 
-const MINT = "#5FA89B";
-const MINT_DEEP = "#4A8C82";
+// Bar geometry
+const BAR_HEIGHT = 78;
+const NOTCH_RADIUS = 38; // half the camera button width + cushion
+const BAR_RADIUS = 32;
+const BUTTON_SIZE = 60;
+
+function buildBarPath(width: number) {
+  // Returns an SVG path that draws the bar:
+  //   • rounded outer corners (BAR_RADIUS)
+  //   • a concave notch centred on top to cradle the camera button.
+  // Uses arc + bezier so the notch lip eases into the top edge instead of
+  // forming sharp corners.
+  const cx = width / 2;
+  const notchHalf = NOTCH_RADIUS;
+  const lipDepth = 22; // how deep the notch carves into the bar
+  const lipFlare = 16; // horizontal flare on each side of the notch
+  const leftLipX = cx - notchHalf - lipFlare;
+  const rightLipX = cx + notchHalf + lipFlare;
+
+  // M start at top-left after corner
+  return [
+    `M ${BAR_RADIUS} 0`,
+    `H ${leftLipX}`,
+    // Left flare easing INTO the notch lip
+    `C ${cx - notchHalf - 4} 0, ${cx - notchHalf} 6, ${cx - notchHalf} ${lipDepth / 2.4}`,
+    // Concave arc carving down into the notch
+    `A ${notchHalf} ${notchHalf} 0 0 0 ${cx + notchHalf} ${lipDepth / 2.4}`,
+    // Right flare easing back up to the top edge
+    `C ${cx + notchHalf} 6, ${cx + notchHalf + 4} 0, ${rightLipX} 0`,
+    `H ${width - BAR_RADIUS}`,
+    // Top-right corner
+    `Q ${width} 0, ${width} ${BAR_RADIUS}`,
+    // Right edge
+    `V ${BAR_HEIGHT - BAR_RADIUS}`,
+    // Bottom-right corner
+    `Q ${width} ${BAR_HEIGHT}, ${width - BAR_RADIUS} ${BAR_HEIGHT}`,
+    // Bottom edge
+    `H ${BAR_RADIUS}`,
+    // Bottom-left corner
+    `Q 0 ${BAR_HEIGHT}, 0 ${BAR_HEIGHT - BAR_RADIUS}`,
+    // Left edge
+    `V ${BAR_RADIUS}`,
+    // Top-left corner
+    `Q 0 0, ${BAR_RADIUS} 0`,
+    `Z`,
+  ].join(" ");
+}
 
 export function PatientTabBar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [barWidth, setBarWidth] = useState(0);
+
+  const onBarLayout = (e: LayoutChangeEvent) => {
+    setBarWidth(e.nativeEvent.layout.width);
+  };
 
   const activeKey: "home" | "inbox" | "new" | null =
     pathname === "/" || pathname === ""
@@ -62,161 +118,168 @@ export function PatientTabBar() {
       pointerEvents="box-none"
       style={{
         position: "relative",
-        paddingHorizontal: 18,
-        paddingTop: 26,
-        paddingBottom: 18,
+        paddingHorizontal: 14,
+        paddingTop: 30,
+        paddingBottom: 16,
       }}
     >
       {/* ============================================================
-          LIQUID-GLASS BAR
-          BlurView gives real iOS frosted-glass; we overlay it with a
-          translucent mint tint + a soft inner highlight at the top edge
-          to simulate the liquid-glass curvature.
+          BAR — SVG so the notch is a real concave carve, not an overlay
          ============================================================ */}
       <View
+        onLayout={onBarLayout}
         style={{
-          borderRadius: 38,
-          overflow: "hidden",
-          shadowColor: MINT_DEEP,
-          shadowOpacity: 0.35,
-          shadowRadius: 16,
-          shadowOffset: { width: 0, height: 8 },
-          elevation: 10,
+          height: BAR_HEIGHT,
+          shadowColor: "#1F4F47",
+          shadowOpacity: 0.22,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 12,
         }}
       >
-        <BlurView
-          tint="light"
-          intensity={70}
-          style={{
-            paddingVertical: 14,
-            paddingHorizontal: 28,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            backgroundColor: "rgba(95, 168, 155, 0.62)",
-          }}
-        >
-          {/* Top inner highlight — the bright sliver across the curve top
-              that sells the glass look. */}
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 24,
-              right: 24,
-              height: 1.5,
-              backgroundColor: "rgba(255,255,255,0.55)",
-              borderRadius: 1,
-            }}
-          />
-          {/* Subtle lower shade so the bar feels rounded, not flat */}
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 22,
-              backgroundColor: "rgba(74, 140, 130, 0.15)",
-            }}
-          />
+        {barWidth > 0 ? (
+          <Svg
+            width={barWidth}
+            height={BAR_HEIGHT}
+            style={{ position: "absolute", top: 0, left: 0 }}
+          >
+            <Defs>
+              {/* Refined three-stop mint gradient — pale mint top-left
+                  fading through brand mint to deep teal bottom-right.
+                  Less flat than a 2-stop, more aesthetic depth. */}
+              <SvgLinearGradient id="barFill" x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0" stopColor="#A3D4C6" stopOpacity="1" />
+                <Stop offset="0.45" stopColor="#6EB3A4" stopOpacity="1" />
+                <Stop offset="1" stopColor="#3F7E73" stopOpacity="1" />
+              </SvgLinearGradient>
+              {/* Top-edge highlight — sells the curved-glass look */}
+              <SvgLinearGradient id="topGloss" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.32" />
+                <Stop offset="0.4" stopColor="#FFFFFF" stopOpacity="0" />
+              </SvgLinearGradient>
+            </Defs>
 
-          {/* LEFT — Home */}
-          <SideButton
-            tab={SIDE_TABS[0]}
-            active={activeKey === "home"}
-            onPress={() => router.push(SIDE_TABS[0].href as never)}
-          />
+            {/* Main shape with carved notch */}
+            <Path d={buildBarPath(barWidth)} fill="url(#barFill)" />
+            {/* Top-edge gloss layered on top of the fill */}
+            <Path d={buildBarPath(barWidth)} fill="url(#topGloss)" />
+          </Svg>
+        ) : null}
+      </View>
 
-          {/* Spacer for the floating camera button above */}
-          <View style={{ width: 76 }} />
-
-          {/* RIGHT — Bookings */}
-          <SideButton
-            tab={SIDE_TABS[1]}
-            active={activeKey === "inbox"}
-            onPress={() => router.push(SIDE_TABS[1].href as never)}
-          />
-        </BlurView>
+      {/* Side icons row — sits absolutely positioned over the SVG bar */}
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          left: 14,
+          right: 14,
+          top: 30,
+          height: BAR_HEIGHT,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 28,
+        }}
+      >
+        <SideButton
+          tab={SIDE_TABS[0]}
+          active={activeKey === "home"}
+          onPress={() => router.push(SIDE_TABS[0].href as never)}
+        />
+        <View style={{ width: 88 }} />
+        <SideButton
+          tab={SIDE_TABS[1]}
+          active={activeKey === "inbox"}
+          onPress={() => router.push(SIDE_TABS[1].href as never)}
+        />
       </View>
 
       {/* ============================================================
-          FLOATING CAMERA BUTTON with mint glow halo
+          FLOATING CAMERA BUTTON — sits inside the carved notch
          ============================================================ */}
       <View
         pointerEvents="box-none"
         style={{
           position: "absolute",
-          top: -10,
+          top: 4,
           left: 0,
           right: 0,
           alignItems: "center",
         }}
       >
-        {/* Outer glow */}
-        <View
+        {/* Subtle radial halo — soft mint warmth, not a hard ring */}
+        <Svg
+          width={120}
+          height={120}
+          style={{ position: "absolute", top: -10 }}
           pointerEvents="none"
-          style={{
-            position: "absolute",
-            width: 104,
-            height: 104,
-            borderRadius: 52,
-            backgroundColor: "rgba(95, 168, 155, 0.18)",
-            top: -10,
-          }}
-        />
-        {/* Inner glow */}
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            width: 84,
-            height: 84,
-            borderRadius: 42,
-            backgroundColor: "rgba(95, 168, 155, 0.34)",
-            top: 0,
-          }}
-        />
+        >
+          <Defs>
+            <RadialGradient id="halo" cx="50%" cy="50%" r="50%">
+              <Stop offset="0" stopColor="#7EC2B2" stopOpacity="0.45" />
+              <Stop offset="0.55" stopColor="#7EC2B2" stopOpacity="0.16" />
+              <Stop offset="1" stopColor="#7EC2B2" stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <Rect x="0" y="0" width="120" height="120" fill="url(#halo)" />
+        </Svg>
 
-        {/* The actual camera button — mint with a glassy highlight ring */}
+        {/* The camera button itself — sits cradled in the notch */}
         <Pressable
           onPress={() => router.push(CAPTURE_HREF as never)}
           style={{
-            width: 64,
-            height: 64,
-            borderRadius: 32,
+            width: BUTTON_SIZE,
+            height: BUTTON_SIZE,
+            borderRadius: BUTTON_SIZE / 2,
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: MINT_DEEP,
-            shadowOpacity: 0.6,
-            shadowRadius: 16,
-            shadowOffset: { width: 0, height: 8 },
+            shadowColor: "#1F4F47",
+            shadowOpacity: 0.45,
+            shadowRadius: 14,
+            shadowOffset: { width: 0, height: 7 },
             elevation: 14,
-            marginTop: 10,
+            marginTop: 22,
             overflow: "hidden",
-            backgroundColor: MINT,
-            borderWidth: 3,
-            borderColor: "rgba(255,255,255,0.85)",
           }}
         >
-          {/* Glassy top highlight on the button itself */}
+          {/* Button surface — its own mini gradient for liveliness */}
+          <Svg
+            width={BUTTON_SIZE}
+            height={BUTTON_SIZE}
+            style={{ position: "absolute", top: 0, left: 0 }}
+          >
+            <Defs>
+              <SvgLinearGradient id="btnFill" x1="0" y1="0" x2="0.5" y2="1">
+                <Stop offset="0" stopColor="#8BCDBE" />
+                <Stop offset="1" stopColor="#4E9388" />
+              </SvgLinearGradient>
+            </Defs>
+            <Rect
+              x="0"
+              y="0"
+              width={BUTTON_SIZE}
+              height={BUTTON_SIZE}
+              rx={BUTTON_SIZE / 2}
+              fill="url(#btnFill)"
+            />
+          </Svg>
+          {/* Top highlight bubble */}
           <View
             pointerEvents="none"
             style={{
               position: "absolute",
-              top: 3,
-              left: 6,
-              right: 6,
-              height: 12,
-              borderRadius: 12,
+              top: 5,
+              left: 9,
+              right: 9,
+              height: 9,
+              borderRadius: 9,
               backgroundColor: "rgba(255,255,255,0.32)",
             }}
           />
           <MaterialCommunityIcons
             name={activeKey === "new" ? "camera" : "camera-outline"}
-            size={28}
+            size={26}
             color="#FFFFFF"
           />
         </Pressable>
@@ -227,8 +290,8 @@ export function PatientTabBar() {
             fontSize: 9,
             letterSpacing: 1.4,
             textTransform: "uppercase",
-            color: MINT,
-            marginTop: 6,
+            color: "#3F7E73",
+            marginTop: 8,
             fontWeight: "500",
           }}
         >
@@ -251,37 +314,21 @@ function SideButton({
   return (
     <Pressable
       onPress={onPress}
-      style={{ alignItems: "center", paddingHorizontal: 8, paddingVertical: 2 }}
+      style={{ alignItems: "center", paddingHorizontal: 6, paddingVertical: 2 }}
     >
       <View
         style={{
-          width: 46,
-          height: 46,
-          borderRadius: 23,
+          width: 44,
+          height: 44,
+          borderRadius: 22,
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: active ? "rgba(255,255,255,0.28)" : "transparent",
-          overflow: "hidden",
         }}
       >
-        {active ? (
-          // Inner highlight ring on active to feel pressed-in but glassy
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              top: 2,
-              left: 8,
-              right: 8,
-              height: 8,
-              borderRadius: 8,
-              backgroundColor: "rgba(255,255,255,0.45)",
-            }}
-          />
-        ) : null}
         <MaterialCommunityIcons
           name={active ? tab.iconActive : tab.icon}
-          size={24}
+          size={23}
           color="#FFFFFF"
         />
       </View>

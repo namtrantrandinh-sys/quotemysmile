@@ -236,33 +236,96 @@ export default function CaptureScreen() {
         />
 
         <View className="px-8 pb-12 gap-3">
-          {photos.slots.map((s) => (
-            <Pressable
-              key={s.id}
-              onPress={() => (s.uri ? handleRetake(s.id) : openCamera(s.id))}
-              className={`border ${
-                s.uri ? "border-gold bg-gold/5" : "border-linen bg-eggshell/40"
-              } px-6 py-6 flex-row items-center justify-between active:bg-eggshell`}
-            >
-              <View className="flex-1">
-                <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mb-2">
-                  Photo {s.id} of {photos.totalSlots}
-                </Text>
-                <Text className="font-display text-xl text-espresso mb-1">
-                  {s.label}
-                </Text>
-                <Text className="text-xs text-taupe font-sans">{s.hint}</Text>
-                {s.qualityScore != null ? (
-                  <Text className="text-[10px] tracking-cap uppercase text-forest font-sans mt-2">
-                    Quality {s.qualityScore.toFixed(1)} / 5 · tap to retake
+          {photos.slots.map((s) => {
+            // Modern dental-aesthetic glyph per slot.
+            const SLOT_ICON: Record<typeof s.name, keyof typeof MaterialCommunityIcons.glyphMap> = {
+              "front-smile": "emoticon-happy-outline",
+              "upper-arch": "tooth-outline",
+              "lower-arch": "tooth",
+              "problem-area": "magnify-scan",
+            };
+            const iconName = SLOT_ICON[s.name];
+            const isNext = !s.uri && s.id === photos.nextSlot?.id;
+            const captured = !!s.uri;
+
+            return (
+              <Pressable
+                key={s.id}
+                onPress={() => (s.uri ? handleRetake(s.id) : openCamera(s.id))}
+                className={`border ${
+                  captured ? "border-gold bg-gold/5" : "border-linen bg-eggshell/40"
+                } px-5 py-5 flex-row items-center active:bg-eggshell rounded-md`}
+              >
+                {/* Leading slot glyph */}
+                <View
+                  className="w-12 h-12 rounded-full items-center justify-center mr-4"
+                  style={{
+                    backgroundColor: captured ? "rgba(95,168,155,0.18)" : "rgba(95,168,155,0.10)",
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name={iconName}
+                    size={26}
+                    color="#5FA89B"
+                  />
+                </View>
+
+                {/* Title + hint */}
+                <View className="flex-1">
+                  <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mb-1">
+                    Photo {s.id} of {photos.totalSlots}
                   </Text>
-                ) : null}
-              </View>
-              <Text className="font-display text-3xl text-gold ml-4">
-                {s.uri ? "✓" : s.id === photos.nextSlot?.id ? "+" : "·"}
-              </Text>
-            </Pressable>
-          ))}
+                  <Text className="font-display text-xl text-espresso mb-0.5 leading-tight">
+                    {s.label}
+                  </Text>
+                  <Text className="text-xs text-taupe font-sans leading-snug">
+                    {s.hint}
+                  </Text>
+                  {s.qualityScore != null ? (
+                    <Text className="text-[10px] tracking-cap uppercase text-forest font-sans mt-2">
+                      Quality {s.qualityScore.toFixed(1)} / 5 · tap to retake
+                    </Text>
+                  ) : null}
+                </View>
+
+                {/* Trailing action affordance — clearly tappable */}
+                {captured ? (
+                  <View
+                    className="ml-3 w-9 h-9 rounded-full items-center justify-center"
+                    style={{ backgroundColor: "#5FA89B" }}
+                  >
+                    <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
+                  </View>
+                ) : (
+                  <View
+                    className="ml-3 px-3 py-2 rounded-full flex-row items-center gap-1.5"
+                    style={{
+                      backgroundColor: isNext ? "#5FA89B" : "rgba(95,168,155,0.18)",
+                      shadowColor: isNext ? "#1F4F47" : "transparent",
+                      shadowOpacity: isNext ? 0.3 : 0,
+                      shadowRadius: 6,
+                      shadowOffset: { width: 0, height: 3 },
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="plus"
+                      size={18}
+                      color={isNext ? "#FFFFFF" : "#3F7E73"}
+                    />
+                    <Text
+                      className="text-[10px] tracking-cap uppercase font-sans"
+                      style={{
+                        color: isNext ? "#FFFFFF" : "#3F7E73",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Add
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
         </View>
 
         <Modal
