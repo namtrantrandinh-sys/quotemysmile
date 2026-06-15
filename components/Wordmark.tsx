@@ -1,4 +1,6 @@
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
+
+const SMILE_SOURCE = require("../assets/smile.png");
 
 type Size = "sm" | "md" | "lg" | "xl";
 
@@ -11,50 +13,59 @@ type Size = "sm" | "md" | "lg" | "xl";
 export function Wordmark({ size = "md" }: { size?: Size }) {
   const base = size === "xl" ? 22 : size === "lg" ? 17 : size === "sm" ? 11 : 14;
   const scriptBoost = base * 2.2;
+  // Smile underline scales with the wordmark size — small relative to text width.
+  const smileWidth = base * 9.5;
+  const smileHeight = base * 1.6;
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "baseline",
-      }}
-    >
-      <Text
+    <View style={{ alignItems: "center" }}>
+      <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+        <Text
+          style={{
+            fontFamily: "Inter-Light",
+            fontSize: base,
+            lineHeight: base,
+            letterSpacing: base * 0.32,
+            textTransform: "uppercase",
+            color: "#2A2520",
+          }}
+        >
+          Quote
+        </Text>
+        <Text
+          style={{
+            fontFamily: "Allura",
+            fontSize: scriptBoost,
+            lineHeight: scriptBoost,
+            color: "#4A8C82",
+            marginHorizontal: base * 0.4,
+            transform: [{ translateY: 5 }, { rotate: "-2deg" }],
+          }}
+        >
+          my
+        </Text>
+        <Text
+          style={{
+            fontFamily: "Inter-Light",
+            fontSize: base,
+            lineHeight: base,
+            letterSpacing: base * 0.32,
+            textTransform: "uppercase",
+            color: "#2A2520",
+          }}
+        >
+          Smile
+        </Text>
+      </View>
+      <Image
+        source={SMILE_SOURCE}
         style={{
-          fontFamily: "Inter-Light",
-          fontSize: base,
-          lineHeight: base,
-          letterSpacing: base * 0.32,
-          textTransform: "uppercase",
-          color: "#2A2520",
+          width: smileWidth,
+          height: smileHeight,
+          marginTop: -smileHeight * 0.35,
         }}
-      >
-        Quote
-      </Text>
-      <Text
-        style={{
-          fontFamily: "Allura",
-          fontSize: scriptBoost,
-          lineHeight: scriptBoost,
-          color: "#A9CFC0",
-          marginHorizontal: base * 0.4,
-          transform: [{ translateY: 5 }, { rotate: "-2deg" }],
-        }}
-      >
-        my
-      </Text>
-      <Text
-        style={{
-          fontFamily: "Inter-Light",
-          fontSize: base,
-          lineHeight: base,
-          letterSpacing: base * 0.32,
-          textTransform: "uppercase",
-          color: "#2A2520",
-        }}
-      >
-        Smile
-      </Text>
+        resizeMode="contain"
+      />
     </View>
   );
 }
@@ -65,6 +76,8 @@ export function Wordmark({ size = "md" }: { size?: Size }) {
 export function FullMark({ size = "md" }: { size?: Size }) {
   const cap = size === "xl" ? 64 : size === "lg" ? 44 : size === "sm" ? 22 : 32;
   const script = cap * 1.7;
+  const smileWidth = cap * 4.5;
+  const smileHeight = cap * 0.65;
 
   return (
     <View style={{ alignItems: "center" }}>
@@ -84,7 +97,7 @@ export function FullMark({ size = "md" }: { size?: Size }) {
         style={{
           fontFamily: "Allura",
           fontSize: script,
-          color: "#A9CFC0",
+          color: "#4A8C82",
           lineHeight: script,
           marginVertical: -cap * 0.32,
           transform: [{ rotate: "-5deg" }],
@@ -104,6 +117,15 @@ export function FullMark({ size = "md" }: { size?: Size }) {
       >
         SMILE
       </Text>
+      <Image
+        source={SMILE_SOURCE}
+        style={{
+          width: smileWidth,
+          height: smileHeight,
+          marginTop: cap * 0.05,
+        }}
+        resizeMode="contain"
+      />
     </View>
   );
 }

@@ -60,10 +60,10 @@ img { max-width: 100%; display: block; }
 .wordmark::after {
   content: "";
   position: absolute;
-  left: -12%;
-  right: -12%;
-  bottom: 6px;
-  height: 56px;
+  left: -6%;
+  right: -6%;
+  bottom: 10px;
+  height: 42px;
   background: url("/smile.png?v=v3") center/contain no-repeat;
   pointer-events: none;
 }
@@ -92,12 +92,12 @@ a.wordmark:hover em,
 a.wordmark:focus em {
   color: #4A8C82;
 }
-.wordmark.sm { font-size: 13px; letter-spacing: 0.10em; padding-bottom: 32px; gap: 0; }
+.wordmark.sm { font-size: 13px; letter-spacing: 0.10em; padding-bottom: 24px; gap: 0; }
 .wordmark.sm em {
   font-size: 20px;
   margin: 0 1px;
 }
-.wordmark.sm::after { height: 44px; bottom: 4px; }
+.wordmark.sm::after { height: 32px; bottom: 8px; }
 
 /* ============================================================ */
 /* Topbar                                                       */
