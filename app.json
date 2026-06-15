@@ -28,9 +28,6 @@
         "NSMicrophoneUsageDescription": "QuoteMySmile uses your microphone only when you choose to record a short video clip of your teeth instead of a photo.",
         "NSPhotoLibraryAddUsageDescription": "Save your dental quotes and consult details to your photo library.",
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "config": {
-        "googleMapsApiKey": "REPLACE_WITH_IOS_GOOGLE_MAPS_KEY"
       }
     },
     "android": {
