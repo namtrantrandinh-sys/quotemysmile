@@ -148,13 +148,13 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   color: var(--espresso);
 }
 .display em {
-  font-family: "Lora", Georgia, serif;
-  font-style: italic;
+  font-family: "Allura", cursive;
+  font-style: normal;
   color: #2F6F66;
-  font-size: 1em;
+  font-size: 1.4em;
   letter-spacing: 0;
-  line-height: 1.05;
-  font-weight: 500;
+  line-height: 1;
+  font-weight: 400;
 }
 .lede {
   font-size: 19px;
@@ -1129,13 +1129,12 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   margin: 0;
 }
 .positioning .headline em {
-  font-family: "Lora", Georgia, serif;
-  font-style: italic;
+  font-family: "Allura", cursive;
+  font-style: normal;
   color: #2F6F66;
-  font-size: 1em;
+  font-size: 1.4em;
   letter-spacing: 0;
-  line-height: 1.1;
-  font-weight: 500;
+  line-height: 1;
 }
 .positioning .ribbon {
   position: relative;
@@ -1170,12 +1169,11 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   margin: 0;
 }
 .positioning .ribbon p em {
-  font-family: "Lora", Georgia, serif;
-  font-style: italic;
+  font-family: "Allura", cursive;
+  font-style: normal;
   color: #2F6F66;
-  font-size: 1em;
+  font-size: 1.3em;
   letter-spacing: 0;
-  font-weight: 500;
 }
 .positioning .stats {
   margin-top: 28px;
