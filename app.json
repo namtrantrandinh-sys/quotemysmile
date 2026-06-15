@@ -89,11 +89,13 @@
         "expo-build-properties",
         {
           "ios": {
+            "newArchEnabled": false,
             "deploymentTarget": "16.4",
             "useFrameworks": "static",
             "privacyManifestPath": "./store/PrivacyInfo.xcprivacy"
           },
           "android": {
+            "newArchEnabled": false,
             "minSdkVersion": 24,
             "compileSdkVersion": 34,
             "targetSdkVersion": 34
