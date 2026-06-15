@@ -39,7 +39,7 @@ img { max-width: 100%; display: block; }
 /* ============================================================ */
 /* Initial wordmark — Italiana editorial caps + Allura signature "my". */
 .wordmark {
-  font-family: "Italiana", "Cormorant Garamond", serif;
+  font-family: "Fraunces", "Cormorant Garamond", serif;
   font-weight: 400;
   font-size: 15px;
   line-height: 1;
@@ -172,7 +172,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 }
 .centered-link { text-align: center; margin-top: 48px; }
 .centered-link a {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 18px;
   letter-spacing: 0.04em;
   color: var(--gold);
@@ -246,7 +246,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 }
 .cta-btn:hover { background: #1f1a16; text-decoration: none; }
 .cta-link {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 18px;
   color: var(--gold);
   letter-spacing: 0.02em;
@@ -399,7 +399,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   text-align: center;
 }
 .screen-count {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 36px;
   text-align: center;
   color: var(--espresso);
@@ -434,14 +434,14 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   letter-spacing: 0;
 }
 .qc-row .gold {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-weight: 400;
   color: var(--gold);
   font-size: 20px;
   letter-spacing: 0.01em;
 }
 .qc-row > span:last-child {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-weight: 400;
   font-size: 18px;
   color: var(--walnut);
@@ -562,7 +562,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   z-index: 1;
 }
 .feature-col h3 {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-weight: 400;
   font-size: 26px;
   color: var(--espresso);
@@ -597,7 +597,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   border-radius: 50%;
 }
 .scr-gps .suburb {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 26px;
   text-align: center;
   color: var(--espresso);
@@ -697,7 +697,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 }
 .scr-gps .count {
   text-align: center;
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 32px;
   color: var(--gold);
   line-height: 1;
@@ -736,7 +736,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   margin: 18px 0 4px;
 }
 .scr-photo h4 {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 26px;
   font-weight: 400;
   text-align: center;
@@ -826,7 +826,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   align-items: center;
   justify-content: center;
   color: var(--gold);
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 24px;
 }
 .scr-book .status {
@@ -837,7 +837,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   text-transform: uppercase;
 }
 .scr-book h4 {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 28px;
   text-align: center;
   margin: 6px 0 20px;
@@ -867,7 +867,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   margin-bottom: 10px;
 }
 .scr-book .booking-card .slot {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 20px;
   color: var(--gold);
   line-height: 1.15;
@@ -887,7 +887,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   margin-bottom: 2px;
 }
 .scr-book .deposit-strip .amount {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   color: var(--gold);
   font-size: 18px;
 }
@@ -975,7 +975,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 /* The 3-step prop cards centre an XL icon */
 .prop .icon-xl { margin: 0 auto 18px; display: block; }
 .prop { text-align: center; }
-.prop .n { color: var(--gold); }
+/* .prop .n color now set in .prop .n rule below (deep teal for legibility) */
 
 /* ============================================================ */
 /* Value props — premium-dental cards                           */
@@ -1051,16 +1051,16 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 .prop .n {
   display: inline-block;
   font-family: "Inter", sans-serif;
-  font-weight: 500;
-  font-size: 10px;
+  font-weight: 700;
+  font-size: 11px;
   letter-spacing: 0.22em;
-  color: var(--gold);
+  color: #2F6F66;
   margin-bottom: 14px;
-  padding: 4px 0;
-  border-top: 1px solid var(--gold);
+  padding: 6px 0 4px;
+  border-top: 2px solid #2F6F66;
 }
 .prop h3 {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 30px;
   font-weight: 400;
   margin: 0 0 12px;
@@ -1121,7 +1121,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   color: #2f7d6b;
 }
 .positioning .headline {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: clamp(28px, 3.6vw, 44px);
   line-height: 1.18;
   letter-spacing: -0.01em;
@@ -1162,7 +1162,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   margin: 0 0 14px;
 }
 .positioning .ribbon p {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 22px;
   line-height: 1.45;
   color: var(--espresso);
@@ -1185,7 +1185,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   text-align: center;
 }
 .positioning .stats .stat .big {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 32px;
   color: var(--gold);
   line-height: 1;
@@ -1260,7 +1260,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
 .faq summary {
   cursor: pointer;
   list-style: none;
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 22px;
   color: var(--espresso);
   display: flex;
@@ -1346,7 +1346,7 @@ footer {
   padding: 80px 40px 120px;
 }
 .legal h1 {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: clamp(40px, 6vw, 64px);
   font-weight: 400;
   margin: 0 0 12px;
@@ -1360,7 +1360,7 @@ footer {
   margin-bottom: 48px;
 }
 .legal h2 {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 28px;
   font-weight: 400;
   margin: 48px 0 14px;
@@ -1398,7 +1398,7 @@ footer {
   margin-bottom: 36px;
 }
 .legal .toc h3 {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-weight: 400;
   margin: 0 0 10px;
   font-size: 14px;
@@ -1441,7 +1441,7 @@ footer {
   display: block;
   font-weight: 500;
   margin-bottom: 4px;
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: 18px;
 }
 @media (max-width: 720px) { .bullets-2col { grid-template-columns: 1fr; } }
@@ -1450,7 +1450,7 @@ footer {
   border-bottom: 1px solid var(--linen);
 }
 .pricing-row .price {
-  font-family: "Italiana", serif;
+  font-family: "Fraunces", serif;
   font-size: clamp(64px, 10vw, 120px);
   color: var(--gold);
   line-height: 1;
