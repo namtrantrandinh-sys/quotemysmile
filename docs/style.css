@@ -1,9 +1,18 @@
 /* QuoteMySmile marketing site — editorial cream + brushed gold. */
+
+/* FOUT prevention — bone background on html prevents the white flash
+   while the stylesheet is downloading. font-display: swap declared in
+   the Google Fonts URL ensures text is always visible. */
+html {
+  background: #f5f1e8;
+  color-scheme: light;
+}
+
 :root {
   --bone: #f5f1e8;
   --eggshell: #faf6ec;
   --linen: #e8e0cd;
-  --taupe: #8a7e6f;
+  --taupe: #6e6457;
   --walnut: #4d423a;
   --espresso: #2a2520;
   --gold: #a9cfc0;

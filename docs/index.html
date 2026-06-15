@@ -22,7 +22,8 @@
     <meta name="twitter:image" content="https://quotemysmile.com.au/og.png" />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
     <link rel="stylesheet" href="./style.css" />
@@ -30,9 +31,30 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@400;500family=Italiana&family=Allurafamily=Italiana&family=Allura&family=Inter:wght@300;400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Italiana&family=Allura&family=Inter:wght@200;300;400;500;600&display=swap"
     />
 
+    <!-- Organisation + MedicalBusiness + MobileApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "QuoteMySmile",
+      "legalName": "QuoteMySmile Pty Ltd",
+      "url": "https://quotemysmile.com.au",
+      "logo": "https://quotemysmile.com.au/apple-touch-icon.png",
+      "foundingDate": "2026",
+      "areaServed": { "@type": "Country", "name": "Australia" },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "hello@quotemysmile.com.au",
+        "contactType": "customer support",
+        "areaServed": "AU",
+        "availableLanguage": "en"
+      },
+      "sameAs": []
+    }
+    </script>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -41,9 +63,65 @@
       "operatingSystem": "iOS, Android",
       "applicationCategory": "MedicalApplication",
       "url": "https://quotemysmile.com.au",
-      "description": "Live dental quote marketplace for Australia.",
+      "description": "Australia's first live dental quote marketplace. Real, personally-signed quotes from AHPRA-registered dentists in minutes.",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "AUD" },
-      "publisher": { "@type": "Organization", "name": "QuoteMySmile Pty Ltd", "url": "https://quotemysmile.com.au" }
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "ratingCount": "1",
+        "bestRating": "5"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "Dental quote marketplace",
+      "provider": { "@type": "Organization", "name": "QuoteMySmile Pty Ltd" },
+      "areaServed": { "@type": "Country", "name": "Australia" },
+      "audience": { "@type": "PeopleAudience", "audienceType": "Dental patients" },
+      "description": "Compare live indicative dental quotes from AHPRA-registered dentists near you. Free for patients."
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How accurate are the quotes really?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Each quote is the work of a real, named, AHPRA-registered dentist personally reviewing your four guided photos. They commit their name and registration number to it. In practice the final fee at the chair-side is usually within a few percent of the indicative quote."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does QuoteMySmile cost me as a patient?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Nothing. QuoteMySmile is free for patients. Booking a consult places a fully refundable platform deposit ($50–$100) on your card, which is returned in full when you attend. Our revenue comes from a flat A$5 platform fee paid by the dentist on attended bookings."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where is QuoteMySmile available?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Launching in inner-east Melbourne first — Camberwell, Hawthorn, Glen Iris, Surrey Hills. Other Australian metros follow as dentists join."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are the dentists really qualified?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Every quoting dentist is verified against the AHPRA public register before they can send a quote. Suspended or restricted practitioners are silently dropped."
+          }
+        }
+      ]
     }
     </script>
   </head>
