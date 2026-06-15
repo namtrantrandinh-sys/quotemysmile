@@ -75,6 +75,55 @@ export default function DentistOnboarding() {
   const idx = ORDER.indexOf(step);
   const next = () => setStep(ORDER[Math.min(idx + 1, ORDER.length - 1)]);
 
+  // --- Per-step validation. Returns null when the step is complete, or a
+  // user-facing message explaining what's missing. The Continue button
+  // shows this message in an Alert so the dentist knows exactly what to do.
+  const AHPRA_RE = /^DEN\d{10}$/;
+  const ABN_RE = /^\d{11}$/;
+  const cleanAbn = abn.replace(/\s/g, "");
+
+  function validateStep(s: Step): string | null {
+    switch (s) {
+      case "practitioner":
+        if (!AHPRA_RE.test(ahpra.trim().toUpperCase()))
+          return "AHPRA registration must be DEN followed by 10 digits (e.g. DEN0001234567).";
+        if (!name.trim() || name.trim().length < 3)
+          return "Enter your full registered name.";
+        return null;
+      case "clinic":
+        if (!clinic.trim()) return "Clinic name is required.";
+        if (!ABN_RE.test(cleanAbn)) return "ABN must be exactly 11 digits.";
+        if (!address.trim() || address.trim().length < 8)
+          return "Enter your full clinic address.";
+        return null;
+      case "insurance":
+        if (!piiProvider.trim()) return "Pick or enter your PII provider.";
+        if (!piiPolicy.trim()) return "Policy number is required.";
+        if (!/^\d{2}\s?\/\s?\d{2}\s?\/\s?\d{4}$/.test(piiExpiry.trim()))
+          return "Expiry must be in DD / MM / YYYY format.";
+        return null;
+      case "services":
+        if (![5, 10, 15, 20, 30].includes(radius))
+          return "Choose a service radius.";
+        return null;
+      case "agreements":
+        if (acks.size !== ALL_ACKS.length)
+          return `Tick all ${ALL_ACKS.length} acknowledgements to continue.`;
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  function tryNext() {
+    const msg = validateStep(step);
+    if (msg) {
+      Alert.alert("Almost there", msg);
+      return;
+    }
+    next();
+  }
+
   const ALL_ACKS = [
     {
       key: "responsibility",
@@ -121,7 +170,7 @@ export default function DentistOnboarding() {
                 ninety days. Cancel any time.
               </Text>
 
-              <View className="border border-linen bg-eggshell/40 p-5 w-full max-w-md mb-8">
+              <View className="border border-linen bg-eggshell/40 p-5 w-full max-w-md mb-6">
                 <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans mb-3">
                   What to know upfront
                 </Text>
@@ -137,6 +186,21 @@ export default function DentistOnboarding() {
                 </Text>
                 <Text className="text-sm text-walnut font-sans leading-relaxed">
                   · Emergency requests pay 30–50% premium. Patients are warned.
+                </Text>
+              </View>
+
+              <View className="border border-linen bg-bone p-5 w-full max-w-md mb-8">
+                <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans mb-3">
+                  Verification — what to expect
+                </Text>
+                <Text className="text-sm text-walnut font-sans leading-relaxed mb-1.5">
+                  <Text className="text-espresso">AHPRA</Text> — verified live against the public register the moment you submit (instant).
+                </Text>
+                <Text className="text-sm text-walnut font-sans leading-relaxed mb-1.5">
+                  <Text className="text-espresso">ABN</Text> — checked against ABN Lookup (instant).
+                </Text>
+                <Text className="text-sm text-walnut font-sans leading-relaxed">
+                  <Text className="text-espresso">PII certificate + clinic photo</Text> — we'll email a secure upload link. You have 14 days. Quoting stays paused until both are on file.
                 </Text>
               </View>
 
@@ -162,17 +226,25 @@ export default function DentistOnboarding() {
 
               <FieldLabel
                 label="AHPRA registration number"
-                hint="We verify your registration against the public AHPRA register. Suspended or conditional registrations cannot proceed."
+                hint="Format: DEN + 10 digits (e.g. DEN0001234567). We check the public AHPRA register live. Suspended or conditional registrations cannot proceed."
               >
-                <TextField value={ahpra} onChangeText={setAhpra} placeholder="DEN0001234567" />
+                <TextField
+                  value={ahpra}
+                  onChangeText={(v) => setAhpra(v.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                  placeholder="DEN0001234567"
+                  maxLength={13}
+                />
               </FieldLabel>
 
-              <FieldLabel label="Full name (as registered)">
+              <FieldLabel
+                label="Full name (as registered)"
+                hint="Must match exactly what AHPRA has on file — including 'Dr', middle names, hyphens."
+              >
                 <TextField value={name} onChangeText={setName} placeholder="Dr Sarah Chen" />
               </FieldLabel>
 
               <View className="items-center mt-6">
-                <Button variant="primary" size="lg" onPress={next}>
+                <Button variant="primary" size="lg" onPress={tryNext}>
                   Continue
                 </Button>
               </View>
@@ -192,8 +264,17 @@ export default function DentistOnboarding() {
                 <TextField value={clinic} onChangeText={setClinic} placeholder="Camberwell Dental" />
               </FieldLabel>
 
-              <FieldLabel label="ABN" hint="We verify against the public ABN Lookup register.">
-                <TextField value={abn} onChangeText={setAbn} placeholder="12 345 678 901" keyboardType="numeric" />
+              <FieldLabel
+                label="ABN"
+                hint="11 digits. We verify against the public ABN Lookup register. Spaces are fine — we strip them."
+              >
+                <TextField
+                  value={abn}
+                  onChangeText={setAbn}
+                  placeholder="12 345 678 901"
+                  keyboardType="numeric"
+                  maxLength={14}
+                />
               </FieldLabel>
 
               <FieldLabel
@@ -204,7 +285,7 @@ export default function DentistOnboarding() {
               </FieldLabel>
 
               <View className="items-center mt-6">
-                <Button variant="primary" size="lg" onPress={next}>
+                <Button variant="primary" size="lg" onPress={tryNext}>
                   Continue
                 </Button>
               </View>
@@ -238,18 +319,17 @@ export default function DentistOnboarding() {
 
               <View className="border border-linen bg-eggshell/40 p-5 mb-10">
                 <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans mb-2">
-                  Upload policy certificate
+                  Policy certificate
                 </Text>
-                <Text className="text-sm text-walnut font-sans leading-relaxed mb-3">
-                  PDF or image. We never share with patients.
-                </Text>
-                <Text className="text-[11px] tracking-cap uppercase text-gold font-sans">
-                  + Choose file
+                <Text className="text-sm text-walnut font-sans leading-relaxed">
+                  After signup we'll email <Text className="text-espresso">support@quotemysmile.com.au</Text>{" "}
+                  with a secure upload link. You have 14 days. Quoting stays
+                  paused until the certificate is on file.
                 </Text>
               </View>
 
               <View className="items-center">
-                <Button variant="primary" size="lg" onPress={next}>
+                <Button variant="primary" size="lg" onPress={tryNext}>
                   Continue
                 </Button>
               </View>
@@ -292,16 +372,18 @@ export default function DentistOnboarding() {
                 </Text>
               </FieldLabel>
 
-              <FieldLabel label="Clinic exterior photo" hint="Trust signal for patients. Real, not stock.">
-                <View className="border border-linen bg-eggshell/40 p-8 items-center">
-                  <Text className="text-[11px] tracking-cap uppercase text-gold font-sans">
-                    + Upload photo
-                  </Text>
-                </View>
-              </FieldLabel>
+              <View className="border border-linen bg-eggshell/40 p-5 mt-6 mb-6">
+                <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans mb-2">
+                  Clinic exterior photo
+                </Text>
+                <Text className="text-sm text-walnut font-sans leading-relaxed">
+                  Trust signal for patients (real, not stock). We'll request this
+                  by email after signup — same secure upload link as your PII.
+                </Text>
+              </View>
 
               <View className="items-center mt-6">
-                <Button variant="primary" size="lg" onPress={next}>
+                <Button variant="primary" size="lg" onPress={tryNext}>
                   Continue
                 </Button>
               </View>
@@ -404,8 +486,10 @@ export default function DentistOnboarding() {
                 You're in.
               </Text>
               <Text className="text-base text-walnut font-sans text-center max-w-md leading-relaxed mb-12">
-                We verify your AHPRA registration, ABN and PII within 24 hours.
-                You'll be active and able to quote as soon as we confirm.
+                We've kicked off your AHPRA + ABN checks — these usually
+                complete within a minute and show as green on your dashboard.
+                A secure email link for your PII certificate is on its way
+                to the address on your AHPRA record.
               </Text>
               <Button variant="primary" size="lg" onPress={() => router.replace("/dentist")}>
                 Open dashboard

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -40,6 +40,15 @@ export default function SignInScreen() {
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  // Resend-code cooldown — Supabase rate-limits to ~once per 60s; we
+  // surface a visible countdown so the user isn't stuck wondering.
+  const [resendIn, setResendIn] = useState(0);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setInterval(() => setResendIn((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [resendIn]);
 
   const isReview = looksLikeReviewEmail(phone);
 
@@ -80,6 +89,7 @@ export default function SignInScreen() {
       setPhone(e164);
       await signInWithPhone(e164);
       setPhase("otp");
+      setResendIn(60);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Try again.";
       const looksLikeTwilioBlocked =
@@ -125,12 +135,43 @@ export default function SignInScreen() {
         if (i < 2) await new Promise((r) => setTimeout(r, 600));
       }
       if (!profile) {
+        // In SIGN-IN mode we don't want to silently create a brand-new
+        // account — confirm with the user first so an existing account
+        // mistakenly typing the wrong number doesn't end up with a duplicate.
+        if (mode === "signin") {
+          Alert.alert(
+            "No account on this number",
+            "We couldn't find a QuoteMySmile account for this mobile. Create one now?",
+            [
+              { text: "Try another number", style: "cancel", onPress: () => setPhase("phone") },
+              { text: "Create account", onPress: () => setPhase("profile") },
+            ],
+          );
+          return;
+        }
         setPhase("profile");
       } else {
         router.replace(profile.role === "dentist" ? "/dentist" : "/");
       }
     } catch (e) {
       Alert.alert("Code didn't match", e instanceof Error ? e.message : "Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resendCode = async () => {
+    if (resendIn > 0 || busy) return;
+    setBusy(true);
+    try {
+      if (isReview) {
+        await signInWithEmail(REVIEW_EMAIL);
+      } else {
+        await signInWithPhone(phone);
+      }
+      setResendIn(60);
+    } catch (e) {
+      Alert.alert("Couldn't resend", e instanceof Error ? e.message : "Try again.");
     } finally {
       setBusy(false);
     }
@@ -230,14 +271,26 @@ export default function SignInScreen() {
                 <TextField
                   value={code}
                   onChangeText={setCode}
-                  placeholder="123 456"
+                  placeholder="123456"
                   keyboardType="numeric"
                   maxLength={6}
+                  autoFocus
                 />
               </FieldLabel>
               <View className="items-center gap-3 mt-6">
                 <Button variant="primary" size="lg" onPress={verify}>
                   {busy ? "Verifying…" : "Verify"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onPress={resendCode}
+                >
+                  {resendIn > 0
+                    ? `Resend code in ${resendIn}s`
+                    : busy
+                      ? "Sending…"
+                      : "Resend code"}
                 </Button>
                 <Button variant="ghost" size="md" onPress={() => setPhase("phone")}>
                   Change number
