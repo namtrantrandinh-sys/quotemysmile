@@ -68,7 +68,9 @@
         {
           "backgroundColor": "#F5F1E8",
           "image": "./assets/splash.png",
-          "imageWidth": 200
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "fadeDuration": 600
         }
       ],
       [

@@ -44,31 +44,33 @@ const PANELS: Panel[] = [
   },
   {
     icon: "mouth",
-    kicker: "01 · Map your mouth",
+    kicker: "02 · Map your mouth",
     title: "Four guided photos.",
-    italicWord: "Four.",
+    italicWord: "photos.",
     body:
       "Front smile, upper arch, lower arch, problem area. Our on-camera guides tell you exactly how to frame each one.",
   },
   {
     icon: "radius",
-    kicker: "02 · Set your radius",
-    title: "Choose how far we reach.",
+    kicker: "03 · Set your radius",
+    title: "Pick your radius.",
+    italicWord: "radius.",
     body:
       "GPS picks up your location. Drag the slider 2–30 km. See the real count of AHPRA-registered dentists in range.",
   },
   {
     icon: "clock",
-    kicker: "03 · Live quoting",
+    kicker: "04 · Live quoting",
     title: "Watch quotes arrive.",
+    italicWord: "arrive.",
     body:
       "Dentists send indicative quotes within your window — 15 minutes for emergencies, up to three days for considered work. Each only allowed one revision.",
   },
   {
     icon: "check",
-    kicker: "04 · Book with confidence",
+    kicker: "05 · Book with confidence",
     title: "Pick the quote that suits.",
-    italicWord: "yours.",
+    italicWord: "suits.",
     body:
       "Compare price, distance, availability, reviews. Book the consult. Final fees confirmed at your in-person exam.",
   },

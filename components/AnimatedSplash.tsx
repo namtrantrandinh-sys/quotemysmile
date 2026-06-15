@@ -15,35 +15,46 @@ export function AnimatedSplash({ onDone }: Props) {
   const fade = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.96)).current;
   const tagOpacity = useRef(new Animated.Value(0)).current;
-  const containerFade = useRef(new Animated.Value(1)).current;
+  // Container starts at 0 and fades IN, then later fades OUT — so the
+  // transition from native splash to animated splash is seamless (cream
+  // background continuous, no flash).
+  const containerFade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
-      // Wordmark in
+      // Container in — fades up FROM the native splash (continuous cream bg)
+      Animated.timing(containerFade, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      // Wordmark in — slower, more deliberate
       Animated.parallel([
         Animated.timing(fade, {
           toValue: 1,
-          duration: 500,
+          duration: 900,
           useNativeDriver: true,
         }),
         Animated.timing(scale, {
           toValue: 1,
-          duration: 500,
+          duration: 900,
           useNativeDriver: true,
         }),
       ]),
-      // Tagline in
+      // Short pause so the wordmark gets to settle before tagline appears
+      Animated.delay(250),
+      // Tagline in — graceful
       Animated.timing(tagOpacity, {
         toValue: 1,
-        duration: 400,
+        duration: 700,
         useNativeDriver: true,
       }),
-      // Hold
-      Animated.delay(400),
-      // Container out
+      // Hold — long enough to actually read "Your dream smile, in your hand."
+      Animated.delay(2400),
+      // Container out — leisurely fade
       Animated.timing(containerFade, {
         toValue: 0,
-        duration: 320,
+        duration: 700,
         useNativeDriver: true,
       }),
     ]).start(() => {

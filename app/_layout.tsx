@@ -94,7 +94,16 @@ export default function RootLayout() {
   const segments = useSegments();
 
   useEffect(() => {
-    if (loaded) SplashScreen.hideAsync();
+    // Keep the native splash visible for a minimum dwell time so the
+    // QUOTE my SMILE lockup gets to register before the animated splash
+    // takes over — no two-flash artefact on fast launches.
+    if (loaded) {
+      const NATIVE_SPLASH_MIN_DURATION_MS = 1400;
+      const t = setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, NATIVE_SPLASH_MIN_DURATION_MS);
+      return () => clearTimeout(t);
+    }
   }, [loaded]);
 
   useEffect(() => {

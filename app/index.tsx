@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View, Text, ScrollView, Pressable, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Wordmark } from "@/components/Wordmark";
 import { Button } from "@/components/Button";
 import { RoleTile } from "@/components/RoleTile";
@@ -108,6 +109,13 @@ export default function WelcomeScreen() {
             in your hand.
           </Text>
 
+          {/* Modern tooth-outline icon — premium dental cue above the headline */}
+          <MaterialCommunityIcons
+            name="tooth-outline"
+            size={36}
+            color="#5FA89B"
+            style={{ marginTop: 24, marginBottom: 16, opacity: 0.85 }}
+          />
           <Text
             style={{
               fontFamily: "Italiana",
