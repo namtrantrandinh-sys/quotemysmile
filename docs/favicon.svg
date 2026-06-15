@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="32" height="32">
-  <!-- QuoteMySmile favicon: white smile with hook tips on each end, mint gradient background -->
+  <!-- QuoteMySmile favicon: white Amazon-style smile + filled triangular arrowheads at each end -->
   <defs>
     <linearGradient id="qms-bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#4A8C82"/>
@@ -13,31 +13,29 @@
     </radialGradient>
   </defs>
 
-  <!-- Background -->
   <rect x="0" y="0" width="64" height="64" rx="14" ry="14" fill="url(#qms-bg)"/>
   <rect x="0" y="0" width="64" height="64" rx="14" ry="14" fill="url(#qms-shine)"/>
 
-  <!-- Sparkle dot (top-right) -->
+  <!-- Sparkle dot top-right -->
   <circle cx="54" cy="11" r="2.4" fill="#ffffff" opacity="0.85"/>
 
-  <!-- White smile arc — bold, rounded ends -->
+  <!-- Bold white smile arc — flat ends so arrowheads attach cleanly -->
   <path d="M 14 28 Q 32 50 50 28"
         fill="none"
         stroke="#ffffff"
         stroke-width="6"
-        stroke-linecap="round"/>
+        stroke-linecap="butt"/>
 
-  <!-- LEFT hook — small curve flicking up from the left end of the smile -->
-  <path d="M 14 28 Q 11 23 14 19"
-        fill="none"
-        stroke="#ffffff"
-        stroke-width="5"
-        stroke-linecap="round"/>
+  <!--
+    LEFT arrowhead — sharp triangle pointing up-and-out from left end of smile.
+    Tip is at (5, 14). Base touches smile end (14, 28) and inner-barb (17, 26).
+  -->
+  <path d="M 5 14 L 17 26 L 14 31 Z"
+        fill="#ffffff"/>
 
-  <!-- RIGHT hook — small curve flicking up from the right end of the smile -->
-  <path d="M 50 28 Q 53 23 50 19"
-        fill="none"
-        stroke="#ffffff"
-        stroke-width="5"
-        stroke-linecap="round"/>
+  <!--
+    RIGHT arrowhead — mirrored: tip at (59, 14), base at (50, 31), inner-barb (47, 26).
+  -->
+  <path d="M 59 14 L 47 26 L 50 31 Z"
+        fill="#ffffff"/>
 </svg>
