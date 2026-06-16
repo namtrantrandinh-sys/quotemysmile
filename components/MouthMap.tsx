@@ -93,10 +93,11 @@ export function MouthMap({ slots, activeSlotName, compact }: Props) {
         </View>
       </View>
 
-      {/* Problem-area chip below — active state gets a sweeping shimmer */}
+      {/* Problem-area chip below — always shimmers while uncaptured so
+          users notice it (it sits below the main mouth diagram and is
+          the most easily-missed of the four). */}
       {(() => {
-        const isActive =
-          !!problem && activeSlotName === "problem-area" && !problem.uri;
+        const isActive = !!problem && !problem.uri;
         const pill = (
           <View
             className={`mt-3 flex-row items-center gap-2 border-2 ${tone(problem)} rounded-full`}
