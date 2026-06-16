@@ -43,6 +43,10 @@ export default function SignInScreen() {
   const mode = params.mode === "signin" ? "signin" : "signup";
 
   const [phase, setPhase] = useState<"phone" | "otp" | "profile">("phone");
+  // Method tab — defaults to phone, user can switch to email so the
+  // keyboard is correct from the very first keystroke. Auto-flips to
+  // email if they paste an address into the phone field.
+  const [method, setMethod] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -57,9 +61,9 @@ export default function SignInScreen() {
     return () => clearInterval(t);
   }, [resendIn]);
 
-  // "isEmail" — the user typed an email instead of a number. Either flow
-  // works; email goes via Supabase email OTP, phone via Twilio SMS.
-  const isEmail = looksLikeEmail(phone);
+  // Treat as email if the user explicitly picked Email tab, OR if they
+  // typed/pasted something that looks like an email into the field.
+  const isEmail = method === "email" || looksLikeEmail(phone);
 
   // Normalise to E.164: digits only, prefixed with "+". Australian users
   // commonly type "0412…" or "+61 412 345 678" — both need to become
@@ -245,19 +249,73 @@ export default function SignInScreen() {
         <View className="px-8 pb-24">
           {phase === "phone" ? (
             <>
+              {/* Phone / Email toggle — picks the right keyboard BEFORE
+                  the user types. Tap Email and the keyboard has letters. */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  backgroundColor: "rgba(95,168,155,0.10)",
+                  borderRadius: 999,
+                  padding: 4,
+                  marginBottom: 22,
+                  alignSelf: "center",
+                }}
+              >
+                {(["phone", "email"] as const).map((m) => {
+                  const active = method === m;
+                  return (
+                    <Pressable
+                      key={m}
+                      onPress={() => {
+                        setMethod(m);
+                        // If user is mid-typing wrong value, clear it
+                        // so the placeholder/format hint guides them.
+                        if (
+                          (m === "phone" && /[@a-zA-Z]/.test(phone)) ||
+                          (m === "email" && /^\+?\d/.test(phone))
+                        ) {
+                          setPhone("");
+                        }
+                      }}
+                      style={{
+                        paddingVertical: 8,
+                        paddingHorizontal: 22,
+                        borderRadius: 999,
+                        backgroundColor: active ? "#5FA89B" : "transparent",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "Inter",
+                          fontSize: 11,
+                          letterSpacing: 1.4,
+                          textTransform: "uppercase",
+                          color: active ? "#FFFFFF" : "#3F7E73",
+                          fontWeight: "600",
+                        }}
+                      >
+                        {m === "phone" ? "Mobile" : "Email"}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
               <FieldLabel
-                label={isEmail ? "Email" : "Mobile or email"}
+                label={method === "email" ? "Email address" : "Mobile number"}
                 hint={
-                  isEmail
-                    ? "We'll email a 6-digit code."
-                    : "AU mobile — 04XX XXX XXX. Or type your email to get the code by inbox."
+                  method === "email"
+                    ? "We'll email you a 6-digit code."
+                    : "AU mobile — 04XX XXX XXX or +61 4XX XXX XXX."
                 }
               >
                 <TextField
                   value={phone}
                   onChangeText={setPhone}
-                  placeholder="0412 345 678 or you@email.com"
-                  keyboardType={isEmail ? "email-address" : "phone-pad"}
+                  placeholder={
+                    method === "email" ? "you@email.com" : "0412 345 678"
+                  }
+                  keyboardType={method === "email" ? "email-address" : "phone-pad"}
                 />
               </FieldLabel>
               <View className="items-center mt-6">
