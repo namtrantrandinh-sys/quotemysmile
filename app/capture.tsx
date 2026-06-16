@@ -23,6 +23,7 @@ import { BackBar } from "@/components/BackBar";
 import { Button } from "@/components/Button";
 import { ProgressDots } from "@/components/ProgressDots";
 import { CameraOverlay } from "@/components/CameraOverlay";
+import { ArchIcon } from "@/components/ArchIcon";
 import { MouthMap } from "@/components/MouthMap";
 import { PhotoInfoCard, PhotoTips } from "@/components/PhotoInfoCard";
 import { Icon } from "@/components/Icon";
@@ -244,11 +245,13 @@ export default function CaptureScreen() {
 
         <View className="px-8 pb-12 gap-3">
           {photos.slots.map((s) => {
-            // Modern dental-aesthetic glyph per slot.
-            const SLOT_ICON: Record<typeof s.name, keyof typeof MaterialCommunityIcons.glyphMap> = {
+            // Modern dental-aesthetic glyph per slot. Upper / lower arches
+            // use a custom SVG ArchIcon (anatomically correct horseshoe,
+            // opening down vs up) so they're visually distinct.
+            const SLOT_ICON: Record<typeof s.name, keyof typeof MaterialCommunityIcons.glyphMap | null> = {
               "front-smile": "emoticon-happy-outline",
-              "upper-arch": "tooth-outline",
-              "lower-arch": "tooth",
+              "upper-arch": null,
+              "lower-arch": null,
               "problem-area": "magnify-scan",
             };
             const iconName = SLOT_ICON[s.name];
@@ -270,11 +273,17 @@ export default function CaptureScreen() {
                     backgroundColor: captured ? "rgba(95,168,155,0.18)" : "rgba(95,168,155,0.10)",
                   }}
                 >
-                  <MaterialCommunityIcons
-                    name={iconName}
-                    size={26}
-                    color="#5FA89B"
-                  />
+                  {s.name === "upper-arch" ? (
+                    <ArchIcon variant="upper" size={28} color="#5FA89B" />
+                  ) : s.name === "lower-arch" ? (
+                    <ArchIcon variant="lower" size={28} color="#5FA89B" />
+                  ) : iconName ? (
+                    <MaterialCommunityIcons
+                      name={iconName}
+                      size={26}
+                      color="#5FA89B"
+                    />
+                  ) : null}
                 </View>
 
                 {/* Title + hint */}

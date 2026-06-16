@@ -1,6 +1,6 @@
 import "../global.css";
 import "@/lib/observability";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useFonts } from "expo-font";
 import {
@@ -45,6 +45,8 @@ import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { hasSeenOnboarding, markOnboardingSeen } from "@/lib/firstLaunch";
 import { supabase } from "@/lib/supabase";
 import { hydrateIntake } from "@/lib/intakeStore";
+// Metro aliases @stripe/stripe-react-native to a no-op stub on web — see
+// metro.config.js. Native bundles get the real provider.
 import { StripeProvider } from "@stripe/stripe-react-native";
 
 const STRIPE_PUBLISHABLE_KEY =
