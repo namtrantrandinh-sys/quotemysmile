@@ -45,9 +45,13 @@ const CAPTURE_HREF = "/categories";
 
 // Bar geometry
 const BAR_HEIGHT = 78;
-const NOTCH_RADIUS = 38; // half the camera button width + cushion
-const BAR_RADIUS = 32;
+// Notch radius is now button radius + an explicit cushion so there's a
+// visible mint ring between the button edge and the carved bar — the
+// button reads as "floating inside" the ditch, not stuck to its walls.
 const BUTTON_SIZE = 60;
+const NOTCH_CUSHION = 10; // visible breathing room on each side of the button
+const NOTCH_RADIUS = BUTTON_SIZE / 2 + NOTCH_CUSHION;
+const BAR_RADIUS = 32;
 
 function buildBarPath(width: number) {
   // Returns an SVG path that draws the bar:
