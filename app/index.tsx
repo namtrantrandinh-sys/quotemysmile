@@ -147,23 +147,26 @@ export default function WelcomeScreen() {
             to give you the best quote.
           </Text>
 
-          <Text className="text-base text-walnut font-sans text-center leading-relaxed max-w-md mb-4 px-4">
-            No awkward phone calls. No "we'll quote you in person" runaround.
-          </Text>
-          <Text className="text-base text-walnut font-sans text-center leading-relaxed max-w-md mb-12 px-4">
-            Compare live dental quotes & choose the best on your screen — from
-            AHPRA-registered dentists near you. Convenient. Competitive. Accurate.
-          </Text>
-
           {/* Role selector — only shown when not signed in */}
           {!signedIn && !loading ? (
-            <View className="w-full max-w-md mb-12">
-              <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans text-center mb-6">
+            <View className="w-full max-w-md mb-12" style={{ marginTop: 24 }}>
+              <Text
+                style={{
+                  fontFamily: "Inter",
+                  fontSize: 10,
+                  letterSpacing: 1.6,
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.85)",
+                  textAlign: "center",
+                  marginBottom: 18,
+                  fontWeight: "500",
+                }}
+              >
                 Choose your path
               </Text>
-              <View className="flex-row gap-3">
-                <RoleTile
-                  symbol="I"
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <ModernRoleTile
+                  glyph="account-heart-outline"
                   label="Patient"
                   blurb="Get quotes from nearby dentists in minutes."
                   onPress={() =>
@@ -173,8 +176,8 @@ export default function WelcomeScreen() {
                     })
                   }
                 />
-                <RoleTile
-                  symbol="II"
+                <ModernRoleTile
+                  glyph="tooth-outline"
                   label="Dentist"
                   blurb="Quote live on patient requests in your area."
                   onPress={() =>
@@ -280,17 +283,10 @@ export default function WelcomeScreen() {
             </View>
           ) : null}
 
-          {/* Steps */}
-          <View className="w-full max-w-2xl border-t border-linen pt-16 gap-12">
-            <Step n="01" title="Photo">
-              Guided capture from three angles. The clearer the photo, the more accurate the quote.
-            </Step>
-            <Step n="02" title="Quote">
-              AHPRA-registered dentists nearby send indicative quotes within thirty minutes. Itemised. Transparent.
-            </Step>
-            <Step n="03" title="Choose">
-              Pick the quote that suits. Each one is signed by an AHPRA-registered dentist — in practice, the chairside fee matches your quote.
-            </Step>
+          {/* Steps section removed — flow is now self-explanatory from
+              the role tiles and main hero. Less is more. */}
+          <View className="w-full max-w-2xl">
+
           </View>
         </Animated.View>
 
@@ -339,5 +335,80 @@ function Step({ n, title, children }: { n: string; title: string; children: stri
       <Text className="text-xs tracking-cap uppercase text-walnut font-sans mb-2">{title}</Text>
       <Text className="text-sm text-taupe font-sans leading-relaxed">{children}</Text>
     </View>
+  );
+}
+
+/**
+ * Modern role tile — white surface, soft shadow, mint accent circle,
+ * clean Inter typography. Replaces the old Patient/Dentist boxes that
+ * were transparent over the mint background.
+ */
+function ModernRoleTile({
+  glyph,
+  label,
+  blurb,
+  onPress,
+}: {
+  glyph: keyof typeof MaterialCommunityIcons.glyphMap;
+  label: string;
+  blurb: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flex: 1,
+        backgroundColor: pressed ? "#F8FAF9" : "#FFFFFF",
+        borderRadius: 20,
+        paddingVertical: 22,
+        paddingHorizontal: 18,
+        alignItems: "center",
+        shadowColor: "#1F4F47",
+        shadowOpacity: 0.18,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 6,
+        borderWidth: 1,
+        borderColor: "rgba(31,79,71,0.06)",
+      })}
+    >
+      <View
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: "rgba(95,168,155,0.14)",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 14,
+        }}
+      >
+        <MaterialCommunityIcons name={glyph} size={28} color="#5FA89B" />
+      </View>
+      <Text
+        style={{
+          fontFamily: "Inter",
+          fontWeight: "600",
+          fontSize: 16,
+          color: "#2A2520",
+          marginBottom: 5,
+          letterSpacing: 0.2,
+        }}
+      >
+        {label}
+      </Text>
+      <Text
+        style={{
+          fontFamily: "Inter",
+          fontSize: 12,
+          color: "#6E6457",
+          textAlign: "center",
+          lineHeight: 17,
+        }}
+      >
+        {blurb}
+      </Text>
+    </Pressable>
   );
 }

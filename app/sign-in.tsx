@@ -23,10 +23,17 @@ import { supabase } from "@/lib/supabase";
  * Set the matching test user up in Supabase Auth with `email_otp` enabled.
  */
 const REVIEW_EMAIL = "review@quotemysmile.com.au";
-const REVIEW_CODE_HINT = "Apple Review can use review@quotemysmile.com.au";
+const REVIEW_CODE_HINT =
+  "Tip: while SMS is being configured, you can sign in with your email address — we'll send the code there instead.";
 
-function looksLikeReviewEmail(value: string) {
-  return value.trim().toLowerCase() === REVIEW_EMAIL;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Any properly-formatted email triggers the Supabase email-OTP path.
+// During Twilio rollout this is the fallback for everyone, not just Apple
+// Review. The user types their email in the same field and gets a code
+// in their inbox within seconds.
+function looksLikeEmail(value: string) {
+  return EMAIL_RE.test(value.trim().toLowerCase());
 }
 
 export default function SignInScreen() {
@@ -50,7 +57,9 @@ export default function SignInScreen() {
     return () => clearInterval(t);
   }, [resendIn]);
 
-  const isReview = looksLikeReviewEmail(phone);
+  // "isEmail" — the user typed an email instead of a number. Either flow
+  // works; email goes via Supabase email OTP, phone via Twilio SMS.
+  const isEmail = looksLikeEmail(phone);
 
   // Normalise to E.164: digits only, prefixed with "+". Australian users
   // commonly type "0412…" or "+61 412 345 678" — both need to become
@@ -68,10 +77,11 @@ export default function SignInScreen() {
   const send = async () => {
     setBusy(true);
     try {
-      if (isReview) {
-        // App-Review path — Supabase emails the magic code, no Twilio needed.
-        await signInWithEmail(REVIEW_EMAIL);
+      if (isEmail) {
+        // Email path — Supabase emails the magic code, no Twilio needed.
+        await signInWithEmail(phone.trim().toLowerCase());
         setPhase("otp");
+        setResendIn(60);
         return;
       }
       const e164 = normalisePhone(phone);
@@ -80,12 +90,10 @@ export default function SignInScreen() {
       if (e164.replace(/\D/g, "").length < 10) {
         Alert.alert(
           "Check your number",
-          "Enter your full mobile, e.g. 0412 345 678 or +61 412 345 678.",
+          "Enter your full mobile (e.g. 0412 345 678) or your email address.",
         );
         return;
       }
-      // Update local state to the cleaned format so the OTP screen + the
-      // resend button see the same E.164 value.
       setPhone(e164);
       await signInWithPhone(e164);
       setPhase("otp");
@@ -97,7 +105,7 @@ export default function SignInScreen() {
       Alert.alert(
         "Couldn't send code",
         looksLikeTwilioBlocked
-          ? `${msg}\n\nIf you're testing the app, you can sign in with the email ${REVIEW_EMAIL} — we'll send the code by email instead.`
+          ? `${msg}\n\nTry your email address instead — we'll send the code to your inbox.`
           : msg,
       );
     } finally {
@@ -108,8 +116,8 @@ export default function SignInScreen() {
   const verify = async () => {
     setBusy(true);
     try {
-      if (isReview) {
-        await verifyEmailOtp(REVIEW_EMAIL, code);
+      if (isEmail) {
+        await verifyEmailOtp(phone.trim().toLowerCase(), code);
       } else {
         await verifyPhoneOtp(phone, code);
       }
@@ -164,8 +172,8 @@ export default function SignInScreen() {
     if (resendIn > 0 || busy) return;
     setBusy(true);
     try {
-      if (isReview) {
-        await signInWithEmail(REVIEW_EMAIL);
+      if (isEmail) {
+        await signInWithEmail(phone.trim().toLowerCase());
       } else {
         await signInWithPhone(phone);
       }
@@ -238,25 +246,25 @@ export default function SignInScreen() {
           {phase === "phone" ? (
             <>
               <FieldLabel
-                label={isReview ? "Email" : "Mobile number"}
+                label={isEmail ? "Email" : "Mobile or email"}
                 hint={
-                  isReview
-                    ? "Email magic-link path (no SMS)."
-                    : "AU mobile — 04XX XXX XXX or +61 4XX XXX XXX."
+                  isEmail
+                    ? "We'll email a 6-digit code."
+                    : "AU mobile — 04XX XXX XXX. Or type your email to get the code by inbox."
                 }
               >
                 <TextField
                   value={phone}
                   onChangeText={setPhone}
-                  placeholder={isReview ? "you@example.com" : "0412 345 678"}
-                  keyboardType={isReview ? "email-address" : "phone-pad"}
+                  placeholder="0412 345 678 or you@email.com"
+                  keyboardType={isEmail ? "email-address" : "phone-pad"}
                 />
               </FieldLabel>
               <View className="items-center mt-6">
                 <Button variant="primary" size="lg" onPress={send}>
                   {busy
                     ? "Sending…"
-                    : isReview
+                    : isEmail
                       ? "Email code"
                       : "Send code"}
                 </Button>

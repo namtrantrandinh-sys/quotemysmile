@@ -72,7 +72,7 @@ const PANELS: Panel[] = [
     title: "Pick the quote that suits.",
     italicWord: "suits.",
     body:
-      "Compare price, distance, availability, reviews. Book the consult. Final fees confirmed at your in-person exam.",
+      "Compare on price, distance, availability and reviews. Each quote is signed by an AHPRA-registered dentist — what you see is what you pay. The clinical exam confirms it, not changes it.",
   },
 ];
 

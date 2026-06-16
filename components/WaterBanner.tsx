@@ -7,24 +7,29 @@ import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type Props = {
-  /** Optional caption shown on the right (e.g. "Step 02 · Capture"). */
   caption?: string;
-  /** Override the back action. Defaults to router.back(). */
   onBack?: () => void;
 };
 
 /**
- * Top banner with a slow, continuously-shifting mint-water aesthetic —
- * three stacked animated gradient layers + an iOS BlurView crystal overlay.
+ * Top banner with a slowly-flowing crystal-water aesthetic.
  *
- * • White back chevron sits flush over the moving gradient.
- * • Honors safe-area top inset (sits below the Dynamic Island automatically).
+ *   • Base: aqua-cyan gradient (crystal clear water tone)
+ *   • Layer 1: bright horizontal shimmer drifting left-right (slow)
+ *   • Layer 2: counter-drifting cool-teal tint (creates the "flow")
+ *   • Layer 3: vertical cascade — soft white caustics descending
+ *   • Layer 4: secondary vertical caustic at offset phase
+ *   • BlurView overlay: opaque frosted-glass crystal texture on top
+ *
+ * White back chevron sits flush over the moving water.
  */
 export function WaterBanner({ caption, onBack }: Props) {
   const router = useRouter();
-  const shimmer1 = useRef(new Animated.Value(0)).current;
-  const shimmer2 = useRef(new Animated.Value(0)).current;
-  const shimmer3 = useRef(new Animated.Value(0)).current;
+  const horiz1 = useRef(new Animated.Value(0)).current;
+  const horiz2 = useRef(new Animated.Value(0)).current;
+  const cascade1 = useRef(new Animated.Value(0)).current;
+  const cascade2 = useRef(new Animated.Value(0)).current;
+  const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const loop = (val: Animated.Value, ms: number, delay = 0) =>
@@ -46,93 +51,172 @@ export function WaterBanner({ caption, onBack }: Props) {
         ]),
       );
 
-    // Three different periods so the layers slip past each other and
-    // never repeat in lockstep — gives the impression of moving water.
-    const a1 = loop(shimmer1, 6000);
-    const a2 = loop(shimmer2, 8500, 600);
-    const a3 = loop(shimmer3, 11000, 1200);
-    a1.start();
-    a2.start();
-    a3.start();
-    return () => {
-      a1.stop();
-      a2.stop();
-      a3.stop();
-    };
-  }, [shimmer1, shimmer2, shimmer3]);
+    // Cascade is uni-directional (water flows DOWN, doesn't bounce back).
+    const cascadeLoop = (val: Animated.Value, ms: number, delay = 0) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(val, {
+            toValue: 1,
+            duration: ms,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }),
+          Animated.timing(val, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
 
-  const tx1 = shimmer1.interpolate({ inputRange: [0, 1], outputRange: [-40, 40] });
-  const tx2 = shimmer2.interpolate({ inputRange: [0, 1], outputRange: [50, -50] });
-  const tx3 = shimmer3.interpolate({ inputRange: [0, 1], outputRange: [-30, 30] });
+    const animations = [
+      loop(horiz1, 7000),
+      loop(horiz2, 9500, 600),
+      cascadeLoop(cascade1, 8000),
+      cascadeLoop(cascade2, 11000, 2200),
+      loop(shimmer, 4200, 1000),
+    ];
+    animations.forEach((a) => a.start());
+    return () => {
+      animations.forEach((a) => a.stop());
+    };
+  }, [horiz1, horiz2, cascade1, cascade2, shimmer]);
+
+  const tx1 = horiz1.interpolate({ inputRange: [0, 1], outputRange: [-50, 50] });
+  const tx2 = horiz2.interpolate({ inputRange: [0, 1], outputRange: [60, -60] });
+  // Caustics descend from above the banner to below (off-screen → off-screen)
+  const ty1 = cascade1.interpolate({ inputRange: [0, 1], outputRange: [-220, 220] });
+  const ty2 = cascade2.interpolate({ inputRange: [0, 1], outputRange: [-260, 260] });
+  const shimmerOpacity = shimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.35, 0.7],
+  });
 
   return (
     <View
       style={{
         position: "relative",
         overflow: "hidden",
+        backgroundColor: "#3F7E73", // safety colour so banner is never transparent
       }}
     >
-      {/* Base mint gradient — sits on the lowest z-index */}
+      {/* ============================================================
+          BASE — crystal-water gradient. Slightly cooler than the brand
+          mint (touch of cyan) to read as flowing water rather than just
+          a tint. Fully opaque.
+         ============================================================ */}
       <LinearGradient
-        colors={["#A9CFC0", "#8BC4B2", "#5FA89B"]}
+        colors={["#BFE5DA", "#7BC4B5", "#3F8C82", "#2D6E66"]}
+        locations={[0, 0.35, 0.75, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
       />
 
-      {/* Moving water layer 1 — bright shimmer drifting left-right */}
+      {/* Horizontal shimmer band 1 — bright, slow */}
       <Animated.View
         pointerEvents="none"
         style={{
           position: "absolute",
-          top: -20,
-          left: -40,
-          right: -40,
-          bottom: -20,
+          top: -30,
+          left: -60,
+          right: -60,
+          bottom: -30,
           transform: [{ translateX: tx1 }],
         }}
       >
         <LinearGradient
           colors={[
             "rgba(255,255,255,0)",
-            "rgba(255,255,255,0.18)",
+            "rgba(255,255,255,0.20)",
             "rgba(255,255,255,0.42)",
-            "rgba(255,255,255,0.18)",
+            "rgba(255,255,255,0.20)",
             "rgba(255,255,255,0)",
           ]}
-          start={{ x: 0, y: 0.2 }}
-          end={{ x: 1, y: 0.8 }}
+          start={{ x: 0, y: 0.3 }}
+          end={{ x: 1, y: 0.7 }}
           style={{ flex: 1 }}
         />
       </Animated.View>
 
-      {/* Moving water layer 2 — counter-drifting cool tint */}
+      {/* Horizontal cool-teal current 2 — counter-drift */}
       <Animated.View
         pointerEvents="none"
         style={{
           position: "absolute",
-          top: -10,
-          left: -50,
-          right: -50,
-          bottom: -10,
+          top: -20,
+          left: -70,
+          right: -70,
+          bottom: -20,
           transform: [{ translateX: tx2 }],
         }}
       >
         <LinearGradient
           colors={[
-            "rgba(95,168,155,0)",
-            "rgba(95,168,155,0.18)",
-            "rgba(74,140,130,0.30)",
-            "rgba(95,168,155,0.18)",
-            "rgba(95,168,155,0)",
+            "rgba(63,140,130,0)",
+            "rgba(63,140,130,0.30)",
+            "rgba(45,110,102,0.40)",
+            "rgba(63,140,130,0.30)",
+            "rgba(63,140,130,0)",
           ]}
-          start={{ x: 0, y: 0.6 }}
-          end={{ x: 1, y: 0.4 }}
+          start={{ x: 0, y: 0.55 }}
+          end={{ x: 1, y: 0.45 }}
           style={{ flex: 1 }}
         />
       </Animated.View>
 
-      {/* Moving water layer 3 — vertical caustic ripple, slowest */}
+      {/* Cascade caustic 1 — vertical descending water highlight */}
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 180,
+          transform: [{ translateY: ty1 }],
+          opacity: 0.55,
+        }}
+      >
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0)",
+            "rgba(255,255,255,0.32)",
+            "rgba(255,255,255,0)",
+          ]}
+          start={{ x: 0.3, y: 0 }}
+          end={{ x: 0.7, y: 1 }}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
+
+      {/* Cascade caustic 2 — second descending wave, offset phase */}
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 220,
+          transform: [{ translateY: ty2 }],
+          opacity: 0.40,
+        }}
+      >
+        <LinearGradient
+          colors={[
+            "rgba(191,229,218,0)",
+            "rgba(255,255,255,0.28)",
+            "rgba(191,229,218,0)",
+          ]}
+          start={{ x: 0.8, y: 0 }}
+          end={{ x: 0.2, y: 1 }}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
+
+      {/* Pulsing surface shimmer — gentle brightness throb */}
       <Animated.View
         pointerEvents="none"
         style={{
@@ -141,29 +225,27 @@ export function WaterBanner({ caption, onBack }: Props) {
           left: 0,
           right: 0,
           bottom: 0,
-          transform: [{ translateX: tx3 }],
-          opacity: 0.55,
+          opacity: shimmerOpacity,
         }}
       >
         <LinearGradient
           colors={[
-            "rgba(255,255,255,0.08)",
+            "rgba(255,255,255,0.18)",
             "rgba(255,255,255,0)",
-            "rgba(255,255,255,0.12)",
-            "rgba(255,255,255,0)",
-            "rgba(255,255,255,0.08)",
+            "rgba(255,255,255,0.06)",
           ]}
-          start={{ x: 0.2, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={{ flex: 1 }}
         />
       </Animated.View>
 
-      {/* Crystal blur overlay — soft frosted texture on top of the moving
-          gradient. Low intensity so the colours still come through. */}
+      {/* Opaque frosted-glass crystal overlay. Higher intensity so the
+          surface reads as crystal water seen through glass — not just a
+          tint. iOS native blur, full opacity. */}
       <BlurView
         tint="light"
-        intensity={18}
+        intensity={28}
         style={{
           position: "absolute",
           top: 0,
@@ -194,7 +276,7 @@ export function WaterBanner({ caption, onBack }: Props) {
               borderRadius: 19,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "rgba(255,255,255,0.18)",
+              backgroundColor: "rgba(255,255,255,0.22)",
             }}
           >
             <MaterialCommunityIcons name="chevron-left" size={24} color="#FFFFFF" />
@@ -208,7 +290,9 @@ export function WaterBanner({ caption, onBack }: Props) {
                 letterSpacing: 1.6,
                 textTransform: "uppercase",
                 color: "#FFFFFF",
-                opacity: 0.92,
+                opacity: 0.95,
+                textShadowColor: "rgba(0,40,35,0.35)",
+                textShadowRadius: 4,
               }}
             >
               {caption}
@@ -217,8 +301,6 @@ export function WaterBanner({ caption, onBack }: Props) {
             <View />
           )}
 
-          {/* Right-side spacer keeps the back chevron flush-left without
-              the caption forcing it off-centre. */}
           <View style={{ width: 38 }} />
         </View>
       </SafeAreaView>
