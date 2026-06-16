@@ -46,23 +46,71 @@ export default function CategoriesScreen() {
           <View className="px-8 mb-8">
             <Pressable
               onPress={goToEmergency}
-              className="border-2 border-clay bg-clay/5 active:bg-clay/15 rounded-md px-5 py-5 flex-row items-center gap-4"
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? "#854C39" : "#9E5E47",
+                borderRadius: 999,
+                paddingVertical: 16,
+                paddingHorizontal: 20,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 14,
+                shadowColor: "#5F2F22",
+                shadowOpacity: 0.28,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 6,
+              })}
             >
-              <View className="w-11 h-11 rounded-full bg-clay items-center justify-center">
+              <View
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 21,
+                  backgroundColor: "rgba(255,255,255,0.22)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <MaterialCommunityIcons name="medical-bag" size={22} color="#FFFFFF" />
               </View>
-              <View className="flex-1">
-                <Text className="text-[10px] tracking-cap uppercase text-clay font-sans mb-0.5">
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "Inter",
+                    fontSize: 10,
+                    letterSpacing: 1.6,
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.78)",
+                    marginBottom: 2,
+                    fontWeight: "500",
+                  }}
+                >
                   Emergency · NOW
                 </Text>
-                <Text className="font-display text-xl text-espresso leading-tight mb-0.5">
+                <Text
+                  style={{
+                    fontFamily: "Inter",
+                    fontSize: 16,
+                    fontWeight: "600",
+                    color: "#FFFFFF",
+                    lineHeight: 20,
+                    marginBottom: 2,
+                  }}
+                >
                   Pain, swelling, or broken tooth?
                 </Text>
-                <Text className="text-xs text-walnut font-sans leading-snug">
-                  15-minute quote window. Dentists respond same-day.
+                <Text
+                  style={{
+                    fontFamily: "Inter",
+                    fontSize: 12,
+                    color: "rgba(255,255,255,0.82)",
+                    lineHeight: 16,
+                  }}
+                >
+                  15-minute quote window. Same-day response.
                 </Text>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#9E5E47" />
+              <MaterialCommunityIcons name="chevron-right" size={22} color="#FFFFFF" />
             </Pressable>
           </View>
         ) : null}
