@@ -70,23 +70,7 @@ export function WaterBanner({ caption, onBack }: Props) {
       {/* ============================================================
           BASE — real ocean wave video on native; gradient on web.
          ============================================================ */}
-      {Platform.OS === "web" ? (
-        <LinearGradient
-          colors={[
-            "#1F4F47",
-            "#2D6E66",
-            "#3F8C82",
-            "#6CBAA8",
-            "#A8DCCB",
-          ]}
-          locations={[0, 0.25, 0.55, 0.85, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-      ) : (
-        <NativeWaterVideo />
-      )}
+      {Platform.OS === "web" ? <WebWaterVideo /> : <NativeWaterVideo />}
 
       {/* ============================================================
           MINT TINT OVERLAY — pulls the natural blue water toward
@@ -220,6 +204,36 @@ export function WaterBanner({ caption, onBack }: Props) {
         </View>
       </SafeAreaView>
     </View>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────
+// WEB — render the same mp4 via plain HTML <video> tag. Metro bundles
+// the .mp4 as a web asset and serves it from /assets/...
+// ────────────────────────────────────────────────────────────────────
+function WebWaterVideo() {
+  // require() returns the bundled asset URL on web.
+  const src =
+    typeof WATER_VIDEO === "string"
+      ? WATER_VIDEO
+      : (WATER_VIDEO as { uri?: string })?.uri ?? "";
+  return (
+    // eslint-disable-next-line jsx-a11y/media-has-caption
+    <video
+      src={src}
+      autoPlay
+      loop
+      muted
+      playsInline
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      }}
+    />
   );
 }
 

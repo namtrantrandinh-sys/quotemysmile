@@ -1,0 +1,30 @@
+-- 0023_email_otp_template
+--
+-- Documents the required Supabase Auth → Email Templates configuration
+-- so email sign-in returns a 6-DIGIT CODE (not a magic confirm link).
+--
+-- Supabase Auth email templates are stored in the auth schema as project
+-- settings — they are not modifiable via raw SQL from a regular client,
+-- but the GoTrue admin endpoint accepts them. We document the desired
+-- value here as the source of truth for ops review + audit.
+--
+-- ACTION REQUIRED IN DASHBOARD (one-time setup per project)
+-- ---------------------------------------------------------
+-- 1. Go to https://supabase.com/dashboard/project/{project-ref}/auth/templates
+-- 2. Open the "Magic Link" template.
+-- 3. Replace the body with:
+--
+--    Your QuoteMySmile sign-in code is:
+--
+--    {{ .Token }}
+--
+--    This code expires in 5 minutes. If you didn't request it, ignore
+--    this email.
+--
+-- 4. Save.
+--
+-- After this, signInWithOtp({ email }) returns a 6-digit token by email,
+-- and verifyOtp({ email, token, type: 'email' }) finishes the session.
+-- ---------------------------------------------------------
+
+select 1 as documented;
