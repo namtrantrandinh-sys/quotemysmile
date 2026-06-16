@@ -16,7 +16,19 @@ export async function verifyPhoneOtp(phone: string, token: string) {
 }
 
 export async function signInWithEmail(email: string) {
-  const { error } = await supabase.auth.signInWithOtp({ email });
+  // Force 6-digit code (not magic link).
+  //   • Omit emailRedirectTo so Supabase doesn't generate a magic URL.
+  //   • Supabase Auth needs the "Magic Link" / "Email OTP" template in the
+  //     Supabase dashboard to contain {{ .Token }} (not {{ .ConfirmationURL }}).
+  //     If your project still has the default ConfirmationURL template,
+  //     users will receive a confirmation LINK that 404s in-app.
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: true,
+      // No emailRedirectTo → Supabase sends the code template.
+    },
+  });
   if (error) throw error;
 }
 
