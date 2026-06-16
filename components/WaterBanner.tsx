@@ -283,7 +283,7 @@ export function WaterBanner({ caption, onBack }: Props) {
       <Animated.View
         pointerEvents="none"
         style={{
-          ...StyleSheet.absoluteFillObject,
+          ...StyleSheet.absoluteFill,
           opacity: shimmerOpacity,
         }}
       >
