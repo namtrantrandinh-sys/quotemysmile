@@ -10,8 +10,17 @@ type Size = "sm" | "md" | "lg" | "xl";
  * Glossier / Aēsop / RMS Beauty palette), with Allura "my" carrying the
  * personality. Reads as a clinical-luxury brand mark, not a book spine.
  */
-export function Wordmark({ size = "md" }: { size?: Size }) {
+export function Wordmark({
+  size = "md",
+  tone = "dark",
+}: {
+  size?: Size;
+  /** `dark` = on cream backgrounds; `light` = on mint / coloured backgrounds */
+  tone?: "dark" | "light";
+}) {
   const base = size === "xl" ? 22 : size === "lg" ? 17 : size === "sm" ? 11 : 14;
+  const capsColor = tone === "light" ? "#FFFFFF" : "#2A2520";
+  const scriptColor = tone === "light" ? "#FFFFFF" : "#4A8C82";
   const scriptBoost = base * 2.2;
   // Smile underline scales with the wordmark size — small relative to text width.
   const smileWidth = base * 9.5;
@@ -27,7 +36,7 @@ export function Wordmark({ size = "md" }: { size?: Size }) {
             lineHeight: base,
             letterSpacing: base * 0.32,
             textTransform: "uppercase",
-            color: "#2A2520",
+            color: capsColor,
           }}
         >
           Quote
@@ -37,7 +46,7 @@ export function Wordmark({ size = "md" }: { size?: Size }) {
             fontFamily: "Allura",
             fontSize: scriptBoost,
             lineHeight: scriptBoost,
-            color: "#4A8C82",
+            color: scriptColor,
             marginHorizontal: base * 0.4,
             transform: [{ translateY: 5 }, { rotate: "-2deg" }],
           }}
@@ -51,7 +60,7 @@ export function Wordmark({ size = "md" }: { size?: Size }) {
             lineHeight: base,
             letterSpacing: base * 0.32,
             textTransform: "uppercase",
-            color: "#2A2520",
+            color: capsColor,
           }}
         >
           Smile
@@ -97,7 +106,7 @@ export function FullMark({ size = "md" }: { size?: Size }) {
         style={{
           fontFamily: "Allura",
           fontSize: script,
-          color: "#4A8C82",
+          color: scriptColor,
           lineHeight: script,
           marginVertical: -cap * 0.32,
           transform: [{ rotate: "-5deg" }],

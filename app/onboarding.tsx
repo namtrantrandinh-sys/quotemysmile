@@ -10,15 +10,17 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Button } from "@/components/Button";
 import { Wordmark } from "@/components/Wordmark";
-import { Icon, type IconName } from "@/components/Icon";
 import { markOnboardingSeen } from "@/lib/firstLaunch";
 
 const { width } = Dimensions.get("window");
 
+type GlyphName = keyof typeof MaterialCommunityIcons.glyphMap;
+
 type Panel = {
-  icon: IconName;
+  icon: GlyphName;
   kicker: string;
   title: string;
   italicWord?: string;
@@ -27,7 +29,7 @@ type Panel = {
 
 const PANELS: Panel[] = [
   {
-    icon: "spark",
+    icon: "trophy-outline",
     kicker: "00 · The whole idea",
     title: "Dentists compete.",
     italicWord: "compete.",
@@ -35,7 +37,7 @@ const PANELS: Panel[] = [
       "AHPRA-registered dentists near you compete to give you the best quote — live, on your screen. You pick the one that suits.",
   },
   {
-    icon: "phone",
+    icon: "phone-off-outline",
     kicker: "01 · Why this exists",
     title: "No awkward phone calls.",
     italicWord: "calls.",
@@ -43,7 +45,7 @@ const PANELS: Panel[] = [
       "No \"call us for a price\" loops. No in-person quote reveals. Real prices, live, on your screen — accurate and competitive.",
   },
   {
-    icon: "mouth",
+    icon: "camera-iris",
     kicker: "02 · Map your mouth",
     title: "Four guided photos.",
     italicWord: "photos.",
@@ -51,7 +53,7 @@ const PANELS: Panel[] = [
       "Front smile, upper arch, lower arch, problem area. Our on-camera guides tell you exactly how to frame each one.",
   },
   {
-    icon: "radius",
+    icon: "map-marker-radius-outline",
     kicker: "03 · Set your radius",
     title: "Pick your radius.",
     italicWord: "radius.",
@@ -59,7 +61,7 @@ const PANELS: Panel[] = [
       "GPS picks up your location. Drag the slider 2–30 km. See the real count of AHPRA-registered dentists in range.",
   },
   {
-    icon: "clock",
+    icon: "lightning-bolt-outline",
     kicker: "04 · Live quoting",
     title: "Watch quotes arrive.",
     italicWord: "arrive.",
@@ -67,7 +69,7 @@ const PANELS: Panel[] = [
       "Dentists send indicative quotes within your window — 15 minutes for emergencies, up to three days for considered work. Each only allowed one revision.",
   },
   {
-    icon: "check",
+    icon: "shield-check-outline",
     kicker: "05 · Book with confidence",
     title: "Pick the quote that suits.",
     italicWord: "suits.",
@@ -132,8 +134,18 @@ export default function OnboardingScreen() {
             style={{ width }}
             className="items-center justify-center px-10"
           >
-            <View className="mb-10">
-              <Icon name={p.icon} size={72} />
+            <View
+              style={{
+                marginBottom: 36,
+                width: 96,
+                height: 96,
+                borderRadius: 48,
+                backgroundColor: "rgba(95,168,155,0.12)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <MaterialCommunityIcons name={p.icon} size={44} color="#5FA89B" />
             </View>
             <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mb-10">
               {p.kicker}

@@ -107,11 +107,36 @@ export function WaterBanner({ caption, onBack }: Props) {
           a tint. Fully opaque.
          ============================================================ */}
       <LinearGradient
-        colors={["#BFE5DA", "#7BC4B5", "#3F8C82", "#2D6E66"]}
-        locations={[0, 0.35, 0.75, 1]}
+        colors={[
+          "#DCF2EA",
+          "#A8DCCB",
+          "#6CBAA8",
+          "#3F8C82",
+          "#2D6E66",
+          "#1F4F47",
+        ]}
+        locations={[0, 0.18, 0.42, 0.7, 0.88, 1]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0.7, y: 1 }}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+      {/* Sun-glint highlight stripe near the top of the banner */}
+      <LinearGradient
+        colors={[
+          "rgba(255,255,255,0.55)",
+          "rgba(255,255,255,0.10)",
+          "rgba(255,255,255,0)",
+        ]}
+        locations={[0, 0.5, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 40,
+        }}
       />
 
       {/* Horizontal shimmer band 1 — bright, slow */}
@@ -263,8 +288,8 @@ export function WaterBanner({ caption, onBack }: Props) {
             alignItems: "center",
             justifyContent: "space-between",
             paddingHorizontal: 18,
-            paddingTop: 10,
-            paddingBottom: 18,
+            paddingTop: 18,
+            paddingBottom: 56,
           }}
         >
           <Pressable

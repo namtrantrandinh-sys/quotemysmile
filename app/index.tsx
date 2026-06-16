@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Wordmark } from "@/components/Wordmark";
 import { Button } from "@/components/Button";
 import { RoleTile } from "@/components/RoleTile";
@@ -52,11 +53,19 @@ export default function WelcomeScreen() {
   }, [signedIn]);
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: "#8BC4B2" }}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "#3F7E73" }}>
+      {/* Dark teal at top → light mint at the bottom (sea floor feel) */}
+      <LinearGradient
+        colors={["#1F4F47", "#2D6E66", "#5FA89B", "#A8DCCB", "#DCF2EA"]}
+        locations={[0, 0.25, 0.6, 0.88, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <Animated.View style={{ opacity: headerOpacity }}>
-          <View className="px-8 py-6 flex-row items-center justify-between border-b border-linen">
-            <Wordmark size="md" />
+          <View className="px-8 py-6 flex-row items-center justify-between border-b border-white/15">
+            <Wordmark size="md" tone="light" />
             <View className="flex-row items-center gap-2">
               <Pressable
                 onPress={() => router.push("/live")}
@@ -85,7 +94,18 @@ export default function WelcomeScreen() {
           className="flex-1 items-center px-8 py-20"
           style={{ opacity: heroOpacity, transform: [{ translateY: heroY }] }}
         >
-          <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mb-10 text-center">
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 11,
+              letterSpacing: 2.5,
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.92)",
+              textAlign: "center",
+              marginBottom: 40,
+              fontWeight: "500",
+            }}
+          >
             Live dental quotes · Australia
           </Text>
 
@@ -94,7 +114,7 @@ export default function WelcomeScreen() {
               fontFamily: "Italiana",
               fontSize: 48,
               lineHeight: 52,
-              color: "#2A2520",
+              color: "#FFFFFF",
               textAlign: "center",
               marginBottom: 2,
             }}
@@ -125,7 +145,7 @@ export default function WelcomeScreen() {
             style={{
               fontFamily: "Italiana",
               fontSize: 22,
-              color: "#2A2520",
+              color: "#FFFFFF",
               textAlign: "center",
               lineHeight: 26,
               marginBottom: 4,
@@ -141,7 +161,6 @@ export default function WelcomeScreen() {
               color: "#FFFFFF",
               textAlign: "center",
               marginBottom: 16,
-              transform: [{ rotate: "-2deg" }],
             }}
           >
             to give you the best quote.

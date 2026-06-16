@@ -209,7 +209,7 @@ export default function SignInScreen() {
     <View className="flex-1 bg-bone">
       <WaterBanner />
       <ScrollView>
-        <View className="px-8 pt-24 pb-8 items-center">
+        <View className="px-8 pt-12 pb-8 items-center">
           <Wordmark size="md" />
           <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mt-10 mb-6">
             {phase === "phone"
