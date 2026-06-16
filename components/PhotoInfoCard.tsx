@@ -1,53 +1,161 @@
 import { View, Text } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Icon, type IconName } from "./Icon";
 
-type Props = {
+type InfoCardProps = {
+  // Accepts either a legacy Icon name OR a MaterialCommunityIcons glyph name.
+  // We branch internally so callers don't have to migrate all at once.
   icon: IconName;
+  mcIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
   hint: string;
   tone?: "neutral" | "gold" | "clay";
 };
 
 /**
- * Editorial guide card — sits at the top of capture/location/urgency screens.
- * Icon hero + title + supporting hint. Cream surface, hairline border.
+ * Modern guide card — rounded corners, mint accent circle, soft shadow.
+ * Sits at the top of capture/location/urgency screens.
  */
-export function PhotoInfoCard({ icon, title, hint, tone = "neutral" }: Props) {
-  const borderClass =
-    tone === "gold"
-      ? "border-gold/40 bg-gold/5"
-      : tone === "clay"
-        ? "border-clay/40 bg-clay/5"
-        : "border-linen bg-eggshell/40";
+export function PhotoInfoCard({
+  icon,
+  mcIcon,
+  title,
+  hint,
+  tone = "neutral",
+}: InfoCardProps) {
+  const accent =
+    tone === "clay" ? "#9E5E47" : tone === "gold" ? "#5FA89B" : "#5FA89B";
+  const accentBg =
+    tone === "clay"
+      ? "rgba(158,94,71,0.12)"
+      : "rgba(95,168,155,0.14)";
 
   return (
-    <View className={`border ${borderClass} px-5 py-6 flex-row gap-4 items-center`}>
-      <View>
-        <Icon name={icon} size={42} color={tone === "clay" ? "#9E5E47" : "#A9CFC0"} />
+    <View
+      style={{
+        backgroundColor: "#FFFFFF",
+        borderRadius: 18,
+        paddingVertical: 18,
+        paddingHorizontal: 18,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 14,
+        shadowColor: "#1F4F47",
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: "rgba(31,79,71,0.06)",
+      }}
+    >
+      {/* Mint accent circle holding the icon */}
+      <View
+        style={{
+          width: 46,
+          height: 46,
+          borderRadius: 23,
+          backgroundColor: accentBg,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {mcIcon ? (
+          <MaterialCommunityIcons name={mcIcon} size={24} color={accent} />
+        ) : (
+          <Icon name={icon} size={26} color={accent} />
+        )}
       </View>
-      <View className="flex-1">
-        <Text className="font-display text-lg text-espresso mb-1">{title}</Text>
-        <Text className="text-xs text-walnut font-sans leading-relaxed">{hint}</Text>
+
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontFamily: "Inter",
+            fontWeight: "600",
+            fontSize: 14,
+            color: "#2A2520",
+            marginBottom: 3,
+            lineHeight: 19,
+          }}
+        >
+          {title}
+        </Text>
+        <Text
+          style={{
+            fontFamily: "Inter",
+            fontSize: 12,
+            color: "#6E6457",
+            lineHeight: 17,
+          }}
+        >
+          {hint}
+        </Text>
       </View>
     </View>
   );
 }
 
 type PhotoTipsProps = {
-  tips: Array<{ icon: IconName; label: string; do?: boolean }>;
+  tips: Array<{
+    icon: IconName;
+    mcIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+    label: string;
+    do?: boolean;
+  }>;
 };
 
 /**
- * Row of small icon-led tips ("Daylight · Hold still · Front-facing")
- * used as a footer / belt across the bottom of capture-ish screens.
+ * Row of small icon-led tips. Now rendered as soft mint chips with
+ * rounded corners — matches the rest of the modernised flow.
  */
 export function PhotoTips({ tips }: PhotoTipsProps) {
   return (
-    <View className="flex-row justify-around px-4 py-5 border-y border-linen bg-eggshell/30">
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        gap: 10,
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+      }}
+    >
       {tips.map((t, i) => (
-        <View key={i} className="items-center gap-2">
-          <Icon name={t.icon} size={26} color={t.do === false ? "#9E5E47" : "#A9CFC0"} />
-          <Text className="text-[10px] tracking-cap uppercase text-walnut font-sans text-center">
+        <View
+          key={i}
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(95,168,155,0.10)",
+            borderRadius: 14,
+            paddingVertical: 12,
+            paddingHorizontal: 8,
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          {t.mcIcon ? (
+            <MaterialCommunityIcons
+              name={t.mcIcon}
+              size={20}
+              color={t.do === false ? "#9E5E47" : "#5FA89B"}
+            />
+          ) : (
+            <Icon
+              name={t.icon}
+              size={20}
+              color={t.do === false ? "#9E5E47" : "#5FA89B"}
+            />
+          )}
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 9,
+              letterSpacing: 1.2,
+              textTransform: "uppercase",
+              color: "#4D423A",
+              textAlign: "center",
+              fontWeight: "600",
+            }}
+          >
             {t.label}
           </Text>
         </View>

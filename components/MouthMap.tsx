@@ -1,5 +1,6 @@
 import { View, Text } from "react-native";
 import type { PhotoSlot } from "@/hooks/usePhotoCapture";
+import { ShimmerText } from "./ShimmerText";
 
 type Props = {
   slots: PhotoSlot[];
@@ -92,19 +93,39 @@ export function MouthMap({ slots, activeSlotName, compact }: Props) {
         </View>
       </View>
 
-      {/* Problem-area chip below */}
-      <View
-        className={`mt-3 flex-row items-center gap-2 border-2 ${tone(problem)} rounded-full`}
-        style={{ paddingVertical: 4 * size, paddingHorizontal: 12 * size }}
-      >
-        <View className={`h-1.5 w-1.5 rounded-full ${dotTone(problem)}`} />
-        <Text
-          className="text-[10px] tracking-cap uppercase text-walnut font-sans"
-          style={{ fontSize: 10 * size }}
-        >
-          Problem area
-        </Text>
-      </View>
+      {/* Problem-area chip below — active state gets a sweeping shimmer */}
+      {(() => {
+        const isActive =
+          !!problem && activeSlotName === "problem-area" && !problem.uri;
+        const pill = (
+          <View
+            className={`mt-3 flex-row items-center gap-2 border-2 ${tone(problem)} rounded-full`}
+            style={{
+              paddingVertical: 4 * size,
+              paddingHorizontal: 12 * size,
+            }}
+          >
+            <View className={`h-1.5 w-1.5 rounded-full ${dotTone(problem)}`} />
+            <Text
+              className="text-[10px] tracking-cap uppercase text-walnut font-sans"
+              style={{ fontSize: 10 * size }}
+            >
+              Problem area
+            </Text>
+          </View>
+        );
+        return isActive ? (
+          <ShimmerText
+            highlight="rgba(95,168,155,0.55)"
+            bandWidth={80}
+            duration={2400}
+          >
+            {pill}
+          </ShimmerText>
+        ) : (
+          pill
+        );
+      })()}
 
       {!compact ? (
         <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mt-5">

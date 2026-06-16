@@ -20,7 +20,7 @@ import {
 } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { BackBar } from "@/components/BackBar";
-import { Button } from "@/components/Button";
+import { Button, TileButton } from "@/components/Button";
 import { ProgressDots } from "@/components/ProgressDots";
 import { CameraOverlay } from "@/components/CameraOverlay";
 import { ArchIcon } from "@/components/ArchIcon";
@@ -226,9 +226,10 @@ export default function CaptureScreen() {
           </View>
         </View>
 
-        <View className="px-8 mb-6">
+        <View className="px-8 mb-2">
           <PhotoInfoCard
             icon="camera"
+            mcIcon="camera-iris"
             title="Clearer photo = more accurate quote"
             hint="On-camera guides show you exactly where to frame. Tap a slot to start."
             tone="gold"
@@ -237,17 +238,14 @@ export default function CaptureScreen() {
 
         <PhotoTips
           tips={[
-            { icon: "spark", label: "Daylight" },
-            { icon: "scan", label: "Hold still" },
-            { icon: "check", label: "Centre frame" },
+            { icon: "spark", mcIcon: "white-balance-sunny", label: "Daylight" },
+            { icon: "scan", mcIcon: "hand-back-right-outline", label: "Hold still" },
+            { icon: "check", mcIcon: "crop-free", label: "Centre frame" },
           ]}
         />
 
-        <View className="px-8 pb-12 gap-3">
+        <View className="px-6 pb-12" style={{ gap: 12 }}>
           {photos.slots.map((s) => {
-            // Modern dental-aesthetic glyph per slot. Upper / lower arches
-            // use a custom SVG ArchIcon (anatomically correct horseshoe,
-            // opening down vs up) so they're visually distinct.
             const SLOT_ICON: Record<typeof s.name, keyof typeof MaterialCommunityIcons.glyphMap | null> = {
               "front-smile": "emoticon-happy-outline",
               "upper-arch": null,
@@ -258,88 +256,68 @@ export default function CaptureScreen() {
             const isNext = !s.uri && s.id === photos.nextSlot?.id;
             const captured = !!s.uri;
 
-            return (
-              <Pressable
-                key={s.id}
-                onPress={() => (s.uri ? handleRetake(s.id) : openCamera(s.id))}
-                className={`border ${
-                  captured ? "border-gold bg-gold/5" : "border-linen bg-eggshell/40"
-                } px-5 py-5 flex-row items-center active:bg-eggshell rounded-md`}
+            const leadingIcon = (
+              <View
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 23,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: captured
+                    ? "rgba(95,168,155,0.20)"
+                    : "rgba(95,168,155,0.12)",
+                }}
               >
-                {/* Leading slot glyph */}
-                <View
-                  className="w-12 h-12 rounded-full items-center justify-center mr-4"
-                  style={{
-                    backgroundColor: captured ? "rgba(95,168,155,0.18)" : "rgba(95,168,155,0.10)",
-                  }}
-                >
-                  {s.name === "upper-arch" ? (
-                    <ArchIcon variant="upper" size={28} color="#5FA89B" />
-                  ) : s.name === "lower-arch" ? (
-                    <ArchIcon variant="lower" size={28} color="#5FA89B" />
-                  ) : iconName ? (
-                    <MaterialCommunityIcons
-                      name={iconName}
-                      size={26}
-                      color="#5FA89B"
-                    />
-                  ) : null}
-                </View>
+                {s.name === "upper-arch" ? (
+                  <ArchIcon variant="upper" size={26} color="#5FA89B" />
+                ) : s.name === "lower-arch" ? (
+                  <ArchIcon variant="lower" size={26} color="#5FA89B" />
+                ) : iconName ? (
+                  <MaterialCommunityIcons name={iconName} size={24} color="#5FA89B" />
+                ) : null}
+              </View>
+            );
 
-                {/* Title + hint */}
-                <View className="flex-1">
-                  <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mb-1">
-                    Photo {s.id} of {photos.totalSlots}
-                  </Text>
-                  <Text className="font-display text-xl text-espresso mb-0.5 leading-tight">
-                    {s.label}
-                  </Text>
-                  <Text className="text-xs text-taupe font-sans leading-snug">
-                    {s.hint}
-                  </Text>
-                  {s.qualityScore != null ? (
-                    <Text className="text-[10px] tracking-cap uppercase text-forest font-sans mt-2">
-                      Quality {s.qualityScore.toFixed(1)} / 5 · tap to retake
-                    </Text>
-                  ) : null}
-                </View>
+            const trailing = captured ? (
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: "#5FA89B",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
+              </View>
+            ) : (
+              <Button
+                variant={isNext ? "primary" : "tonal"}
+                size="sm"
+                leftIcon="plus"
+                onPress={() => openCamera(s.id)}
+              >
+                Add
+              </Button>
+            );
 
-                {/* Trailing action affordance — clearly tappable */}
-                {captured ? (
-                  <View
-                    className="ml-3 w-9 h-9 rounded-full items-center justify-center"
-                    style={{ backgroundColor: "#5FA89B" }}
-                  >
-                    <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
-                  </View>
-                ) : (
-                  <View
-                    className="ml-3 px-3 py-2 rounded-full flex-row items-center gap-1.5"
-                    style={{
-                      backgroundColor: isNext ? "#5FA89B" : "rgba(95,168,155,0.18)",
-                      shadowColor: isNext ? "#1F4F47" : "transparent",
-                      shadowOpacity: isNext ? 0.3 : 0,
-                      shadowRadius: 6,
-                      shadowOffset: { width: 0, height: 3 },
-                    }}
-                  >
-                    <MaterialCommunityIcons
-                      name="plus"
-                      size={18}
-                      color={isNext ? "#FFFFFF" : "#3F7E73"}
-                    />
-                    <Text
-                      className="text-[10px] tracking-cap uppercase font-sans"
-                      style={{
-                        color: isNext ? "#FFFFFF" : "#3F7E73",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Add
-                    </Text>
-                  </View>
-                )}
-              </Pressable>
+            return (
+              <TileButton
+                key={s.id}
+                emphasis={isNext}
+                kicker={`Photo ${s.id} of ${photos.totalSlots}`}
+                title={s.label}
+                subtitle={
+                  s.qualityScore != null
+                    ? `${s.hint}  ·  Quality ${s.qualityScore.toFixed(1)} / 5`
+                    : s.hint
+                }
+                leftSlot={leadingIcon}
+                trailing={trailing}
+                onPress={() => (s.uri ? handleRetake(s.id) : openCamera(s.id))}
+              />
             );
           })}
         </View>
@@ -489,12 +467,42 @@ export default function CaptureScreen() {
           </View>
         </Modal>
 
-        <View className="px-8 pb-12">
-          <View className="border border-linen bg-eggshell/40 p-5">
-            <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans mb-2">
+        <View className="px-6 pb-8">
+          <View
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderRadius: 18,
+              padding: 18,
+              borderWidth: 1,
+              borderColor: "rgba(31,79,71,0.06)",
+              shadowColor: "#1F4F47",
+              shadowOpacity: 0.05,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 3 },
+              elevation: 2,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 10,
+                letterSpacing: 1.4,
+                textTransform: "uppercase",
+                color: "#5FA89B",
+                fontWeight: "600",
+                marginBottom: 6,
+              }}
+            >
               Why four photos
             </Text>
-            <Text className="text-sm text-walnut font-sans leading-relaxed">
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 13,
+                color: "#4D423A",
+                lineHeight: 19,
+              }}
+            >
               Dentists assess the front, upper arch, lower arch, and your
               specific problem area. The four together give a complete picture
               without needing a clinical visit.
@@ -502,18 +510,16 @@ export default function CaptureScreen() {
           </View>
         </View>
 
-        <View className="px-8 pb-24 items-center">
+        <View className="px-6 pb-24 items-center" style={{ gap: 10 }}>
           <Button
             variant="primary"
             size="lg"
+            leftIcon={photos.allCaptured ? "arrow-right" : "camera"}
             onPress={() => {
               if (!photos.allCaptured) {
                 openCamera(photos.nextSlot?.id ?? 1);
                 return;
               }
-              // Type-safe collection: only include slots with a real uri.
-              // Previously `.map(s => s.uri!).filter(Boolean)` could drop
-              // an empty slot and silently shift downstream indices.
               const photoUris = photos.slots
                 .map((s) => s.uri)
                 .filter((u): u is string => !!u);
@@ -533,9 +539,18 @@ export default function CaptureScreen() {
           >
             {photos.allCaptured
               ? "Continue"
-              : `Capture ${photos.nextSlot?.label.toLowerCase() ?? "next"}`}
+              : `Capture ${photos.nextSlot?.label ?? "next"}`}
           </Button>
-          <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mt-4">
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 10,
+              letterSpacing: 1.2,
+              textTransform: "uppercase",
+              color: "#6E6457",
+              marginTop: 4,
+            }}
+          >
             {photos.capturedCount} of {photos.totalSlots} mapped
           </Text>
         </View>
