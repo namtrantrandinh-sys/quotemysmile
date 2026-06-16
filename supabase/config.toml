@@ -1,0 +1,20 @@
+project_id = "mqlaoxcjebzsihiocmzm"
+
+[auth]
+enabled = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+secure_password_change = false
+otp_length = 6
+otp_expiry = 300
+
+# Override the magic-link template so the email contains a 6-DIGIT CODE
+# instead of a confirm URL. {{ .Token }} renders the OTP; {{ .ConfirmationURL }}
+# would render the magic link (and breaks our in-app flow because we have
+# no deep-link handler for the resulting URL in the current build).
+[auth.email.template.magic_link]
+subject = "Your QuoteMySmile sign-in code"
+content_path = "./supabase/templates/magic_link.html"
