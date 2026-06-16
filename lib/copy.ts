@@ -13,16 +13,16 @@
  */
 
 export const DISCLAIMER = {
-  short: "Indicative · based on photos",
+  short: "AHPRA-signed · based on photos",
   medium:
-    "This quote is indicative, based on the photos and information you provided. The clearer the photo, the more accurate the quote. Final fees and treatment are the responsibility of the quoting dentist and confirmed at your clinical examination.",
+    "This quote is signed by an AHPRA-registered Australian dentist, based on the photos you submitted. The clearer the photo, the tighter the quote — in practice the chairside fee matches what you see here.",
   long: `About QuoteMySmile quotes
 
-Every quote on QuoteMySmile is an indicative, photo-based assessment by a registered Australian dentist. The accuracy of any quote depends directly on the quality of the photos and information you provide — clearer, well-lit photos taken as guided produce more accurate quotes.
+Every quote is personally signed by an AHPRA-registered Australian dentist after reviewing the photos and information you provided. The clearer the photo, the tighter the quote.
 
-Each dentist is solely responsible for their own quotes and professional opinions. QuoteMySmile does not provide clinical advice and is not a party to the dentist–patient relationship.
+In practice the chairside fee matches your quote — that's the dentist's commitment when they sign it. Treatment plans are reviewed at the in-person exam, and your dentist will confirm everything before you proceed.
 
-Final treatment, fees, and clinical decisions are confirmed at your in-person examination with the dentist you choose.`,
+Each dentist is solely responsible for their own quotes and clinical opinions. QuoteMySmile is an introduction marketplace — we don't provide clinical advice and we're not a party to the dentist–patient relationship.`,
 };
 
 export const DENTIST_ACKS = {
