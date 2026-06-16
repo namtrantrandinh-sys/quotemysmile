@@ -18,28 +18,100 @@ const ICON_FOR: Record<CategoryId, keyof typeof MaterialCommunityIcons.glyphMap>
   "not-sure": "head-question-outline",
 };
 
+/**
+ * Modern category tile — matches the capture-slot architecture:
+ * white surface, soft drop shadow, 18px rounded corners, leading icon
+ * in a mint-tinted circle. No more beige eggshell editorial boxes.
+ */
 export function CategoryTile({ c, onPress }: Props) {
   const iconName = ICON_FOR[c.id] ?? "tooth-outline";
   return (
     <Pressable
       onPress={onPress}
-      // Fixed half-width — every tile is the same height regardless of how
-      // many sit in the row. flex-1 chaos gone.
-      style={{ width: "48.5%" }}
-      className="border border-linen bg-eggshell/40 active:bg-eggshell px-5 py-5 mb-3 rounded-md"
+      style={({ pressed }) => ({
+        width: "48.5%",
+        backgroundColor: pressed ? "#F8FAF9" : "#FFFFFF",
+        borderRadius: 18,
+        paddingVertical: 18,
+        paddingHorizontal: 16,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: "rgba(31,79,71,0.06)",
+        shadowColor: "#1F4F47",
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 3,
+      })}
     >
-      <View className="flex-row items-start justify-between mb-3">
-        <MaterialCommunityIcons name={iconName} size={28} color="#5FA89B" />
-        <View className="px-2 py-0.5 rounded-full border border-linen">
-          <Text className="text-[9px] tracking-cap uppercase text-taupe font-sans">
+      {/* Top row — mint accent icon circle + Roman numeral pill */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 14,
+        }}
+      >
+        <View
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            backgroundColor: "rgba(95,168,155,0.14)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <MaterialCommunityIcons name={iconName} size={22} color="#5FA89B" />
+        </View>
+        <View
+          style={{
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            borderRadius: 999,
+            borderWidth: 1,
+            borderColor: "rgba(31,79,71,0.10)",
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 9,
+              letterSpacing: 1.2,
+              textTransform: "uppercase",
+              color: "#6E6457",
+              fontWeight: "500",
+            }}
+          >
             {c.symbol}
           </Text>
         </View>
       </View>
-      <Text className="font-display text-lg text-espresso mb-1 leading-tight">
+
+      {/* Title — Inter SemiBold (matches the slot tile titles) */}
+      <Text
+        style={{
+          fontFamily: "Inter",
+          fontWeight: "600",
+          fontSize: 15,
+          color: "#2A2520",
+          lineHeight: 19,
+          marginBottom: 4,
+        }}
+      >
         {c.label}
       </Text>
-      <Text className="text-xs text-taupe font-sans leading-snug">
+
+      {/* Subtitle */}
+      <Text
+        style={{
+          fontFamily: "Inter",
+          fontSize: 12,
+          color: "#6E6457",
+          lineHeight: 16,
+        }}
+      >
         {c.blurb}
       </Text>
     </Pressable>
