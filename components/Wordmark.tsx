@@ -106,7 +106,7 @@ export function FullMark({ size = "md" }: { size?: Size }) {
         style={{
           fontFamily: "Allura",
           fontSize: script,
-          color: scriptColor,
+          color: "#4A8C82",
           lineHeight: script,
           marginVertical: -cap * 0.32,
           transform: [{ rotate: "-5deg" }],
