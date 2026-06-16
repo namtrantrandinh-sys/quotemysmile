@@ -95,7 +95,7 @@ export function WaterBanner({ caption, onBack }: Props) {
       <View
         pointerEvents="none"
         style={{
-          ...StyleSheet.absoluteFillObject,
+          ...StyleSheet.absoluteFill,
           backgroundColor: "rgba(63,140,130,0.42)",
         }}
       />
@@ -146,7 +146,7 @@ export function WaterBanner({ caption, onBack }: Props) {
       <Animated.View
         pointerEvents="none"
         style={{
-          ...StyleSheet.absoluteFillObject,
+          ...StyleSheet.absoluteFill,
           opacity: shimmerOpacity,
         }}
       >
@@ -242,7 +242,6 @@ function NativeWaterVideo() {
       style={StyleSheet.absoluteFill}
       contentFit="cover"
       nativeControls={false}
-      allowsFullscreen={false}
       allowsPictureInPicture={false}
     />
   );
