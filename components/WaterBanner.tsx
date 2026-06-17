@@ -14,9 +14,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-// Real ocean wave video. On native we use expo-video; on web we fall
-// back to a procedural gradient (web preview can't run video reliably
-// inside the Metro bundle).
+// Real ocean wave video — turquoise rolling waves with white foam
+// crests. On native we use expo-video; on web we fall back to a
+// procedural gradient (web preview can't run video reliably inside
+// the Metro bundle).
 const WATER_VIDEO = require("../assets/video/water.mp4");
 
 type Props = {

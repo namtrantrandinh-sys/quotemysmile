@@ -88,20 +88,142 @@ export default function BookingDetailScreen() {
     );
   };
 
+  const dentistName = b.quotes?.dentist_name_at_quote ?? "Dr ?";
+  const dentistInitials = dentistName
+    .replace(/^Dr\s+/i, "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .slice(0, 2)
+    .join("");
+
   return (
     <SafeAreaView className="flex-1 bg-bone">
       <BackBar title="Booking" />
       <ScrollView>
-        <View className="px-8 pt-10 pb-6 items-center">
-          <Icon name="calendar" size={48} />
-          <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mt-6 mb-2">
-            {b.status}
+        {/* Meet-your-dentist hero — Pattern #6 from the research.
+            Single biggest trust moment in the funnel: front-load the
+            human, not the calendar. */}
+        <View
+          style={{
+            position: "relative",
+            height: 220,
+            marginBottom: 70,
+          }}
+        >
+          <View
+            style={{
+              position: "absolute",
+              top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: "#5FA89B",
+              overflow: "hidden",
+            }}
+          >
+            <View
+              style={{
+                position: "absolute",
+                top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: "#3F7E73",
+                opacity: 0.55,
+                transform: [{ skewY: "-3deg" }, { translateY: 60 }],
+              }}
+            />
+            <View
+              style={{
+                position: "absolute",
+                top: -30, right: -40, width: 220, height: 220, borderRadius: 110,
+                backgroundColor: "rgba(255,255,255,0.10)",
+              }}
+            />
+          </View>
+          {/* Floating initials circle — overlaps gradient + content */}
+          <View
+            style={{
+              position: "absolute",
+              bottom: -52,
+              left: 0,
+              right: 0,
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                width: 104,
+                height: 104,
+                borderRadius: 52,
+                backgroundColor: "#F5F1E8",
+                borderWidth: 4,
+                borderColor: "rgba(255,255,255,0.95)",
+                alignItems: "center",
+                justifyContent: "center",
+                shadowColor: "#1F4F47",
+                shadowOpacity: 0.25,
+                shadowRadius: 18,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 8,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "CormorantGaramond-Medium",
+                  fontSize: 38,
+                  color: "#3F7E73",
+                  letterSpacing: -0.5,
+                }}
+              >
+                {dentistInitials}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View className="px-8 pt-2 pb-2 items-center">
+          <Text
+            style={{
+              fontFamily: "Caveat",
+              fontSize: 22,
+              color: "#3F7E73",
+              marginBottom: 4,
+            }}
+          >
+            You're booked with
           </Text>
           <Text className="font-display text-3xl text-espresso text-center mb-1">
-            {slotLabel}
+            {dentistName}
           </Text>
-          <Text className="text-xs text-walnut font-sans">
-            {b.clinics?.name ?? "Clinic"} · {b.quotes?.dentist_name_at_quote ?? "Dentist"}
+          <Text className="text-[11px] tracking-cap uppercase text-taupe font-sans mb-6">
+            {b.clinics?.name ?? "Clinic"}
+          </Text>
+
+          {/* Appointment slot — quieter than before, no longer the hero */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 999,
+              backgroundColor: "rgba(95,168,155,0.10)",
+              borderWidth: 1,
+              borderColor: "rgba(95,168,155,0.25)",
+              marginBottom: 8,
+            }}
+          >
+            <Icon name="calendar" size={14} color="#3F7E73" />
+            <Text
+              style={{
+                fontFamily: "Inter-Medium",
+                fontSize: 13,
+                color: "#2A2520",
+                letterSpacing: 0.2,
+              }}
+            >
+              {slotLabel}
+            </Text>
+          </View>
+          <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mt-4">
+            {b.status}
           </Text>
         </View>
 
@@ -139,8 +261,8 @@ export default function BookingDetailScreen() {
             </Text>
             <Text className="text-sm text-walnut font-sans leading-relaxed">
               {eligibleRefund
-                ? `You can cancel within the next ${Math.floor(hoursUntil - b.cancellation_window_hours)}h for a full deposit refund. After that the deposit is forfeited.`
-                : `It's within the ${b.cancellation_window_hours}h cancellation window. Cancelling now will forfeit the deposit.`}
+                ? `Free cancellation until ${Math.floor(hoursUntil - b.cancellation_window_hours)}h from now. After that, the deposit is held by the clinic.`
+                : `It's within the ${b.cancellation_window_hours}h cancellation window. Cancelling now means the clinic keeps the deposit.`}
             </Text>
           </View>
         </View>

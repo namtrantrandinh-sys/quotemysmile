@@ -40,6 +40,7 @@ import {
   Lora_500Medium_Italic,
 } from "@expo-google-fonts/lora";
 import * as SplashScreen from "expo-splash-screen";
+import * as Updates from "expo-updates";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { hasSeenOnboarding, markOnboardingSeen } from "@/lib/firstLaunch";
@@ -113,6 +114,28 @@ export default function RootLayout() {
     // Restore any in-progress intake from disk so a backgrounded capture
     // session can resume on next launch. Fire-and-forget; failure is safe.
     void hydrateIntake();
+  }, []);
+
+  useEffect(() => {
+    // Force OTA to apply on the SAME launch it was downloaded. By default
+    // expo-updates uses ON_LOAD policy: download in background on launch N,
+    // apply on launch N+1. That two-launch delay made the phone feel like
+    // it was ignoring EAS updates entirely. Here we explicitly check on
+    // boot, download if newer, then reload — so the user sees the new
+    // bundle on the very next cold start.
+    if (!Updates.isEnabled || __DEV__) return;
+    (async () => {
+      try {
+        const result = await Updates.checkForUpdateAsync();
+        if (result.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch {
+        // Network down / Expo unreachable — silently fall back to the
+        // embedded bundle. Never block app launch on an OTA check.
+      }
+    })();
   }, []);
 
   useEffect(() => {

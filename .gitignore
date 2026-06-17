@@ -27,3 +27,4 @@ android/build/
 android/app/build/
 package.json.tmp
 
+.qms-*

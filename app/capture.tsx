@@ -8,6 +8,7 @@ import {
   Alert,
   Linking,
   Platform,
+  TextInput,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -279,18 +280,61 @@ export default function CaptureScreen() {
               </View>
             );
 
+            // Traffic-light quality chip — green ≥4, amber 3-4, red <3.
+            // Promotes the score from a buried subtitle to glanceable feedback.
+            const score = s.qualityScore ?? 0;
+            const qualityTier =
+              score >= 4 ? "good" : score >= 3 ? "ok" : "low";
+            const qualityColor =
+              qualityTier === "good"
+                ? "#4A6B4F"
+                : qualityTier === "ok"
+                  ? "#A8843D"
+                  : "#9E5E47";
+            const qualityBg =
+              qualityTier === "good"
+                ? "rgba(74,107,79,0.10)"
+                : qualityTier === "ok"
+                  ? "rgba(168,132,61,0.10)"
+                  : "rgba(158,94,71,0.10)";
+
             const trailing = captured ? (
-              <View
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: "#5FA89B",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                {s.qualityScore != null ? (
+                  <View
+                    style={{
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 999,
+                      backgroundColor: qualityBg,
+                      borderWidth: 1,
+                      borderColor: qualityColor + "55",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Inter-Medium",
+                        fontSize: 10,
+                        letterSpacing: 0.6,
+                        color: qualityColor,
+                      }}
+                    >
+                      {score.toFixed(1)}
+                    </Text>
+                  </View>
+                ) : null}
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: "#5FA89B",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
+                </View>
               </View>
             ) : (
               <Button
@@ -304,20 +348,65 @@ export default function CaptureScreen() {
             );
 
             return (
-              <TileButton
-                key={s.id}
-                emphasis={isNext}
-                kicker={`Photo ${s.id} of ${photos.totalSlots}`}
-                title={s.label}
-                subtitle={
-                  s.qualityScore != null
-                    ? `${s.hint}  ·  Quality ${s.qualityScore.toFixed(1)} / 5`
-                    : s.hint
-                }
-                leftSlot={leadingIcon}
-                trailing={trailing}
-                onPress={() => (s.uri ? handleRetake(s.id) : openCamera(s.id))}
-              />
+              <View key={s.id} style={{ gap: 8 }}>
+                <TileButton
+                  emphasis={isNext}
+                  kicker={`Photo ${s.id} of ${photos.totalSlots}`}
+                  title={s.label}
+                  subtitle={s.hint}
+                  leftSlot={leadingIcon}
+                  trailing={trailing}
+                  onPress={() => (s.uri ? handleRetake(s.id) : openCamera(s.id))}
+                />
+                {/* Caption field on captured photos — the brief-not-intake reframe.
+                    e.g. "I'd like this gap closed" written under the front shot. */}
+                {captured ? (
+                  <View
+                    style={{
+                      marginHorizontal: 4,
+                      marginTop: -2,
+                      paddingHorizontal: 14,
+                      paddingTop: 10,
+                      paddingBottom: 10,
+                      borderLeftWidth: 2,
+                      borderLeftColor: "#5FA89B",
+                      backgroundColor: "rgba(95,168,155,0.05)",
+                      borderTopRightRadius: 4,
+                      borderBottomRightRadius: 4,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Inter-Medium",
+                        fontSize: 9,
+                        letterSpacing: 1.4,
+                        textTransform: "uppercase",
+                        color: "#3F7E73",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Tell the dentist · optional
+                    </Text>
+                    <TextInput
+                      value={s.caption ?? ""}
+                      onChangeText={(t) => photos.setCaption(s.id, t)}
+                      placeholder="e.g. I'd like this gap closed"
+                      placeholderTextColor="#9C9285"
+                      multiline
+                      maxLength={220}
+                      style={{
+                        fontFamily: "Lora-Italic",
+                        fontStyle: "italic",
+                        fontSize: 14,
+                        lineHeight: 20,
+                        color: "#4D423A",
+                        padding: 0,
+                        minHeight: 22,
+                      }}
+                    />
+                  </View>
+                ) : null}
+              </View>
             );
           })}
         </View>
@@ -530,8 +619,11 @@ export default function CaptureScreen() {
                 );
                 return;
               }
+              // Captions aligned to photoUris by index; empty strings preserved.
+              const photoCaptions = photos.slots.map((s) => (s.caption ?? "").trim());
               setIntake({
                 photoUris,
+                photoCaptions,
                 photoQualityScore: photos.overallQuality,
               });
               router.push({ pathname: "/symptoms", params: { c: params.c } });

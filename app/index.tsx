@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Updates from "expo-updates";
 import { Wordmark } from "@/components/Wordmark";
 import { Button } from "@/components/Button";
 import { RoleTile } from "@/components/RoleTile";
@@ -53,23 +54,25 @@ export default function WelcomeScreen() {
   }, [signedIn]);
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: "#3F7E73" }}>
-      {/* Dark teal at top → light mint at the bottom (sea floor feel) */}
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "#F5F1E8" }}>
+      {/* Soft mint band at the very top fades into cream/bone — same
+          palette as the categories + capture screens for visual
+          consistency across the whole patient flow. */}
       <LinearGradient
-        colors={["#1F4F47", "#2D6E66", "#5FA89B", "#A8DCCB", "#DCF2EA"]}
-        locations={[0, 0.25, 0.6, 0.88, 1]}
+        colors={["#A8DCCB", "#C8E8DC", "#E8F2EB", "#F5F1E8", "#F5F1E8"]}
+        locations={[0, 0.18, 0.4, 0.7, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
       />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <Animated.View style={{ opacity: headerOpacity }}>
-          <View className="px-8 py-6 flex-row items-center justify-between border-b border-white/15">
-            <Wordmark size="md" tone="light" />
+          <View className="px-8 py-6 flex-row items-center justify-between border-b border-linen">
+            <Wordmark size="md" />
             <View className="flex-row items-center gap-2">
               <Pressable
                 onPress={() => router.push("/live")}
-                className="px-3.5 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+                className="px-3.5 py-1.5 rounded-full bg-eggshell active:bg-linen border border-linen"
               >
                 <Text className="text-[11px] tracking-cap uppercase text-espresso font-sans">
                   Live demo
@@ -78,7 +81,7 @@ export default function WelcomeScreen() {
               {signedIn ? (
                 <Pressable
                   onPress={() => router.push("/inbox")}
-                  className="px-3.5 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+                  className="px-3.5 py-1.5 rounded-full bg-eggshell active:bg-linen border border-linen"
                 >
                   <Text className="text-[11px] tracking-cap uppercase text-espresso font-sans">
                     Inbox
@@ -91,7 +94,7 @@ export default function WelcomeScreen() {
 
         {/* Hero */}
         <Animated.View
-          className="flex-1 items-center px-8 py-20"
+          className="flex-1 items-center px-8 pt-10 pb-12"
           style={{ opacity: heroOpacity, transform: [{ translateY: heroY }] }}
         >
           <Text
@@ -100,7 +103,7 @@ export default function WelcomeScreen() {
               fontSize: 11,
               letterSpacing: 2.5,
               textTransform: "uppercase",
-              color: "rgba(255,255,255,0.92)",
+              color: "#3F7E73",
               textAlign: "center",
               marginBottom: 40,
               fontWeight: "500",
@@ -114,7 +117,7 @@ export default function WelcomeScreen() {
               fontFamily: "Italiana",
               fontSize: 48,
               lineHeight: 52,
-              color: "#FFFFFF",
+              color: "#2A2520",
               textAlign: "center",
               marginBottom: 2,
             }}
@@ -126,7 +129,7 @@ export default function WelcomeScreen() {
               fontFamily: "Allura",
               fontSize: 68,
               lineHeight: 72,
-              color: "#FFFFFF",
+              color: "#5FA89B",
               textAlign: "center",
               marginBottom: 24,
             }}
@@ -138,14 +141,14 @@ export default function WelcomeScreen() {
           <MaterialCommunityIcons
             name="tooth-outline"
             size={36}
-            color="#FFFFFF"
+            color="#5FA89B"
             style={{ marginTop: 24, marginBottom: 16, opacity: 0.92 }}
           />
           <Text
             style={{
               fontFamily: "Italiana",
               fontSize: 22,
-              color: "#FFFFFF",
+              color: "#2A2520",
               textAlign: "center",
               lineHeight: 26,
               marginBottom: 4,
@@ -158,7 +161,7 @@ export default function WelcomeScreen() {
             style={{
               fontFamily: "Allura",
               fontSize: 38,
-              color: "#FFFFFF",
+              color: "#5FA89B",
               textAlign: "center",
               marginBottom: 16,
             }}
@@ -166,28 +169,20 @@ export default function WelcomeScreen() {
             to give you the best quote.
           </Text>
 
-          {/* Role selector — only shown when not signed in */}
+          {/* Two distinct sign-in entry points — patients book, dentists
+              quote. Each tile carries its own brand register: mint pill
+              for patient (warm consumer) and deep teal for dentist
+              (authoritative practitioner). */}
           {!signedIn && !loading ? (
-            <View className="w-full max-w-md mb-12" style={{ marginTop: 24 }}>
-              <Text
-                style={{
-                  fontFamily: "Inter",
-                  fontSize: 10,
-                  letterSpacing: 1.6,
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.85)",
-                  textAlign: "center",
-                  marginBottom: 18,
-                  fontWeight: "500",
-                }}
-              >
-                Choose your path
-              </Text>
-              <View style={{ flexDirection: "row", gap: 12 }}>
-                <ModernRoleTile
-                  glyph="account-heart-outline"
-                  label="Patient"
-                  blurb="Get quotes from nearby dentists in minutes."
+            <View className="w-full max-w-md mb-12 items-center" style={{ marginTop: 32 }}>
+              {/* Two role buttons side-by-side on a single row — compact
+                  pill width, just the title (no subtitle) so they fit
+                  comfortably on a phone. */}
+              <View style={{ flexDirection: "row", gap: 10, alignSelf: "stretch" }}>
+                <WelcomeRoleTile
+                  role="patient"
+                  title="I'm a Patient"
+                  icon="account-heart-outline"
                   onPress={() =>
                     router.push({
                       pathname: "/sign-in",
@@ -195,10 +190,10 @@ export default function WelcomeScreen() {
                     })
                   }
                 />
-                <ModernRoleTile
-                  glyph="tooth-outline"
-                  label="Dentist"
-                  blurb="Quote live on patient requests in your area."
+                <WelcomeRoleTile
+                  role="dentist"
+                  title="I'm a Dentist"
+                  icon="tooth-outline"
                   onPress={() =>
                     router.push({
                       pathname: "/sign-in",
@@ -207,17 +202,27 @@ export default function WelcomeScreen() {
                   }
                 />
               </View>
-              <View className="mt-6 items-center">
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onPress={() =>
-                    router.push({ pathname: "/sign-in", params: { mode: "signin" } })
-                  }
+
+              <Pressable
+                onPress={() =>
+                  router.push({ pathname: "/sign-in", params: { mode: "signin" } })
+                }
+                hitSlop={10}
+                style={{ marginTop: 14 }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Inter-Medium",
+                    fontSize: 12,
+                    letterSpacing: 1.4,
+                    textTransform: "uppercase",
+                    color: "#3F7E73",
+                    textAlign: "center",
+                  }}
                 >
-                  Sign in
-                </Button>
-              </View>
+                  Already have an account · Sign in
+                </Text>
+              </Pressable>
             </View>
           ) : null}
 
@@ -309,6 +314,25 @@ export default function WelcomeScreen() {
           </View>
         </Animated.View>
 
+        {/* Tiny build tag — visible proof of which JS bundle is live on
+            the device. If you see "OTA #4 mint-fix", the EAS Update
+            applied. If you still see "embedded", the device is running
+            the build's bundled JS and OTA hasn't taken yet. */}
+        <View style={{ alignItems: "center", marginTop: 4 }}>
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 9,
+              letterSpacing: 1.2,
+              textTransform: "uppercase",
+              color: "#A89B88",
+            }}
+          >
+            Bundle: OTA #4 mint-fix ·{" "}
+            {Updates.updateId ? Updates.updateId.slice(0, 8) : "embedded"}
+          </Text>
+        </View>
+
         {/* Footer */}
         <View className="px-8 py-10 border-t border-linen flex-row items-center justify-between">
           <Wordmark size="sm" />
@@ -316,7 +340,7 @@ export default function WelcomeScreen() {
             {signedIn ? (
               <Pressable
                 onPress={() => router.push("/settings")}
-                className="px-3 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+                className="px-3 py-1.5 rounded-full bg-eggshell active:bg-linen border border-linen"
               >
                 <Text className="text-[10px] tracking-editorial uppercase text-espresso font-sans">
                   Settings
@@ -325,7 +349,7 @@ export default function WelcomeScreen() {
             ) : null}
             <Pressable
               onPress={() => router.push("/legal/terms")}
-              className="px-3 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+              className="px-3 py-1.5 rounded-full bg-eggshell active:bg-linen border border-linen"
             >
               <Text className="text-[10px] tracking-editorial uppercase text-espresso font-sans">
                 Terms
@@ -333,7 +357,7 @@ export default function WelcomeScreen() {
             </Pressable>
             <Pressable
               onPress={() => router.push("/legal/privacy")}
-              className="px-3 py-1.5 rounded-full bg-white/25 active:bg-white/40"
+              className="px-3 py-1.5 rounded-full bg-eggshell active:bg-linen border border-linen"
             >
               <Text className="text-[10px] tracking-editorial uppercase text-espresso font-sans">
                 Privacy
@@ -427,6 +451,90 @@ function ModernRoleTile({
         }}
       >
         {blurb}
+      </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * WelcomeRoleTile — large tappable card used on the welcome screen.
+ * Patient = mint primary; Dentist = deep-teal authoritative. Matches
+ * the same tile language used on the sign-in role-picker so the user
+ * sees consistent treatment as they move forward.
+ */
+function WelcomeRoleTile({
+  role,
+  title,
+  icon,
+  onPress,
+}: {
+  role: "patient" | "dentist";
+  title: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  onPress: () => void;
+}) {
+  // Patient = mint filled (#5FA89B) + white text — bold primary CTA on
+  // the cream surface area (NOT on the mint banner — tiles sit below the
+  // fade so contrast holds; mint #5FA89B on cream #F5F1E8 reads cleanly).
+  // Dentist = transparent + deep-teal border + deep-teal text — secondary
+  // outlined treatment, clearly distinct without competing with the
+  // patient CTA. Both treatments visually different at a glance.
+  const isDentist = role === "dentist";
+  const bg = isDentist ? "transparent" : "#5FA89B";
+  const bgPressed = isDentist ? "rgba(31,79,71,0.06)" : "#4E9388";
+  const fg = isDentist ? "#1F4F47" : "#FFFFFF";
+  const fgSubtle = isDentist ? "rgba(31,79,71,0.72)" : "rgba(255,255,255,0.92)";
+  const iconBg = isDentist ? "rgba(31,79,71,0.10)" : "rgba(255,255,255,0.18)";
+  const borderColor = isDentist ? "#1F4F47" : "transparent";
+  const borderWidth = isDentist ? 1.5 : 0;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flex: 1,
+        backgroundColor: pressed ? bgPressed : bg,
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 10,
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        borderWidth,
+        borderColor,
+        // Soft shadow only on the filled (patient) tile; outlined tile
+        // stays clean — no shadow on a transparent surface.
+        shadowColor: "#1F4F47",
+        shadowOpacity: isDentist ? 0 : 0.22,
+        shadowRadius: isDentist ? 0 : 10,
+        shadowOffset: { width: 0, height: isDentist ? 0 : 5 },
+        elevation: isDentist ? 0 : 4,
+      })}
+    >
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: iconBg,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <MaterialCommunityIcons name={icon} size={20} color={fg} />
+      </View>
+      <Text
+        style={{
+          fontFamily: "Inter",
+          fontSize: 13,
+          fontWeight: "700",
+          color: fg,
+          letterSpacing: 0.2,
+          textAlign: "center",
+        }}
+      >
+        {title}
       </Text>
     </Pressable>
   );

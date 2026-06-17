@@ -200,36 +200,41 @@ export function PatientTabBar() {
       </View>
 
       {/* ============================================================
-          FLOATING CAMERA BUTTON — sits inside the carved notch
+          FLOATING CAMERA BUTTON — sits inside the carved notch with a
+          clear gap to the socket walls so it reads as "floating in the
+          ditch" rather than welded into it. Just above the socket rim.
          ============================================================ */}
       <View
         pointerEvents="box-none"
         style={{
           position: "absolute",
-          top: 4,
+          top: 6,
           left: 0,
           right: 0,
           alignItems: "center",
         }}
       >
-        {/* Subtle radial halo — soft mint warmth, not a hard ring */}
+        {/* Subtle radial halo — soft mint warmth around the floating button */}
         <Svg
           width={120}
           height={120}
-          style={{ position: "absolute", top: -10 }}
+          style={{ position: "absolute", top: -8 }}
           pointerEvents="none"
         >
           <Defs>
             <RadialGradient id="halo" cx="50%" cy="50%" r="50%">
-              <Stop offset="0" stopColor="#7EC2B2" stopOpacity="0.45" />
-              <Stop offset="0.55" stopColor="#7EC2B2" stopOpacity="0.16" />
+              <Stop offset="0" stopColor="#7EC2B2" stopOpacity="0.55" />
+              <Stop offset="0.55" stopColor="#7EC2B2" stopOpacity="0.18" />
               <Stop offset="1" stopColor="#7EC2B2" stopOpacity="0" />
             </RadialGradient>
           </Defs>
-          <Rect x="0" y="0" width="120" height="120" fill="url(#halo)" />
+          <Rect x="0" y="0" width="140" height="140" fill="url(#halo)" />
         </Svg>
 
-        {/* The camera button itself — sits cradled in the notch */}
+        {/* The camera button itself — sits INSIDE the socket with a
+            visible cushion around it (NOTCH_CUSHION = 10px on each side)
+            so it reads as floating in the ditch. Strong drop shadow
+            sells the hover above the socket floor. */}
         <Pressable
           onPress={() => router.push(CAPTURE_HREF as never)}
           style={{
@@ -239,11 +244,15 @@ export function PatientTabBar() {
             alignItems: "center",
             justifyContent: "center",
             shadowColor: "#1F4F47",
-            shadowOpacity: 0.45,
-            shadowRadius: 14,
-            shadowOffset: { width: 0, height: 7 },
-            elevation: 14,
-            marginTop: 22,
+            shadowOpacity: 0.55,
+            shadowRadius: 18,
+            shadowOffset: { width: 0, height: 10 },
+            elevation: 16,
+            // Sits a few px below the top so it tucks INTO the socket
+            // but a clear gap of mint shows around all sides.
+            marginTop: 8,
+            borderWidth: 2,
+            borderColor: "rgba(255,255,255,0.88)",
             overflow: "hidden",
           }}
         >
@@ -294,9 +303,9 @@ export function PatientTabBar() {
             fontSize: 9,
             letterSpacing: 1.4,
             textTransform: "uppercase",
-            color: "#3F7E73",
-            marginTop: 8,
-            fontWeight: "500",
+            color: "#FFFFFF",
+            marginTop: 14,
+            fontWeight: "600",
           }}
         >
           New quote

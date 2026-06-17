@@ -35,6 +35,14 @@ export type PhotoSlot = {
   qualityFlags?: Array<"blurry" | "dark" | "bright" | "off-centre" | "good">;
   capturedAt?: string;
   kind?: "photo" | "video";
+  /**
+   * Patient-supplied caption for this photo. Converts the capture from
+   * mute intake into a *brief* — e.g. "I'd like this gap closed" written
+   * under the front shot. The dentist sees these alongside the image
+   * when composing their quote.
+   * Research pattern #5 — the brief-not-intake reframe.
+   */
+  caption?: string;
 };
 
 const INITIAL: PhotoSlot[] = [
@@ -158,6 +166,13 @@ export function usePhotoCapture() {
     );
   }, []);
 
+  /** Set or clear the patient's caption on a single photo slot. */
+  const setCaption = useCallback((slotId: number, caption: string) => {
+    setSlots((current) =>
+      current.map((s) => (s.id === slotId ? { ...s, caption } : s)),
+    );
+  }, []);
+
   const overallQuality =
     slots.reduce((sum, s) => sum + (s.qualityScore ?? 0), 0) / slots.length;
   const allCaptured = slots.every((s) => s.uri);
@@ -168,6 +183,7 @@ export function usePhotoCapture() {
     slots,
     capture,
     retake,
+    setCaption,
     overallQuality,
     allCaptured,
     capturedCount,

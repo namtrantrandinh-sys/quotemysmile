@@ -47,6 +47,7 @@ export const SAMPLE_QUOTES: Quote[] = [
       { code: "111", label: "Scale + clean", amount: 109 },
       { code: "531", label: "Composite filling", amount: 135 },
     ],
+    note: "From your photos the filling looks small — should be a single visit. Bring earphones; we play your music during the chair.",
   },
   {
     id: "q-3",
@@ -67,6 +68,7 @@ export const SAMPLE_QUOTES: Quote[] = [
       { code: "111", label: "Scale + clean", amount: 135 },
       { code: "531", label: "Composite filling", amount: 150 },
     ],
+    note: "Looking at the angle in your second photo, I'd want a bitewing X-ray on the day. If it's straightforward I'll smooth it then and there.",
   },
 ];
 

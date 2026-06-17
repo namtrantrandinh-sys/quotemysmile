@@ -38,6 +38,12 @@ const MINT_DEEP = "#1F4F47";
 const ESPRESSO = "#2A2520";
 const CLAY = "#9E5E47";
 const TAUPE = "#6E6457";
+// Primary CTA surface — deep teal, not mint. White text on mint
+// (#5FA89B) measures ~2.1:1 (AA fail) and disappears over the mint
+// banner used on the welcome + sign-in screens. Deep teal #1F4F47
+// against white text measures ~10:1 (AAA) and is already in palette.
+const PRIMARY_BG = MINT_DEEP;
+const PRIMARY_BG_PRESSED = "#173B35";
 
 const SIZE_SPEC: Record<
   Size,
@@ -65,8 +71,8 @@ export function Button({
     switch (variant) {
       case "primary":
         return {
-          bg: MINT,
-          activeBg: "#4E9388",
+          bg: PRIMARY_BG,
+          activeBg: PRIMARY_BG_PRESSED,
           text: "#FFFFFF",
           iconColor: "#FFFFFF",
           shadow: true,

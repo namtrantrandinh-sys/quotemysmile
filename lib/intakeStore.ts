@@ -20,6 +20,12 @@ export type IntakeSnapshot = {
     member_id_last4?: string | null;
   };
   photoUris?: string[];
+  /**
+   * Optional captions per photo, aligned to photoUris by index. Empty
+   * strings preserved so the index alignment survives. Dentists see
+   * these alongside each thumbnail when composing their quote.
+   */
+  photoCaptions?: string[];
   photoQualityScore?: number;
   coords?: { lat: number; lng: number };
   radiusKm?: number;

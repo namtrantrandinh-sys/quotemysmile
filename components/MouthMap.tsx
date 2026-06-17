@@ -93,40 +93,22 @@ export function MouthMap({ slots, activeSlotName, compact }: Props) {
         </View>
       </View>
 
-      {/* Problem-area chip below — always shimmers while uncaptured so
-          users notice it (it sits below the main mouth diagram and is
-          the most easily-missed of the four). */}
-      {(() => {
-        const isActive = !!problem && !problem.uri;
-        const pill = (
-          <View
-            className={`mt-3 flex-row items-center gap-2 border-2 ${tone(problem)} rounded-full`}
-            style={{
-              paddingVertical: 4 * size,
-              paddingHorizontal: 12 * size,
-            }}
-          >
-            <View className={`h-1.5 w-1.5 rounded-full ${dotTone(problem)}`} />
-            <Text
-              className="text-[10px] tracking-cap uppercase text-walnut font-sans"
-              style={{ fontSize: 10 * size }}
-            >
-              Problem area
-            </Text>
-          </View>
-        );
-        return isActive ? (
-          <ShimmerText
-            highlight="rgba(95,168,155,0.55)"
-            bandWidth={80}
-            duration={2400}
-          >
-            {pill}
-          </ShimmerText>
-        ) : (
-          pill
-        );
-      })()}
+      {/* Problem-area chip below the main mouth diagram. */}
+      <View
+        className={`mt-3 flex-row items-center gap-2 border-2 ${tone(problem)} rounded-full`}
+        style={{
+          paddingVertical: 4 * size,
+          paddingHorizontal: 12 * size,
+        }}
+      >
+        <View className={`h-1.5 w-1.5 rounded-full ${dotTone(problem)}`} />
+        <Text
+          className="text-[10px] tracking-cap uppercase text-walnut font-sans"
+          style={{ fontSize: 10 * size }}
+        >
+          Problem area
+        </Text>
+      </View>
 
       {!compact ? (
         <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mt-5">

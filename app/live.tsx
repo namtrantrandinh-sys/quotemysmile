@@ -54,6 +54,7 @@ function toViewQuote(row: QuoteRow): Quote {
     availability: "—",
     total: row.total,
     previousTotal: row.previous_total ?? undefined,
+    note: row.note ?? undefined,
     ahpraNo: row.ahpra_no,
     isFinal: row.status === "final",
     // lat/lng come via a separate map RPC; left undefined here so map view
@@ -235,8 +236,19 @@ export default function LiveFeedScreen() {
     };
   }, [request]);
 
-  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-  const ss = String(secondsLeft % 60).padStart(2, "0");
+  // Show an absolute time ("Closes 4:30 pm") instead of mm:ss countdown.
+  // Pattern #11 (research): urgency-marketing countdowns destroy the calm
+  // premium register. Real expiries shown as dates and times.
+  const closesAt = new Date(Date.now() + secondsLeft * 1000);
+  const closesLabel = closesAt.toLocaleTimeString("en-AU", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  // Show day prefix if it's not today (e.g. urgency = "3d")
+  const closesIsToday = closesAt.toDateString() === new Date().toDateString();
+  const closesDisplay = closesIsToday
+    ? `Closes ${closesLabel}`
+    : `Closes ${closesAt.toLocaleDateString("en-AU", { weekday: "short" })} ${closesLabel}`;
 
   return (
     <SafeAreaView className="flex-1 bg-bone">
@@ -266,7 +278,7 @@ export default function LiveFeedScreen() {
           <View className="flex-row items-center gap-6">
             <LiveBadge />
             <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans">
-              Closes {mm}:{ss}
+              {closesDisplay}
             </Text>
           </View>
         </View>
@@ -282,7 +294,7 @@ export default function LiveFeedScreen() {
           <Text className="text-sm text-walnut font-sans text-center max-w-md leading-relaxed mb-8">
             {closed
               ? "Quotes are valid for 7 days. Book any of them at your own pace."
-              : `Streaming from AHPRA-registered dentists near you. Window closes in ${mm}:${ss}.`}
+              : `Streaming from AHPRA-registered dentists near you. Window closes ${closesIsToday ? closesLabel.toLowerCase() : `${closesAt.toLocaleDateString("en-AU", { weekday: "long" })} ${closesLabel.toLowerCase()}`}.`}
           </Text>
           <ViewToggle
             value={view}

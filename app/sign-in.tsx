@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { WaterBanner } from "@/components/WaterBanner";
 import { Button } from "@/components/Button";
 import { FieldLabel } from "@/components/FieldLabel";
@@ -39,7 +41,14 @@ function looksLikeEmail(value: string) {
 export default function SignInScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ role?: "patient" | "dentist"; mode?: "signin" | "signup" }>();
-  const role = params.role === "dentist" ? "dentist" : "patient";
+
+  // Role can come in as a deep-link param (from the welcome screen's
+  // "I'm a dentist →" link, etc). When it does we skip the role picker
+  // and go straight to the matching sign-in form.
+  const [pickedRole, setPickedRole] = useState<"patient" | "dentist" | null>(
+    params.role === "dentist" ? "dentist" : params.role === "patient" ? "patient" : null,
+  );
+  const role = pickedRole ?? "patient";
   const mode = params.mode === "signin" ? "signin" : "signup";
 
   const [phase, setPhase] = useState<"phone" | "otp" | "profile">("phone");
@@ -203,46 +212,197 @@ export default function SignInScreen() {
       });
       router.replace(role === "dentist" ? "/dentist/onboarding" : "/");
     } catch (e) {
-      Alert.alert("Profile error", e instanceof Error ? e.message : "Try again.");
+      // Surface the real reason. Supabase PostgrestError isn't an Error
+      // subclass — relying on `e instanceof Error` previously swallowed
+      // RLS rejections behind a generic "Try again.".
+      const msg =
+        (e as { message?: string })?.message ??
+        (typeof e === "string" ? e : "Try again.");
+      Alert.alert("Profile error", msg);
     } finally {
       setBusy(false);
     }
   };
 
+  // Visual register branches on role. Patients get warm consumer (water
+  // banner, mint accent, friendly copy). Dentists get an authoritative
+  // practitioner treatment (deep teal header, lock glyph, AHPRA reference).
+  const isDentist = role === "dentist";
+
+  // Role picker — shown when no role has been deep-linked in. Lets the
+  // user choose Patient vs Dentist from a single sign-in landing.
+  if (!pickedRole) {
+    return (
+      <View className="flex-1 bg-bone">
+        <WaterBanner />
+        <ScrollView>
+          <View className="px-8 pt-12 pb-8 items-center">
+            <Wordmark size="md" />
+            <Text
+              style={{
+                fontFamily: "Inter-Medium",
+                fontSize: 10,
+                letterSpacing: 2.4,
+                textTransform: "uppercase",
+                color: "#8A7E70",
+                marginTop: 36,
+                marginBottom: 18,
+              }}
+            >
+              Sign in to QuoteMySmile
+            </Text>
+            <Text className="font-display text-5xl text-espresso text-center leading-[1.05] mb-4">
+              Who's signing in?
+            </Text>
+            <Text className="text-sm text-walnut font-sans text-center max-w-md leading-relaxed mb-10">
+              We tailor the next steps to whether you're booking dental work or providing it.
+            </Text>
+          </View>
+
+          <View className="px-6 pb-12" style={{ gap: 14 }}>
+            <RoleSignInButton
+              role="patient"
+              title="I'm a Patient"
+              subtitle="Get accurate, AHPRA-signed dental quotes near you."
+              icon="account-heart-outline"
+              onPress={() => setPickedRole("patient")}
+            />
+            <RoleSignInButton
+              role="dentist"
+              title="I'm a Dentist"
+              subtitle="AHPRA-registered Australian practitioners — sign live, paid per attendance."
+              icon="tooth-outline"
+              onPress={() => setPickedRole("dentist")}
+            />
+          </View>
+
+          <View className="items-center pb-16">
+            <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans text-center">
+              All quotes are AHPRA-signed · A$5 platform fee per attended booking
+            </Text>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-bone">
-      <WaterBanner />
+      {isDentist ? <DentistHeader /> : <SignInBanner />}
+      {/* Back button — ALWAYS visible.
+          • In the OTP phase, go back to phone entry.
+          • Otherwise, return to the role picker if the user picked
+            in-app, else router.back() to the welcome screen. */}
+      <Pressable
+        onPress={() => {
+          if (phase === "otp") {
+            setPhase("phone");
+            setCode("");
+            return;
+          }
+          if (phase === "profile") {
+            setPhase("otp");
+            return;
+          }
+          // In phone phase. If the user picked a role inside this
+          // screen, take them back to the picker. Otherwise leave the
+          // sign-in screen entirely and return to welcome.
+          if (!params.role) {
+            setPickedRole(null);
+            setPhone("");
+            setCode("");
+            return;
+          }
+          // Always route via replace("/") — router.back() throws
+          // "GO_BACK not handled" when there is no history (which
+          // happens on direct deep-links and cold launches into the
+          // sign-in screen).
+          router.replace("/");
+        }}
+        hitSlop={12}
+        style={{
+          position: "absolute",
+          top: 56,
+          left: 18,
+          width: 38,
+          height: 38,
+          borderRadius: 19,
+          backgroundColor: isDentist ? "rgba(255,255,255,0.18)" : "#FFFFFF",
+          borderWidth: isDentist ? 0 : 1,
+          borderColor: "#E5DCC8",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10,
+          shadowColor: "#1F4F47",
+          shadowOpacity: isDentist ? 0 : 0.10,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 2 },
+          elevation: 3,
+        }}
+      >
+        <MaterialCommunityIcons
+          name="chevron-left"
+          size={24}
+          color={isDentist ? "#FFFFFF" : "#2A2520"}
+        />
+      </Pressable>
       <ScrollView>
-        <View className="px-8 pt-12 pb-8 items-center">
+        <View className="px-8 pt-10 pb-8 items-center">
           <Wordmark size="md" />
-          <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mt-10 mb-6">
+          <Text
+            style={{
+              fontFamily: "Inter-Medium",
+              fontSize: 10,
+              letterSpacing: 2.4,
+              textTransform: "uppercase",
+              color: isDentist ? "#3F7E73" : "#8A7E70",
+              marginTop: 36,
+              marginBottom: 18,
+            }}
+          >
             {phase === "phone"
-              ? role === "dentist"
-                ? "Dentist · " + (mode === "signin" ? "Sign in" : "Create account")
+              ? isDentist
+                ? mode === "signin"
+                  ? "Practitioner portal · Sign in"
+                  : "Practitioner portal · Register"
                 : mode === "signin"
-                  ? "Sign in"
-                  : "Create account"
+                  ? "Patient · Sign in"
+                  : "Patient · Create account"
               : phase === "otp"
                 ? "Verify"
-                : "Almost there"}
+                : isDentist
+                  ? "AHPRA on file"
+                  : "Almost there"}
           </Text>
           <Text className="font-display text-5xl text-espresso text-center leading-[1.05] mb-6">
             {phase === "phone"
-              ? mode === "signin"
-                ? "Welcome back."
-                : "Your number."
+              ? isDentist
+                ? mode === "signin"
+                  ? "Welcome, doctor."
+                  : "Join the panel."
+                : mode === "signin"
+                  ? "Welcome back."
+                  : "Your number."
               : phase === "otp"
                 ? "Enter the code."
-                : "What's your name?"}
+                : isDentist
+                  ? "Your registered name."
+                  : "What's your name?"}
           </Text>
           <Text className="text-sm text-walnut font-sans text-center max-w-md leading-relaxed">
             {phase === "phone"
-              ? mode === "signin"
-                ? "Sign in with the mobile you registered. We'll send a 6-digit code."
-                : "We'll send a 6-digit code by SMS. No password, no fuss."
+              ? isDentist
+                ? mode === "signin"
+                  ? "Sign in with the mobile attached to your AHPRA registration. We'll send a one-time code."
+                  : "QuoteMySmile is for AHPRA-registered Australian dentists. You'll add your AHPRA number, ABN and PI insurance after sign-in."
+                : mode === "signin"
+                  ? "Sign in with the mobile you registered. We'll send a one-time code."
+                  : "We'll send a one-time code by SMS. No password, no fuss."
               : phase === "otp"
                 ? `Sent to ${phone}. The code expires in 5 minutes.`
-                : "We'll use this to introduce you to the dentist when you book."}
+                : isDentist
+                  ? "Use the name on your AHPRA registration. We display this to patients on every quote."
+                  : "We'll use this to introduce you to the dentist when you book."}
           </Text>
         </View>
 
@@ -305,7 +465,7 @@ export default function SignInScreen() {
                 label={method === "email" ? "Email address" : "Mobile number"}
                 hint={
                   method === "email"
-                    ? "We'll email you a 6-digit code."
+                    ? "We'll email you a one-time code."
                     : "AU mobile — 04XX XXX XXX or +61 4XX XXX XXX."
                 }
               >
@@ -322,24 +482,54 @@ export default function SignInScreen() {
                 <Button variant="primary" size="lg" onPress={send}>
                   {busy
                     ? "Sending…"
-                    : isEmail
-                      ? "Email code"
-                      : "Send code"}
+                    : isDentist
+                      ? "Send sign-in code"
+                      : isEmail
+                        ? "Email code"
+                        : "Send code"}
                 </Button>
               </View>
-              <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans text-center mt-6">
-                {REVIEW_CODE_HINT}
-              </Text>
+              {isDentist ? (
+                <View
+                  style={{
+                    marginTop: 28,
+                    paddingTop: 16,
+                    borderTopWidth: 1,
+                    borderTopColor: "rgba(229,220,200,0.7)",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  <MaterialCommunityIcons name="shield-check-outline" size={14} color="#3F7E73" />
+                  <Text
+                    style={{
+                      fontFamily: "Inter-Medium",
+                      fontSize: 10,
+                      letterSpacing: 1.6,
+                      textTransform: "uppercase",
+                      color: "#3F7E73",
+                    }}
+                  >
+                    AHPRA · ABN · PI insurance verified
+                  </Text>
+                </View>
+              ) : (
+                <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans text-center mt-6">
+                  {REVIEW_CODE_HINT}
+                </Text>
+              )}
             </>
           ) : phase === "otp" ? (
             <>
-              <FieldLabel label="6-digit code">
+              <FieldLabel label="Sign-in code">
                 <TextField
                   value={code}
                   onChangeText={setCode}
-                  placeholder="123456"
+                  placeholder="12345678"
                   keyboardType="numeric"
-                  maxLength={6}
+                  maxLength={8}
                   autoFocus
                 />
               </FieldLabel>
@@ -365,18 +555,231 @@ export default function SignInScreen() {
             </>
           ) : (
             <>
-              <FieldLabel label="Full name" hint="As you'd like the dentist to address you.">
-                <TextField value={name} onChangeText={setName} placeholder="Sarah K" />
+              <FieldLabel
+                label="Full name"
+                hint={
+                  isDentist
+                    ? "As registered with AHPRA. Patients see this on every quote."
+                    : "As you'd like the dentist to address you."
+                }
+              >
+                <TextField
+                  value={name}
+                  onChangeText={setName}
+                  placeholder={isDentist ? "Dr Sarah Chen" : "Sarah K"}
+                />
               </FieldLabel>
               <View className="items-center mt-6">
                 <Button variant="primary" size="lg" onPress={completeProfile}>
-                  {busy ? "Saving…" : "Continue"}
+                  {busy ? "Saving…" : isDentist ? "Continue to AHPRA details" : "Continue"}
                 </Button>
               </View>
             </>
           )}
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+/**
+ * RoleSignInButton — large tappable card. Patient = mint primary; Dentist
+ * = deep-teal authoritative. Both pill-shaped to match the rest of the
+ * button system. Used on the sign-in landing's role-picker step.
+ */
+function RoleSignInButton({
+  role,
+  title,
+  subtitle,
+  icon,
+  onPress,
+}: {
+  role: "patient" | "dentist";
+  title: string;
+  subtitle: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  onPress: () => void;
+}) {
+  // Patient = mint filled + white text (primary CTA).
+  // Dentist = transparent + deep-teal border + deep-teal text (outlined
+  // secondary). Identical treatment to the welcome screen so the user
+  // sees the same role visuals end-to-end.
+  const isDentist = role === "dentist";
+  const bg = isDentist ? "transparent" : "#5FA89B";
+  const bgPressed = isDentist ? "rgba(31,79,71,0.06)" : "#4E9388";
+  const fg = isDentist ? "#1F4F47" : "#FFFFFF";
+  const fgSubtle = isDentist ? "rgba(31,79,71,0.72)" : "rgba(255,255,255,0.92)";
+  const iconBg = isDentist ? "rgba(31,79,71,0.10)" : "rgba(255,255,255,0.18)";
+  const borderColor = isDentist ? "#1F4F47" : "transparent";
+  const borderWidth = isDentist ? 1.5 : 0;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        backgroundColor: pressed ? bgPressed : bg,
+        borderRadius: 22,
+        paddingVertical: 18,
+        paddingHorizontal: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 16,
+        borderWidth,
+        borderColor,
+        shadowColor: "#1F4F47",
+        shadowOpacity: isDentist ? 0 : 0.25,
+        shadowRadius: isDentist ? 0 : 14,
+        shadowOffset: { width: 0, height: isDentist ? 0 : 6 },
+        elevation: isDentist ? 0 : 5,
+      })}
+    >
+      <View
+        style={{
+          width: 52,
+          height: 52,
+          borderRadius: 26,
+          backgroundColor: iconBg,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <MaterialCommunityIcons name={icon} size={28} color={fg} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontFamily: "Inter",
+            fontSize: 17,
+            fontWeight: "700",
+            color: fg,
+            marginBottom: 4,
+            letterSpacing: 0.2,
+          }}
+        >
+          {title}
+        </Text>
+        <Text
+          style={{
+            fontFamily: "Inter",
+            fontSize: 12,
+            color: fgSubtle,
+            lineHeight: 17,
+          }}
+        >
+          {subtitle}
+        </Text>
+      </View>
+      <MaterialCommunityIcons name="chevron-right" size={22} color={fgSubtle} />
+    </Pressable>
+  );
+}
+
+/**
+ * SignInBanner — mint + white treatment. A soft mint band at the top
+ * fades into cream, with a thin gold rule. Much cleaner + more modern
+ * than the full ocean WaterBanner — keeps mint as an accent rather
+ * than dominating the entire screen.
+ */
+function SignInBanner() {
+  return (
+    <View
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        backgroundColor: "#F5F1E8",
+      }}
+    >
+      <LinearGradient
+        colors={["#A8DCCB", "#C8E8DC", "#E8F2EB", "#F5F1E8"]}
+        locations={[0, 0.4, 0.78, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+      {/* Hairline mint rule that emphasises the fade */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 24,
+          right: 24,
+          height: 1,
+          backgroundColor: "rgba(95,168,155,0.18)",
+        }}
+      />
+      <SafeAreaView edges={["top"]}>
+        <View style={{ height: 32 }} />
+      </SafeAreaView>
+    </View>
+  );
+}
+
+/**
+ * DentistHeader — quieter, professional alternative to the WaterBanner.
+ * Solid deep-teal gradient with a thin gold rule, a shield-check icon
+ * and the "Practitioner portal" caption. Reads as authoritative rather
+ * than consumer-feminine, while still living in the QMS palette.
+ */
+function DentistHeader() {
+  return (
+    <View
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        backgroundColor: "#1F4F47",
+      }}
+    >
+      <LinearGradient
+        colors={["#1F4F47", "#2D6E66", "#3F7E73"]}
+        locations={[0, 0.55, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+      {/* Subtle horizontal rule under the caption — small editorial tell */}
+      <SafeAreaView edges={["top"]}>
+        <View
+          style={{
+            paddingHorizontal: 22,
+            paddingTop: 14,
+            paddingBottom: 28,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <MaterialCommunityIcons name="shield-check-outline" size={16} color="#A8DCCB" />
+            <Text
+              style={{
+                fontFamily: "Inter-Medium",
+                fontSize: 10,
+                letterSpacing: 1.8,
+                textTransform: "uppercase",
+                color: "#A8DCCB",
+              }}
+            >
+              Practitioner portal
+            </Text>
+          </View>
+          <Text
+            style={{
+              fontFamily: "Caveat",
+              fontSize: 16,
+              color: "rgba(255,255,255,0.85)",
+            }}
+          >
+            AHPRA-verified
+          </Text>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
