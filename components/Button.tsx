@@ -1,15 +1,16 @@
 import { Pressable, Text, View, type ViewStyle } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SketchIcon, type SketchIconName } from "@/components/SketchIcon";
 
 /**
  * Unified button architecture.
  *
  * Variants
- *   primary    Mint pill, white text, soft shadow. The main CTA.
- *   secondary  Outlined espresso pill, transparent fill.
- *   tonal      Soft mint tint pill (low-emphasis action, e.g. "Resend").
+ *   primary    Deep-teal rounded-rect, white text, whisper-soft shadow.
+ *   secondary  Hairline-outlined espresso rect, transparent fill.
+ *   tonal      Soft mint tint rect (low-emphasis action, e.g. "Resend").
  *   ghost      Plain text button, no surface.
- *   destructive Clay pill, white text.
+ *   destructive Clay rounded-rect, white text.
  *
  * Sizes
  *   sm  / md (default) / lg
@@ -17,7 +18,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
  * Icons
  *   leftIcon  / rightIcon — MaterialCommunityIcons glyph name
  *
- * All variants are pill-shaped (rounded-full) for a consistent modern feel.
+ * Tend Dental aesthetic: rounded-rect (~14pt), sentence-case copy with
+ * gentle tracking, breathing vertical padding, low-opacity shadow. No pills.
  */
 type Variant = "primary" | "secondary" | "tonal" | "ghost" | "destructive";
 type Size = "sm" | "md" | "lg";
@@ -30,6 +32,10 @@ type Props = {
   disabled?: boolean;
   leftIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
   rightIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  /** Hand-drawn sketch glyph variants — use these on post-sign-in screens
+   *  for the editorial Tend look. Take precedence over leftIcon/rightIcon. */
+  leftSketch?: SketchIconName;
+  rightSketch?: SketchIconName;
   fullWidth?: boolean;
 };
 
@@ -49,9 +55,9 @@ const SIZE_SPEC: Record<
   Size,
   { px: number; py: number; iconSize: number; fontSize: number; gap: number }
 > = {
-  sm: { px: 18, py: 9, iconSize: 16, fontSize: 11, gap: 6 },
-  md: { px: 22, py: 12, iconSize: 18, fontSize: 13, gap: 8 },
-  lg: { px: 28, py: 16, iconSize: 20, fontSize: 14, gap: 10 },
+  sm: { px: 18, py: 11, iconSize: 16, fontSize: 13, gap: 8 },
+  md: { px: 22, py: 15, iconSize: 18, fontSize: 15, gap: 10 },
+  lg: { px: 28, py: 18, iconSize: 20, fontSize: 16, gap: 12 },
 };
 
 export function Button({
@@ -62,6 +68,8 @@ export function Button({
   disabled,
   leftIcon,
   rightIcon,
+  leftSketch,
+  rightSketch,
   fullWidth,
 }: Props) {
   const spec = SIZE_SPEC[size];
@@ -123,65 +131,110 @@ export function Button({
     }
   })();
 
-  const containerStyle: ViewStyle = {
+  // Background colour sits on a WRAPPER View, not on the Pressable's
+  // style-function. Function-style was intermittently failing to apply
+  // `backgroundColor` on iOS, which made the primary CTA render as
+  // white-on-cream ghost text ("SEND SIGN-IN CODE" appearing invisible).
+  // Wrapping in a coloured View guarantees the fill renders every time;
+  // press feedback is delivered via opacity on the inner Pressable.
+  const wrapperStyle: ViewStyle = {
     backgroundColor: v.bg,
-    borderRadius: 999,
+    borderRadius: 14,
+    borderWidth: v.borderWidth,
+    borderColor: v.borderColor,
+    opacity: disabled ? 0.5 : 1,
+    alignSelf: fullWidth ? "stretch" : "auto",
+    overflow: "hidden",
+    ...(v.shadow
+      ? {
+          shadowColor: MINT_DEEP,
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 3,
+        }
+      : {}),
+  };
+
+  const innerStyle: ViewStyle = {
     paddingHorizontal: spec.px,
     paddingVertical: spec.py,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: spec.gap,
-    borderWidth: v.borderWidth,
-    borderColor: v.borderColor,
-    opacity: disabled ? 0.5 : 1,
-    alignSelf: fullWidth ? "stretch" : "auto",
-    ...(v.shadow
-      ? {
-          shadowColor: MINT_DEEP,
-          shadowOpacity: 0.22,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: 5 },
-          elevation: 6,
-        }
-      : {}),
   };
 
   return (
-    <Pressable
-      onPress={disabled ? undefined : onPress}
-      style={({ pressed }) => [
-        containerStyle,
-        pressed && !disabled ? { backgroundColor: v.activeBg } : null,
-      ]}
-    >
-      {leftIcon ? (
-        <MaterialCommunityIcons
-          name={leftIcon}
-          size={spec.iconSize}
-          color={v.iconColor}
-        />
-      ) : null}
-      <Text
-        style={{
-          fontFamily: "Inter",
-          color: v.text,
-          fontSize: spec.fontSize,
-          letterSpacing: 1.4,
-          textTransform: "uppercase",
-          fontWeight: "600",
-        }}
+    <View style={wrapperStyle}>
+      <Pressable
+        onPress={disabled ? undefined : onPress}
+        android_ripple={
+          v.bg !== "transparent"
+            ? { color: "rgba(255,255,255,0.18)" }
+            : { color: "rgba(31,79,71,0.08)" }
+        }
+        style={({ pressed }) => [
+          innerStyle,
+          pressed && !disabled ? { opacity: 0.82 } : null,
+        ]}
       >
-        {children}
-      </Text>
-      {rightIcon ? (
-        <MaterialCommunityIcons
-          name={rightIcon}
-          size={spec.iconSize}
-          color={v.iconColor}
-        />
-      ) : null}
-    </Pressable>
+        {leftSketch ? (
+          <SketchIcon
+            name={leftSketch}
+            size={spec.iconSize + 2}
+            color={v.iconColor}
+            strokeWidth={1.5}
+            noGhost
+          />
+        ) : leftIcon ? (
+          <MaterialCommunityIcons
+            name={leftIcon}
+            size={spec.iconSize}
+            color={v.iconColor}
+          />
+        ) : null}
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+          style={{
+            // flexShrink lets the label give up width (and trigger the
+            // auto-shrink) instead of pushing past the button edge when
+            // two buttons share a row on a narrow phone.
+            flexShrink: 1,
+            fontFamily: "Inter",
+            color: v.text,
+            fontSize: spec.fontSize,
+            // Explicit lineHeight prevents iOS from rendering the Text
+            // box taller than the glyphs. Match font size + 4px of
+            // breathing room.
+            lineHeight: spec.fontSize + 4,
+            letterSpacing: 0.2,
+            fontWeight: "600",
+            includeFontPadding: false,
+            textAlignVertical: "center",
+          }}
+        >
+          {children}
+        </Text>
+        {rightSketch ? (
+          <SketchIcon
+            name={rightSketch}
+            size={spec.iconSize + 2}
+            color={v.iconColor}
+            strokeWidth={1.5}
+            noGhost
+          />
+        ) : rightIcon ? (
+          <MaterialCommunityIcons
+            name={rightIcon}
+            size={spec.iconSize}
+            color={v.iconColor}
+          />
+        ) : null}
+      </Pressable>
+    </View>
   );
 }
 

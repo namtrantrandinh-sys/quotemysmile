@@ -85,11 +85,19 @@ export async function createBooking(input: CreateBookingInput) {
 }
 
 export async function listMyBookings() {
+  // Defense-in-depth: explicitly filter by patient_id even though RLS
+  // already restricts to the signed-in patient. A misbehaving RLS rule
+  // (e.g. during a future migration) would otherwise leak other patients'
+  // bookings — the explicit filter prevents that.
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+  if (!userId) throw new Error("Not signed in");
   const { data, error } = await supabase
     .from("bookings")
     .select(
       "id, slot, status, clinic_id, quote_id, request_id, clinics(name, address), quotes(total, dentist_name_at_quote)",
     )
+    .eq("patient_id", userId)
     .order("slot", { ascending: true });
   if (error) throw error;
   return data;
@@ -97,13 +105,28 @@ export async function listMyBookings() {
 
 /**
  * Dentist-side: list bookings into the dentist's own clinic.
+ * Defense-in-depth: explicitly filter by the dentist's clinic_id rather
+ * than relying only on RLS to scope rows.
  */
 export async function listClinicBookings() {
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+  if (!userId) throw new Error("Not signed in");
+  // Look up the dentist's clinic via clinics.owner_user_id. If the
+  // dentist hasn't completed onboarding yet they own no clinic and we
+  // return [] rather than letting the query fall back to RLS-only scope.
+  const { data: clinic } = await supabase
+    .from("clinics")
+    .select("id")
+    .eq("owner_user_id", userId)
+    .maybeSingle();
+  if (!clinic?.id) return [];
   const { data, error } = await supabase
     .from("bookings")
     .select(
       "id, slot, status, clinic_id, quote_id, request_id, deposit_amount, deposit_status, quotes(total, dentist_name_at_quote)",
     )
+    .eq("clinic_id", clinic.id)
     .order("slot", { ascending: true });
   if (error) throw error;
   return data;
@@ -186,6 +209,39 @@ export async function cancelBooking(bookingId: string) {
     .catch(() => {});
 
   return { refunded: false, forfeited: booking.deposit_status === "paid" };
+}
+
+/**
+ * Tidy up a booking row that was created server-side as part of the
+ * deposit PaymentIntent but never actually paid (Stripe sheet cancelled,
+ * sheet init failed, presentation failed). Marks the row as cancelled
+ * with deposit_status='abandoned' so the slot is freed and the row
+ * doesn't loiter as a pending mystery in the patient's inbox.
+ *
+ * Safe to call even if the booking has already been paid — the guard
+ * skips when deposit_status moved past 'pending'.
+ */
+export async function abandonPendingBooking(bookingId: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, deposit_status, status")
+    .eq("id", bookingId)
+    .eq("patient_id", user.id)
+    .maybeSingle();
+  if (!booking) return;
+  // Only sweep rows that genuinely never paid. If Stripe confirmed in
+  // the background after the user closed the sheet, leave the row alone.
+  if (booking.deposit_status !== "pending") return;
+  if (booking.status === "cancelled") return;
+  await supabase
+    .from("bookings")
+    .update({ status: "cancelled", deposit_status: "abandoned" })
+    .eq("id", bookingId)
+    .eq("patient_id", user.id);
 }
 
 /**

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { View, Text, Pressable, type LayoutChangeEvent } from "react-native";
 import { useRouter, usePathname } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Svg, {
   Path,
   Defs,
@@ -10,6 +9,7 @@ import Svg, {
   RadialGradient,
   Rect,
 } from "react-native-svg";
+import { SketchIcon, type SketchIconName } from "@/components/SketchIcon";
 
 /**
  * Bottom tab bar with a true SVG-carved notch cradling the floating
@@ -19,8 +19,7 @@ import Svg, {
 type SideTab = {
   key: "home" | "inbox";
   label: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  iconActive: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: SketchIconName;
   href: string;
 };
 
@@ -28,15 +27,13 @@ const SIDE_TABS: SideTab[] = [
   {
     key: "home",
     label: "Home",
-    icon: "home-outline",
-    iconActive: "home",
+    icon: "home",
     href: "/",
   },
   {
     key: "inbox",
     label: "Bookings",
-    icon: "calendar-blank-outline",
-    iconActive: "calendar-blank",
+    icon: "bookings",
     href: "/inbox",
   },
 ];
@@ -290,11 +287,7 @@ export function PatientTabBar() {
               backgroundColor: "rgba(255,255,255,0.32)",
             }}
           />
-          <MaterialCommunityIcons
-            name={activeKey === "new" ? "camera" : "camera-outline"}
-            size={26}
-            color="#FFFFFF"
-          />
+          <SketchIcon name="camera" size={26} color="#FFFFFF" noGhost />
         </Pressable>
 
         <Text
@@ -339,10 +332,12 @@ function SideButton({
           backgroundColor: active ? "rgba(255,255,255,0.28)" : "transparent",
         }}
       >
-        <MaterialCommunityIcons
-          name={active ? tab.iconActive : tab.icon}
+        <SketchIcon
+          name={tab.icon}
           size={23}
           color="#FFFFFF"
+          strokeWidth={active ? 1.7 : 1.3}
+          noGhost
         />
       </View>
       <Text

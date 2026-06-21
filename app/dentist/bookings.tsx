@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { Icon } from "@/components/Icon";
 import { Skeleton } from "@/components/Skeleton";
 import { listClinicBookings, markAttended } from "@/lib/services/bookings";
+import { formatAud, formatAudDollars } from "@/lib/copy";
 
 type Row = {
   id: string;
@@ -143,7 +144,7 @@ function Card({ r, onMark, showActions }: { r: Row; onMark: (id: string, a: bool
         <Text className="text-[10px] tracking-cap uppercase text-walnut font-sans">{when}</Text>
       </View>
       <Text className="font-sans text-sm text-walnut">
-        Quote ${r.quotes?.total ?? "—"} · deposit ${r.deposit_amount / 100}
+        Quote {formatAudDollars(r.quotes?.total)} · deposit {formatAud(r.deposit_amount)}
       </Text>
       {showActions ? (
         <View className="flex-row gap-2 mt-4">

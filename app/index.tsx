@@ -26,6 +26,10 @@ export default function WelcomeScreen() {
   const [active, setActive] = useState<ActiveRequest[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  // Surface activity-load failures so the user sees *something* instead
+  // of a silent empty-state when the request actually errored. Common
+  // cause is a transient network blip during cold-start.
+  const [activityError, setActivityError] = useState<string | null>(null);
 
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const heroOpacity = useRef(new Animated.Value(0)).current;
@@ -46,12 +50,29 @@ export default function WelcomeScreen() {
       setDataLoading(false);
       return;
     }
+    // Signed-in dentists must never land on the patient welcome — even
+    // when they navigate back from a dentist screen. Otherwise pressing
+    // back twice from /dentist/* drops them onto patient hero copy +
+    // patient tab bar, which is confusing and looks like a bug.
+    if (profile?.role === "dentist") {
+      router.replace("/dentist");
+      return;
+    }
     setDataLoading(true);
+    setActivityError(null);
     Promise.all([
-      listMyActiveRequests().then((d) => setActive(d as ActiveRequest[])).catch(() => {}),
-      listMyBookings().then((d) => setBookings(d as unknown as Booking[])).catch(() => {}),
+      listMyActiveRequests()
+        .then((d) => setActive(d as ActiveRequest[]))
+        .catch((e: { message?: string }) =>
+          setActivityError(e?.message ?? "Couldn't load requests"),
+        ),
+      listMyBookings()
+        .then((d) => setBookings(d as unknown as Booking[]))
+        .catch((e: { message?: string }) =>
+          setActivityError(e?.message ?? "Couldn't load bookings"),
+        ),
     ]).finally(() => setDataLoading(false));
-  }, [signedIn]);
+  }, [signedIn, profile?.role, router]);
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: "#F5F1E8" }}>
@@ -112,6 +133,10 @@ export default function WelcomeScreen() {
             Live dental quotes · Australia
           </Text>
 
+          {/* Home + splash share one editorial register: Italiana caps
+              + Allura script (the "before" lockup). The new Cormorant
+              face is reserved for post-sign-in screens so the marketing
+              surface stays on the original brand type. */}
           <Text
             style={{
               fontFamily: "Italiana",
@@ -212,15 +237,16 @@ export default function WelcomeScreen() {
               >
                 <Text
                   style={{
-                    fontFamily: "Inter-Medium",
-                    fontSize: 12,
-                    letterSpacing: 1.4,
-                    textTransform: "uppercase",
+                    fontFamily: "Inter",
+                    fontSize: 13,
+                    fontWeight: "500",
+                    letterSpacing: 0.2,
                     color: "#3F7E73",
                     textAlign: "center",
                   }}
                 >
-                  Already have an account · Sign in
+                  Already have an account?{" "}
+                  <Text style={{ textDecorationLine: "underline" }}>Sign in</Text>
                 </Text>
               </Pressable>
             </View>
@@ -267,6 +293,10 @@ export default function WelcomeScreen() {
                   <Skeleton height={48} />
                   <Skeleton height={48} />
                 </View>
+              ) : activityError && active.length === 0 && bookings.length === 0 ? (
+                <Text className="text-sm text-clay font-sans text-center">
+                  Couldn't load your activity. Pull down to retry.
+                </Text>
               ) : active.length === 0 && bookings.length === 0 ? (
                 <Text className="text-sm text-taupe font-sans text-center">
                   No active requests. Tap "Get a quote" to start.
@@ -328,7 +358,7 @@ export default function WelcomeScreen() {
               color: "#A89B88",
             }}
           >
-            Bundle: OTA #4 mint-fix ·{" "}
+            Bundle: OTA #14 backbar-fix ·{" "}
             {Updates.updateId ? Updates.updateId.slice(0, 8) : "embedded"}
           </Text>
         </View>
@@ -473,69 +503,75 @@ function WelcomeRoleTile({
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   onPress: () => void;
 }) {
-  // Patient = mint filled (#5FA89B) + white text — bold primary CTA on
-  // the cream surface area (NOT on the mint banner — tiles sit below the
-  // fade so contrast holds; mint #5FA89B on cream #F5F1E8 reads cleanly).
-  // Dentist = transparent + deep-teal border + deep-teal text — secondary
-  // outlined treatment, clearly distinct without competing with the
-  // patient CTA. Both treatments visually different at a glance.
+  // Tend Dental tactile card: cream surface, warm hairline border, mint
+  // accent for patient / deep-teal for dentist. Centered icon-over-serif
+  // label reads like a healthcare brand tile, not a marketing pill.
+  // Background sits on a wrapping View — Pressable function-style was
+  // intermittently dropping backgroundColor on iOS.
   const isDentist = role === "dentist";
-  const bg = isDentist ? "transparent" : "#5FA89B";
-  const bgPressed = isDentist ? "rgba(31,79,71,0.06)" : "#4E9388";
-  const fg = isDentist ? "#1F4F47" : "#FFFFFF";
-  const fgSubtle = isDentist ? "rgba(31,79,71,0.72)" : "rgba(255,255,255,0.92)";
-  const iconBg = isDentist ? "rgba(31,79,71,0.10)" : "rgba(255,255,255,0.18)";
-  const borderColor = isDentist ? "#1F4F47" : "transparent";
-  const borderWidth = isDentist ? 1.5 : 0;
+  const accent = isDentist ? "#1F4F47" : "#5FA89B";
+  const accentSoft = isDentist ? "rgba(31,79,71,0.10)" : "rgba(95,168,155,0.14)";
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
+    <View
+      style={{
         flex: 1,
-        backgroundColor: pressed ? bgPressed : bg,
-        borderRadius: 16,
-        paddingVertical: 14,
-        paddingHorizontal: 10,
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        borderWidth,
-        borderColor,
-        // Soft shadow only on the filled (patient) tile; outlined tile
-        // stays clean — no shadow on a transparent surface.
+        backgroundColor: "#FFFFFF",
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: "rgba(31,79,71,0.10)",
         shadowColor: "#1F4F47",
-        shadowOpacity: isDentist ? 0 : 0.22,
-        shadowRadius: isDentist ? 0 : 10,
-        shadowOffset: { width: 0, height: isDentist ? 0 : 5 },
-        elevation: isDentist ? 0 : 4,
-      })}
+        shadowOpacity: 0.06,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 2,
+        overflow: "hidden",
+      }}
     >
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: iconBg,
+      <Pressable
+        onPress={onPress}
+        android_ripple={{ color: "rgba(31,79,71,0.06)" }}
+        style={({ pressed }) => ({
+          paddingVertical: 22,
+          paddingHorizontal: 14,
           alignItems: "center",
           justifyContent: "center",
-        }}
+          gap: 10,
+          backgroundColor: pressed ? "#FAFAF7" : "transparent",
+        })}
       >
-        <MaterialCommunityIcons name={icon} size={20} color={fg} />
-      </View>
-      <Text
-        style={{
-          fontFamily: "Inter",
-          fontSize: 13,
-          fontWeight: "700",
-          color: fg,
-          letterSpacing: 0.2,
-          textAlign: "center",
-        }}
-      >
-        {title}
-      </Text>
-    </Pressable>
+        <View
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 26,
+            backgroundColor: accentSoft,
+            borderWidth: 1,
+            borderColor: isDentist ? "rgba(31,79,71,0.18)" : "rgba(95,168,155,0.30)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <MaterialCommunityIcons name={icon} size={28} color={accent} />
+        </View>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+          style={{
+            fontFamily: "Inter",
+            fontWeight: "600",
+            fontSize: 15,
+            lineHeight: 20,
+            color: "#2A2520",
+            letterSpacing: 0.1,
+            textAlign: "center",
+            includeFontPadding: false,
+          }}
+        >
+          {title}
+        </Text>
+      </Pressable>
+    </View>
   );
 }

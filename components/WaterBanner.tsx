@@ -12,7 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SketchIcon } from "./SketchIcon";
 
 // Real ocean wave video — turquoise rolling waves with white foam
 // crests. On native we use expo-video; on web we fall back to a
@@ -179,7 +179,7 @@ export function WaterBanner({ caption, onBack }: Props) {
               backgroundColor: "rgba(255,255,255,0.28)",
             }}
           >
-            <MaterialCommunityIcons name="chevron-left" size={24} color="#FFFFFF" />
+            <SketchIcon name="chevron-left" size={24} color="#FFFFFF" noGhost />
           </Pressable>
 
           {caption ? (

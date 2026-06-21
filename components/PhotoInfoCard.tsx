@@ -1,12 +1,14 @@
 import { View, Text } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Icon, type IconName } from "./Icon";
+import { SketchIcon, type SketchIconName } from "./SketchIcon";
 
 type InfoCardProps = {
-  // Accepts either a legacy Icon name OR a MaterialCommunityIcons glyph name.
-  // We branch internally so callers don't have to migrate all at once.
+  // Accepts a legacy Icon name, an MCI glyph, OR a hand-drawn SketchIcon
+  // name (Tend post-sign-in look). SketchIcon takes precedence.
   icon: IconName;
   mcIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  sketchIcon?: SketchIconName;
   title: string;
   hint: string;
   tone?: "neutral" | "gold" | "clay";
@@ -19,6 +21,7 @@ type InfoCardProps = {
 export function PhotoInfoCard({
   icon,
   mcIcon,
+  sketchIcon,
   title,
   hint,
   tone = "neutral",
@@ -60,7 +63,9 @@ export function PhotoInfoCard({
           justifyContent: "center",
         }}
       >
-        {mcIcon ? (
+        {sketchIcon ? (
+          <SketchIcon name={sketchIcon} size={26} color={accent} />
+        ) : mcIcon ? (
           <MaterialCommunityIcons name={mcIcon} size={24} color={accent} />
         ) : (
           <Icon name={icon} size={26} color={accent} />
@@ -99,6 +104,7 @@ type PhotoTipsProps = {
   tips: Array<{
     icon: IconName;
     mcIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+    sketchIcon?: SketchIconName;
     label: string;
     do?: boolean;
   }>;
@@ -132,7 +138,13 @@ export function PhotoTips({ tips }: PhotoTipsProps) {
             gap: 6,
           }}
         >
-          {t.mcIcon ? (
+          {t.sketchIcon ? (
+            <SketchIcon
+              name={t.sketchIcon}
+              size={22}
+              color={t.do === false ? "#9E5E47" : "#3F7E73"}
+            />
+          ) : t.mcIcon ? (
             <MaterialCommunityIcons
               name={t.mcIcon}
               size={20}

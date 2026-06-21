@@ -9,7 +9,11 @@ import { Checkbox } from "@/components/Checkbox";
 import { FieldLabel } from "@/components/FieldLabel";
 import { Icon } from "@/components/Icon";
 import { getQuote as getSampleQuote } from "@/lib/sampleQuotes";
-import { createDepositIntent, depositTierForQuote } from "@/lib/services/bookings";
+import {
+  createDepositIntent,
+  depositTierForQuote,
+  abandonPendingBooking,
+} from "@/lib/services/bookings";
 import { getQuote as fetchQuote } from "@/lib/services/quotes";
 import { supabase } from "@/lib/supabase";
 import { CONSULT_FEE_LINE } from "@/lib/copy";
@@ -174,6 +178,10 @@ export default function BookScreen() {
             ctx: "stripe.initPaymentSheet",
             code: initErr.code,
           });
+          // Sheet failed to init — the backend already wrote a pending
+          // booking row. Sweep it so the slot is freed and the patient
+          // can retry without "you already have a booking" errors.
+          void abandonPendingBooking(bookingId).catch(() => {});
           setFailure({
             title: "Couldn't open Apple Pay / card sheet",
             body: initErr.message,
@@ -185,13 +193,18 @@ export default function BookScreen() {
         if (presentErr) {
           if (presentErr.code === "Canceled") {
             // User backed out — silent, no banner, leave the slot picker armed.
+            // Sweep the pending booking row created server-side; otherwise
+            // it would loiter and block the same slot from being rebooked.
             breadcrumb("payment", "stripe.canceled");
+            void abandonPendingBooking(bookingId).catch(() => {});
             return;
           }
           captureError(new Error(presentErr.message), {
             ctx: "stripe.presentPaymentSheet",
             code: presentErr.code,
           });
+          // Payment failed — sweep the pending row so retry isn't blocked.
+          void abandonPendingBooking(bookingId).catch(() => {});
           // Frame the message so the patient knows it's recoverable.
           const friendly =
             presentErr.code === "Failed"

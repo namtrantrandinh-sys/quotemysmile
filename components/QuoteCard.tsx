@@ -2,7 +2,7 @@ import { View, Text, Pressable, Linking, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Disclaimer } from "./Disclaimer";
 import { Icon } from "./Icon";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SketchIcon } from "./SketchIcon";
 import type { Quote } from "@/lib/types";
 
 const AHPRA_REGISTER_URL = "https://www.ahpra.gov.au/registration/registers-of-practitioners.aspx";
@@ -81,7 +81,7 @@ export function QuoteCard({ q, urgency }: { q: Quote; urgency?: "emergency" }) {
             borderColor: "rgba(95,168,155,0.32)",
           }}
         >
-          <MaterialCommunityIcons name="check-decagram" size={13} color="#3F7E73" />
+          <SketchIcon name="verified" size={14} color="#3F7E73" noGhost />
           <Text
             style={{
               fontSize: 10,

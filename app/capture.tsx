@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   CameraView,
   type CameraType,
@@ -28,6 +27,7 @@ import { ArchIcon } from "@/components/ArchIcon";
 import { MouthMap } from "@/components/MouthMap";
 import { PhotoInfoCard, PhotoTips } from "@/components/PhotoInfoCard";
 import { Icon } from "@/components/Icon";
+import { SketchIcon, type SketchIconName } from "@/components/SketchIcon";
 import { getCategory } from "@/lib/categories";
 import { usePhotoCapture } from "@/hooks/usePhotoCapture";
 import { setIntake } from "@/lib/intakeStore";
@@ -239,19 +239,19 @@ export default function CaptureScreen() {
 
         <PhotoTips
           tips={[
-            { icon: "spark", mcIcon: "white-balance-sunny", label: "Daylight" },
-            { icon: "scan", mcIcon: "hand-back-right-outline", label: "Hold still" },
-            { icon: "check", mcIcon: "crop-free", label: "Centre frame" },
+            { icon: "spark", sketchIcon: "sun", label: "Daylight" },
+            { icon: "scan", sketchIcon: "hand-still", label: "Hold still" },
+            { icon: "check", sketchIcon: "frame", label: "Centre frame" },
           ]}
         />
 
         <View className="px-6 pb-12" style={{ gap: 12 }}>
           {photos.slots.map((s) => {
-            const SLOT_ICON: Record<typeof s.name, keyof typeof MaterialCommunityIcons.glyphMap | null> = {
-              "front-smile": "emoticon-happy-outline",
+            const SLOT_ICON: Record<typeof s.name, SketchIconName | null> = {
+              "front-smile": "smile",
               "upper-arch": null,
               "lower-arch": null,
-              "problem-area": "magnify-scan",
+              "problem-area": "magnify",
             };
             const iconName = SLOT_ICON[s.name];
             const isNext = !s.uri && s.id === photos.nextSlot?.id;
@@ -275,7 +275,7 @@ export default function CaptureScreen() {
                 ) : s.name === "lower-arch" ? (
                   <ArchIcon variant="lower" size={26} color="#5FA89B" />
                 ) : iconName ? (
-                  <MaterialCommunityIcons name={iconName} size={24} color="#5FA89B" />
+                  <SketchIcon name={iconName} size={26} color="#3F7E73" />
                 ) : null}
               </View>
             );
@@ -333,14 +333,14 @@ export default function CaptureScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
+                  <SketchIcon name="check" size={20} color="#FFFFFF" noGhost />
                 </View>
               </View>
             ) : (
               <Button
                 variant={isNext ? "primary" : "tonal"}
                 size="sm"
-                leftIcon="plus"
+                leftSketch="plus"
                 onPress={() => openCamera(s.id)}
               >
                 Add
@@ -495,11 +495,7 @@ export default function CaptureScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <MaterialCommunityIcons
-                    name="camera-flip-outline"
-                    size={18}
-                    color="#FFFFFF"
-                  />
+                  <SketchIcon name="camera-flip" size={20} color="#FFFFFF" noGhost />
                 </Pressable>
               </View>
             </SafeAreaView>
@@ -603,7 +599,7 @@ export default function CaptureScreen() {
           <Button
             variant="primary"
             size="lg"
-            leftIcon={photos.allCaptured ? "arrow-right" : "camera"}
+            leftSketch={photos.allCaptured ? "arrow-right" : "camera"}
             onPress={() => {
               if (!photos.allCaptured) {
                 openCamera(photos.nextSlot?.id ?? 1);

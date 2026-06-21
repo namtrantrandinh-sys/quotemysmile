@@ -1,16 +1,18 @@
 import { View } from "react-native";
+import { SketchIcon, type SketchIconName } from "./SketchIcon";
 
 /**
  * Editorial line-icon library for QuoteMySmile.
  *
- * Built from absolutely-positioned styled Views (no SVG dep). Each icon is
- * 1px gold hairline strokes on transparent. Sized by `size` prop (default 48).
+ * Historically this was a hand-built View-only line-icon set drawn from
+ * borders + positioned dots. As of OTA #13 we delegate to the hand-drawn
+ * SketchIcon library so every post-sign-in screen inherits the Tend
+ * Dental ink-on-cream aesthetic without each callsite needing migration.
  *
- * Aesthetic rules:
- *  - 1px or 1.5px strokes, gold (#A9CFC0) by default
- *  - Minimal geometry — circles + lines + soft arcs
- *  - Never filled, never colourful — they read as engraved
- *  - Use sparingly: one hero icon per screen, one inline per row
+ * The `Icon` name → SketchIcon name map preserves the original API surface
+ * — callers continue to import { Icon } and pass the same name strings.
+ * The legacy View-based geometry below is retained as a fallback for any
+ * name not yet mapped, and as historical reference.
  */
 
 type Props = {
@@ -41,7 +43,36 @@ export type IconName =
   | "list"
   | "map";
 
-export function Icon({ name, size = 48, color = "#A9CFC0" }: Props) {
+// Direct name → SketchIcon. Most names match 1:1; the few aliases below
+// translate legacy slugs ("spark" → "sparkle", "gps" → "map-pin").
+const SKETCH_MAP: Record<IconName, SketchIconName> = {
+  camera: "camera",
+  mouth: "mouth",
+  gps: "map-pin",
+  radius: "radius",
+  clock: "clock",
+  emergency: "emergency",
+  tooth: "tooth",
+  smile: "smile",
+  scan: "scan",
+  chat: "chat",
+  shield: "shield",
+  spark: "sparkle",
+  "map-pin": "map-pin",
+  info: "info",
+  check: "check",
+  lock: "lock",
+  calendar: "calendar",
+  phone: "phone",
+  list: "list",
+  map: "map",
+};
+
+export function Icon({ name, size = 48, color = "#3F7E73" }: Props) {
+  const sketchName = SKETCH_MAP[name];
+  if (sketchName) {
+    return <SketchIcon name={sketchName} size={size} color={color} />;
+  }
   return (
     <View
       style={{

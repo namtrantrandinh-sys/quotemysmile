@@ -166,8 +166,8 @@ export default function DentistOnboarding() {
               </Text>
               <Text className="text-base text-walnut font-sans text-center max-w-md leading-relaxed mb-8">
                 Set your availability, pick the work you want, and respond to
-                live requests within your service area. Free for the first
-                ninety days. Cancel any time.
+                live requests within your service area. Free for dentists,
+                always — no subscription.
               </Text>
 
               <View className="border border-linen bg-eggshell/40 p-5 w-full max-w-md mb-6">

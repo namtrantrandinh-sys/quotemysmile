@@ -1,21 +1,22 @@
 import { Pressable, View, Text } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SketchIcon, type SketchIconName } from "@/components/SketchIcon";
 import type { Category, CategoryId } from "@/lib/types";
 
 type Props = { c: Category; onPress?: () => void };
 
-// Modern dental-aesthetic glyphs.
-const ICON_FOR: Record<CategoryId, keyof typeof MaterialCommunityIcons.glyphMap> = {
-  "filling-clean": "tooth-outline",
-  "checkup-clean": "tooth",
-  "emergency": "medical-bag",
-  "cosmetic": "star-four-points-outline",
-  "whitening": "creation",
-  "crown-veneer": "crown-outline",
-  "implant": "screw-machine-flat-top",
-  "wisdom": "tooth-outline",
-  "ortho": "vector-line",
-  "not-sure": "head-question-outline",
+// Hand-drawn editorial glyph per category. See SketchIcon.tsx for the
+// drawn shapes — each one is custom, not a vector-font pictogram.
+const ICON_FOR: Record<CategoryId, SketchIconName> = {
+  "filling-clean": "tooth",
+  "checkup-clean": "tooth-clean",
+  "emergency": "emergency",
+  "cosmetic": "sparkle",
+  "whitening": "whiten",
+  "crown-veneer": "crown",
+  "implant": "implant",
+  "wisdom": "wisdom",
+  "ortho": "ortho",
+  "not-sure": "question",
 };
 
 /**
@@ -24,7 +25,7 @@ const ICON_FOR: Record<CategoryId, keyof typeof MaterialCommunityIcons.glyphMap>
  * in a mint-tinted circle. No more beige eggshell editorial boxes.
  */
 export function CategoryTile({ c, onPress }: Props) {
-  const iconName = ICON_FOR[c.id] ?? "tooth-outline";
+  const iconName = ICON_FOR[c.id] ?? "tooth";
   return (
     <Pressable
       onPress={onPress}
@@ -63,7 +64,7 @@ export function CategoryTile({ c, onPress }: Props) {
             justifyContent: "center",
           }}
         >
-          <MaterialCommunityIcons name={iconName} size={22} color="#5FA89B" />
+          <SketchIcon name={iconName} size={26} color="#3F7E73" />
         </View>
         <View
           style={{

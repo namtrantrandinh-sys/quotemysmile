@@ -159,7 +159,7 @@ export default function DentistGuideScreen() {
             Got it
           </Button>
           <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mt-6">
-            Free for the first 90 days · cancel any time
+            Free for dentists, always · no subscription
           </Text>
         </View>
       </ScrollView>

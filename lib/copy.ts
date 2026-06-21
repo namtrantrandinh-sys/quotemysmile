@@ -105,3 +105,40 @@ export const REQUOTE_NOTICE =
   "You may requote once. After your requote your quote is final for this window and cannot be changed.";
 
 export const CONSULT_FEE_LINE = "Consult fee · Free for QuoteMySmile bookings.";
+
+/**
+ * Format an AUD amount stored as cents into a clean currency string.
+ *   formatAud(4500)   → "$45"
+ *   formatAud(4550)   → "$45.50"
+ *   formatAud(120000) → "$1,200"
+ * Suppresses the decimals when the value is a whole dollar so amounts
+ * like deposits don't display "$45.5" or "$45.00" (which read as noise).
+ */
+export function formatAud(cents: number | null | undefined): string {
+  if (cents == null || Number.isNaN(cents)) return "—";
+  const dollars = cents / 100;
+  const isWhole = cents % 100 === 0;
+  return (
+    "$" +
+    dollars.toLocaleString("en-AU", {
+      minimumFractionDigits: isWhole ? 0 : 2,
+      maximumFractionDigits: 2,
+    })
+  );
+}
+
+/**
+ * Format a quote total stored in DOLLARS (not cents) — quotes.total uses
+ * dollars per the existing column convention. Adds thousand separators.
+ *   formatAudDollars(12000) → "$12,000"
+ */
+export function formatAudDollars(dollars: number | null | undefined): string {
+  if (dollars == null || Number.isNaN(dollars)) return "—";
+  return (
+    "$" +
+    dollars.toLocaleString("en-AU", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })
+  );
+}

@@ -6,6 +6,7 @@ import { BackBar } from "@/components/BackBar";
 import { Button } from "@/components/Button";
 import { Icon } from "@/components/Icon";
 import { getBooking, cancelBooking } from "@/lib/services/bookings";
+import { formatAud } from "@/lib/copy";
 
 type Booking = {
   id: string;
@@ -59,8 +60,8 @@ export default function BookingDetailScreen() {
     Alert.alert(
       eligibleRefund ? "Cancel & refund deposit?" : "Cancel anyway?",
       eligibleRefund
-        ? `Your $${b.deposit_amount / 100} deposit will be refunded.`
-        : `It's within ${b.cancellation_window_hours}h of your appointment, so the $${b.deposit_amount / 100} deposit will be forfeited.`,
+        ? `Your ${formatAud(b.deposit_amount)} deposit will be refunded.`
+        : `It's within ${b.cancellation_window_hours}h of your appointment, so the ${formatAud(b.deposit_amount)} deposit will be forfeited.`,
       [
         { text: "Back", style: "cancel" },
         {
@@ -237,13 +238,13 @@ export default function BookingDetailScreen() {
               </Text>
             </View>
             <Text className="font-display text-3xl text-gold mb-1">
-              ${b.deposit_amount / 100}
+              {formatAud(b.deposit_amount)}
             </Text>
             <Text className="text-xs text-walnut font-sans leading-relaxed">
               {b.deposit_status === "paid"
-                ? `Held by QuoteMySmile until your visit. Refunded in full ($${b.deposit_amount / 100}) to your card on attendance.`
+                ? `Held by QuoteMySmile until your visit. Refunded in full (${formatAud(b.deposit_amount)}) to your card on attendance.`
                 : b.deposit_status === "credited"
-                  ? `Refunded in full — $${b.deposit_amount / 100} back to your card within 5 business days.`
+                  ? `Refunded in full — ${formatAud(b.deposit_amount)} back to your card within 5 business days.`
                   : b.deposit_status === "refunded"
                     ? "Refunded in full — should appear back on your card within 5 business days."
                     : b.deposit_status === "forfeited"

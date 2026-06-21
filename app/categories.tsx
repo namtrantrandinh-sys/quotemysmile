@@ -1,9 +1,9 @@
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BackBar } from "@/components/BackBar";
 import { CategoryTile } from "@/components/CategoryTile";
+import { SketchIcon } from "@/components/SketchIcon";
 import { CATEGORIES, GROUP_LABEL } from "@/lib/categories";
 import type { CategoryGroup } from "@/lib/types";
 import { setIntake } from "@/lib/intakeStore";
@@ -71,7 +71,7 @@ export default function CategoriesScreen() {
                   justifyContent: "center",
                 }}
               >
-                <MaterialCommunityIcons name="medical-bag" size={22} color="#FFFFFF" />
+                <SketchIcon name="emergency" size={24} color="#FFFFFF" noGhost />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
@@ -110,7 +110,7 @@ export default function CategoriesScreen() {
                   15-minute quote window. Same-day response.
                 </Text>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={22} color="#FFFFFF" />
+              <SketchIcon name="chevron-right" size={22} color="#FFFFFF" noGhost />
             </Pressable>
           </View>
         ) : null}

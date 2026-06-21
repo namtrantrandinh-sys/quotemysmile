@@ -11,10 +11,16 @@ import { TextField } from "@/components/TextField";
 import { Wordmark } from "@/components/Wordmark";
 import {
   signInWithPhone,
-  verifyPhoneOtp,
-  createUserProfile,
   signInWithEmail,
+  signUpWithPhone,
+  signUpWithEmail,
+  verifyPhoneOtp,
   verifyEmailOtp,
+  startLinkEmail,
+  startLinkPhone,
+  confirmLinkEmail,
+  confirmLinkPhone,
+  createUserProfile,
 } from "@/lib/services/auth";
 import { supabase } from "@/lib/supabase";
 
@@ -51,7 +57,15 @@ export default function SignInScreen() {
   const role = pickedRole ?? "patient";
   const mode = params.mode === "signin" ? "signin" : "signup";
 
-  const [phase, setPhase] = useState<"phone" | "otp" | "profile">("phone");
+  // Sign-up flow phases:
+  //   phone  → enter primary identifier (mobile or email)
+  //   otp    → verify primary
+  //   profile→ enter name + the OTHER identifier (so both bind to one auth user)
+  //   linkOtp→ verify the second identifier
+  // Sign-in flow phases:
+  //   phone  → enter mobile or email
+  //   otp    → verify, route to home
+  const [phase, setPhase] = useState<"phone" | "otp" | "profile" | "linkOtp">("phone");
   // Method tab — defaults to phone, user can switch to email so the
   // keyboard is correct from the very first keystroke. Auto-flips to
   // email if they paste an address into the phone field.
@@ -59,6 +73,11 @@ export default function SignInScreen() {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
+  // Secondary identifier captured at the profile phase — the OTHER one
+  // (email if the user signed up with phone, phone if they signed up
+  // with email). Stored as the normalised value we send to Supabase.
+  const [secondary, setSecondary] = useState("");
+  const [secondaryCode, setSecondaryCode] = useState("");
   const [busy, setBusy] = useState(false);
   // Resend-code cooldown — Supabase rate-limits to ~once per 60s; we
   // surface a visible countdown so the user isn't stuck wondering.
@@ -90,16 +109,24 @@ export default function SignInScreen() {
   const send = async () => {
     setBusy(true);
     try {
+      // SIGN-IN: never create a new auth user (shouldCreateUser:false in
+      // signInWith{Phone,Email}). If Supabase returns "Signups not allowed
+      // for otp" we know the identifier isn't on any auth row and offer to
+      // switch to signup. SIGN-UP: signUpWith{Phone,Email} explicitly
+      // creates the row.
       if (isEmail) {
-        // Email path — Supabase emails the magic code, no Twilio needed.
-        await signInWithEmail(phone.trim().toLowerCase());
+        const e = phone.trim().toLowerCase();
+        if (mode === "signin") {
+          await signInWithEmail(e);
+        } else {
+          await signUpWithEmail(e);
+        }
+        setPhone(e);
         setPhase("otp");
         setResendIn(60);
         return;
       }
       const e164 = normalisePhone(phone);
-      // AU mobile in E.164 is +614XXXXXXXX = 12 chars. Allow some slack
-      // for other valid country codes too.
       if (e164.replace(/\D/g, "").length < 10) {
         Alert.alert(
           "Check your number",
@@ -108,11 +135,34 @@ export default function SignInScreen() {
         return;
       }
       setPhone(e164);
-      await signInWithPhone(e164);
+      if (mode === "signin") {
+        await signInWithPhone(e164);
+      } else {
+        await signUpWithPhone(e164);
+      }
       setPhase("otp");
       setResendIn(60);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Try again.";
+      const noSignup = /signups not allowed|user not found|not.*registered/i.test(msg);
+      if (mode === "signin" && noSignup) {
+        Alert.alert(
+          isEmail ? "No account on this email" : "No account on this number",
+          "We couldn't find a QuoteMySmile account here. Create one now?",
+          [
+            { text: "Try another", style: "cancel" },
+            {
+              text: "Create account",
+              onPress: () =>
+                router.replace({
+                  pathname: "/sign-in",
+                  params: { role, mode: "signup" },
+                }),
+            },
+          ],
+        );
+        return;
+      }
       const looksLikeTwilioBlocked =
         /unsupported|invalid.*phone|sms not configured|provider/i.test(msg);
       Alert.alert(
@@ -156,20 +206,13 @@ export default function SignInScreen() {
         if (i < 2) await new Promise((r) => setTimeout(r, 600));
       }
       if (!profile) {
-        // In SIGN-IN mode we don't want to silently create a brand-new
-        // account — confirm with the user first so an existing account
-        // mistakenly typing the wrong number doesn't end up with a duplicate.
-        if (mode === "signin") {
-          Alert.alert(
-            "No account on this number",
-            "We couldn't find a QuoteMySmile account for this mobile. Create one now?",
-            [
-              { text: "Try another number", style: "cancel", onPress: () => setPhase("phone") },
-              { text: "Create account", onPress: () => setPhase("profile") },
-            ],
-          );
-          return;
-        }
+        // Reachable in two cases:
+        //   (a) SIGN-UP: first-time OTP just succeeded — go collect the
+        //       second identifier + name so both bind to this auth user.
+        //   (b) SIGN-IN: auth.users row exists (Supabase let us through)
+        //       but no public.users row yet — happens when a previous
+        //       signup was abandoned mid-profile. Resume by sending them
+        //       through the same profile + link flow.
         setPhase("profile");
       } else {
         router.replace(profile.role === "dentist" ? "/dentist" : "/");
@@ -198,27 +241,106 @@ export default function SignInScreen() {
     }
   };
 
+  // What kind of identifier we still need to bind. If the user signed up
+  // with phone, we need their email next, and vice versa.
+  const linkType: "phone" | "email" = isEmail ? "phone" : "email";
+
   const completeProfile = async () => {
     if (!name.trim()) {
       Alert.alert("Your name", "We need your name to introduce you to dentists.");
       return;
     }
+    // Capture + validate the SECOND identifier. Both phone and email must
+    // bind to the same auth.users row before we write public.users, so a
+    // future sign-in with EITHER one resolves to the same account.
+    const rawSecondary = secondary.trim();
+    if (linkType === "email") {
+      if (!EMAIL_RE.test(rawSecondary.toLowerCase())) {
+        Alert.alert("Add your email", "Enter the email address you'll use to sign in.");
+        return;
+      }
+    } else {
+      const e164 = normalisePhone(rawSecondary);
+      if (e164.replace(/\D/g, "").length < 10) {
+        Alert.alert("Add your mobile", "Enter a valid AU mobile (e.g. 0412 345 678).");
+        return;
+      }
+    }
     setBusy(true);
     try {
-      await createUserProfile({
-        role,
-        fullName: name.trim(),
-        phone,
-      });
-      router.replace(role === "dentist" ? "/dentist/onboarding" : "/");
+      // Kick off the identity-link: Supabase sends an OTP to the new
+      // identifier. We advance to linkOtp and the user enters it there.
+      if (linkType === "email") {
+        const e = rawSecondary.toLowerCase();
+        await startLinkEmail(e);
+        setSecondary(e);
+      } else {
+        const e164 = normalisePhone(rawSecondary);
+        await startLinkPhone(e164);
+        setSecondary(e164);
+      }
+      setSecondaryCode("");
+      setPhase("linkOtp");
+      setResendIn(60);
     } catch (e) {
-      // Surface the real reason. Supabase PostgrestError isn't an Error
-      // subclass — relying on `e instanceof Error` previously swallowed
-      // RLS rejections behind a generic "Try again.".
       const msg =
         (e as { message?: string })?.message ??
         (typeof e === "string" ? e : "Try again.");
-      Alert.alert("Profile error", msg);
+      // Most likely cause: the secondary identifier is already bound to a
+      // DIFFERENT auth user. Surface a clear "use the other method" path.
+      const conflict = /already.*registered|already.*exists|duplicate/i.test(msg);
+      Alert.alert(
+        conflict ? "Already on another account" : "Couldn't link that",
+        conflict
+          ? `This ${linkType} is already used by another QuoteMySmile account. Sign in with it instead.`
+          : msg,
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyLinkOtp = async () => {
+    if (!secondaryCode.trim()) {
+      Alert.alert("Enter the code", "Check the code we just sent.");
+      return;
+    }
+    setBusy(true);
+    try {
+      if (linkType === "email") {
+        await confirmLinkEmail(secondary, secondaryCode.trim());
+      } else {
+        await confirmLinkPhone(secondary, secondaryCode.trim());
+      }
+      // Both identifiers are now bound to one auth.users row. Write the
+      // public.users row with BOTH so unique constraints catch any future
+      // collision and either sign-in method finds the same profile.
+      await createUserProfile({
+        role,
+        fullName: name.trim(),
+        phone: linkType === "phone" ? secondary : phone,
+        email: linkType === "email" ? secondary : phone,
+      });
+      router.replace(role === "dentist" ? "/dentist/onboarding" : "/");
+    } catch (e) {
+      const msg =
+        (e as { message?: string })?.message ??
+        (typeof e === "string" ? e : "Try again.");
+      Alert.alert("Code didn't match", msg);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resendLinkCode = async () => {
+    if (resendIn > 0 || busy) return;
+    setBusy(true);
+    try {
+      if (linkType === "email") await startLinkEmail(secondary);
+      else await startLinkPhone(secondary);
+      setResendIn(60);
+    } catch (e) {
+      Alert.alert("Couldn't resend", e instanceof Error ? e.message : "Try again.");
     } finally {
       setBusy(false);
     }
@@ -240,37 +362,58 @@ export default function SignInScreen() {
             <Wordmark size="md" />
             <Text
               style={{
-                fontFamily: "Inter-Medium",
+                fontFamily: "Inter",
                 fontSize: 10,
                 letterSpacing: 2.4,
                 textTransform: "uppercase",
                 color: "#8A7E70",
                 marginTop: 36,
                 marginBottom: 18,
+                fontWeight: "500",
               }}
             >
               Sign in to QuoteMySmile
             </Text>
-            <Text className="font-display text-5xl text-espresso text-center leading-[1.05] mb-4">
+            <Text
+              style={{
+                fontFamily: "CormorantGaramond_400Regular",
+                fontSize: 42,
+                lineHeight: 46,
+                color: "#2A2520",
+                textAlign: "center",
+                marginBottom: 14,
+                letterSpacing: -0.5,
+              }}
+            >
               Who's signing in?
             </Text>
-            <Text className="text-sm text-walnut font-sans text-center max-w-md leading-relaxed mb-10">
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 14,
+                lineHeight: 22,
+                color: "#6E6457",
+                textAlign: "center",
+                maxWidth: 360,
+                marginBottom: 36,
+              }}
+            >
               We tailor the next steps to whether you're booking dental work or providing it.
             </Text>
           </View>
 
-          <View className="px-6 pb-12" style={{ gap: 14 }}>
+          <View className="px-6 pb-12" style={{ gap: 12 }}>
             <RoleSignInButton
               role="patient"
               title="I'm a Patient"
-              subtitle="Get accurate, AHPRA-signed dental quotes near you."
+              subtitle="Get AHPRA-signed quotes near you"
               icon="account-heart-outline"
               onPress={() => setPickedRole("patient")}
             />
             <RoleSignInButton
               role="dentist"
               title="I'm a Dentist"
-              subtitle="AHPRA-registered Australian practitioners — sign live, paid per attendance."
+              subtitle="AHPRA practitioner · paid per attendance"
               icon="tooth-outline"
               onPress={() => setPickedRole("dentist")}
             />
@@ -304,6 +447,11 @@ export default function SignInScreen() {
             setPhase("otp");
             return;
           }
+          if (phase === "linkOtp") {
+            setPhase("profile");
+            setSecondaryCode("");
+            return;
+          }
           // In phone phase. If the user picked a role inside this
           // screen, take them back to the picker. Otherwise leave the
           // sign-in screen entirely and return to welcome.
@@ -322,14 +470,16 @@ export default function SignInScreen() {
         hitSlop={12}
         style={{
           position: "absolute",
-          top: 56,
-          left: 18,
-          width: 38,
-          height: 38,
-          borderRadius: 19,
-          backgroundColor: isDentist ? "rgba(255,255,255,0.18)" : "#FFFFFF",
-          borderWidth: isDentist ? 0 : 1,
-          borderColor: "#E5DCC8",
+          top: 54,
+          left: 16,
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: isDentist
+            ? "rgba(255,255,255,0.12)"
+            : "#FFFFFF",
+          borderWidth: isDentist ? 1 : 1,
+          borderColor: isDentist ? "rgba(255,255,255,0.25)" : "#E5DCC8",
           alignItems: "center",
           justifyContent: "center",
           zIndex: 10,
@@ -341,8 +491,8 @@ export default function SignInScreen() {
         }}
       >
         <MaterialCommunityIcons
-          name="chevron-left"
-          size={24}
+          name="arrow-left"
+          size={20}
           color={isDentist ? "#FFFFFF" : "#2A2520"}
         />
       </Pressable>
@@ -351,13 +501,14 @@ export default function SignInScreen() {
           <Wordmark size="md" />
           <Text
             style={{
-              fontFamily: "Inter-Medium",
+              fontFamily: "Inter",
               fontSize: 10,
               letterSpacing: 2.4,
               textTransform: "uppercase",
               color: isDentist ? "#3F7E73" : "#8A7E70",
               marginTop: 36,
               marginBottom: 18,
+              fontWeight: "500",
             }}
           >
             {phase === "phone"
@@ -370,11 +521,25 @@ export default function SignInScreen() {
                   : "Patient · Create account"
               : phase === "otp"
                 ? "Verify"
-                : isDentist
-                  ? "AHPRA on file"
-                  : "Almost there"}
+                : phase === "linkOtp"
+                  ? linkType === "email"
+                    ? "Confirm email"
+                    : "Confirm mobile"
+                  : isDentist
+                    ? "AHPRA on file"
+                    : "Almost there"}
           </Text>
-          <Text className="font-display text-5xl text-espresso text-center leading-[1.05] mb-6">
+          <Text
+            style={{
+              fontFamily: "CormorantGaramond_400Regular",
+              fontSize: 42,
+              lineHeight: 46,
+              color: "#2A2520",
+              textAlign: "center",
+              marginBottom: 16,
+              letterSpacing: -0.5,
+            }}
+          >
             {phase === "phone"
               ? isDentist
                 ? mode === "signin"
@@ -385,9 +550,11 @@ export default function SignInScreen() {
                   : "Your number."
               : phase === "otp"
                 ? "Enter the code."
-                : isDentist
-                  ? "Your registered name."
-                  : "What's your name?"}
+                : phase === "linkOtp"
+                  ? "One more code."
+                  : isDentist
+                    ? "Your registered name."
+                    : "What's your name?"}
           </Text>
           <Text className="text-sm text-walnut font-sans text-center max-w-md leading-relaxed">
             {phase === "phone"
@@ -400,9 +567,11 @@ export default function SignInScreen() {
                   : "We'll send a one-time code by SMS. No password, no fuss."
               : phase === "otp"
                 ? `Sent to ${phone}. The code expires in 5 minutes.`
-                : isDentist
-                  ? "Use the name on your AHPRA registration. We display this to patients on every quote."
-                  : "We'll use this to introduce you to the dentist when you book."}
+                : phase === "linkOtp"
+                  ? `Sent to ${secondary}. We'll bind it to this account so you can sign in with either.`
+                  : isDentist
+                    ? "Use the name on your AHPRA registration, then add your email so you can sign in with either."
+                    : "We'll use your name to introduce you to the dentist. Add your email so you can sign in with either."}
           </Text>
         </View>
 
@@ -415,7 +584,7 @@ export default function SignInScreen() {
                 style={{
                   flexDirection: "row",
                   backgroundColor: "rgba(95,168,155,0.10)",
-                  borderRadius: 999,
+                  borderRadius: 12,
                   padding: 4,
                   marginBottom: 22,
                   alignSelf: "center",
@@ -438,18 +607,17 @@ export default function SignInScreen() {
                         }
                       }}
                       style={{
-                        paddingVertical: 8,
+                        paddingVertical: 10,
                         paddingHorizontal: 22,
-                        borderRadius: 999,
-                        backgroundColor: active ? "#5FA89B" : "transparent",
+                        borderRadius: 10,
+                        backgroundColor: active ? "#1F4F47" : "transparent",
                       }}
                     >
                       <Text
                         style={{
                           fontFamily: "Inter",
-                          fontSize: 11,
-                          letterSpacing: 1.4,
-                          textTransform: "uppercase",
+                          fontSize: 13,
+                          letterSpacing: 0.2,
                           color: active ? "#FFFFFF" : "#3F7E73",
                           fontWeight: "600",
                         }}
@@ -553,7 +721,7 @@ export default function SignInScreen() {
                 </Button>
               </View>
             </>
-          ) : (
+          ) : phase === "profile" ? (
             <>
               <FieldLabel
                 label="Full name"
@@ -569,9 +737,73 @@ export default function SignInScreen() {
                   placeholder={isDentist ? "Dr Sarah Chen" : "Sarah K"}
                 />
               </FieldLabel>
+              {/* Second identifier — we bind both phone and email to a
+                  SINGLE auth.users row so the user can later sign in with
+                  whichever they prefer and always land on the same profile. */}
+              <View style={{ marginTop: 18 }}>
+                <FieldLabel
+                  label={linkType === "email" ? "Email address" : "Mobile number"}
+                  hint={
+                    linkType === "email"
+                      ? "We'll send a code to confirm it. You can sign in with either method later."
+                      : "We'll send an SMS to confirm it. You can sign in with either method later."
+                  }
+                >
+                  <TextField
+                    value={secondary}
+                    onChangeText={setSecondary}
+                    placeholder={
+                      linkType === "email" ? "you@email.com" : "0412 345 678"
+                    }
+                    keyboardType={
+                      linkType === "email" ? "email-address" : "phone-pad"
+                    }
+                  />
+                </FieldLabel>
+              </View>
               <View className="items-center mt-6">
                 <Button variant="primary" size="lg" onPress={completeProfile}>
-                  {busy ? "Saving…" : isDentist ? "Continue to AHPRA details" : "Continue"}
+                  {busy
+                    ? "Sending code…"
+                    : linkType === "email"
+                      ? "Send email code"
+                      : "Send SMS code"}
+                </Button>
+              </View>
+            </>
+          ) : (
+            <>
+              <FieldLabel label={linkType === "email" ? "Email code" : "SMS code"}>
+                <TextField
+                  value={secondaryCode}
+                  onChangeText={setSecondaryCode}
+                  placeholder="123456"
+                  keyboardType="numeric"
+                  maxLength={8}
+                  autoFocus
+                />
+              </FieldLabel>
+              <View className="items-center gap-3 mt-6">
+                <Button variant="primary" size="lg" onPress={verifyLinkOtp}>
+                  {busy
+                    ? "Confirming…"
+                    : isDentist
+                      ? "Confirm & continue to AHPRA"
+                      : "Confirm & finish"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onPress={resendLinkCode}
+                >
+                  {resendIn > 0
+                    ? `Resend in ${resendIn}s`
+                    : busy
+                      ? "Sending…"
+                      : "Resend code"}
+                </Button>
+                <Button variant="ghost" size="md" onPress={() => setPhase("profile")}>
+                  {linkType === "email" ? "Change email" : "Change number"}
                 </Button>
               </View>
             </>
@@ -600,77 +832,89 @@ function RoleSignInButton({
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   onPress: () => void;
 }) {
-  // Patient = mint filled + white text (primary CTA).
-  // Dentist = transparent + deep-teal border + deep-teal text (outlined
-  // secondary). Identical treatment to the welcome screen so the user
-  // sees the same role visuals end-to-end.
+  // Tend Dental tactile card: white surface, warm hairline border,
+  // soft mint/teal accent disc on the left, editorial serif title and
+  // sentence-case Inter subtitle, mint arrow on the right. Reads as
+  // editorial healthcare brand rather than marketing pill.
+  // Background sits on the wrapper View to dodge the iOS bug where
+  // Pressable function-styles intermittently drop backgroundColor.
   const isDentist = role === "dentist";
-  const bg = isDentist ? "transparent" : "#5FA89B";
-  const bgPressed = isDentist ? "rgba(31,79,71,0.06)" : "#4E9388";
-  const fg = isDentist ? "#1F4F47" : "#FFFFFF";
-  const fgSubtle = isDentist ? "rgba(31,79,71,0.72)" : "rgba(255,255,255,0.92)";
-  const iconBg = isDentist ? "rgba(31,79,71,0.10)" : "rgba(255,255,255,0.18)";
-  const borderColor = isDentist ? "#1F4F47" : "transparent";
-  const borderWidth = isDentist ? 1.5 : 0;
+  const accent = isDentist ? "#1F4F47" : "#5FA89B";
+  const accentSoft = isDentist
+    ? "rgba(31,79,71,0.10)"
+    : "rgba(95,168,155,0.14)";
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => ({
-        backgroundColor: pressed ? bgPressed : bg,
-        borderRadius: 22,
-        paddingVertical: 18,
-        paddingHorizontal: 20,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 16,
-        borderWidth,
-        borderColor,
+    <View
+      style={{
+        backgroundColor: "#FFFFFF",
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "rgba(31,79,71,0.10)",
         shadowColor: "#1F4F47",
-        shadowOpacity: isDentist ? 0 : 0.25,
-        shadowRadius: isDentist ? 0 : 14,
-        shadowOffset: { width: 0, height: isDentist ? 0 : 6 },
-        elevation: isDentist ? 0 : 5,
-      })}
+        shadowOpacity: 0.06,
+        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 2,
+        overflow: "hidden",
+      }}
     >
-      <View
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: 26,
-          backgroundColor: iconBg,
+      <Pressable
+        onPress={onPress}
+        android_ripple={{ color: "rgba(31,79,71,0.06)" }}
+        style={({ pressed }) => ({
+          paddingVertical: 20,
+          paddingHorizontal: 20,
+          flexDirection: "row",
           alignItems: "center",
-          justifyContent: "center",
-        }}
+          gap: 16,
+          backgroundColor: pressed ? "#FAFAF7" : "transparent",
+        })}
       >
-        <MaterialCommunityIcons name={icon} size={28} color={fg} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text
+        <View
           style={{
-            fontFamily: "Inter",
-            fontSize: 17,
-            fontWeight: "700",
-            color: fg,
-            marginBottom: 4,
-            letterSpacing: 0.2,
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            backgroundColor: accentSoft,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {title}
-        </Text>
-        <Text
-          style={{
-            fontFamily: "Inter",
-            fontSize: 12,
-            color: fgSubtle,
-            lineHeight: 17,
-          }}
-        >
-          {subtitle}
-        </Text>
-      </View>
-      <MaterialCommunityIcons name="chevron-right" size={22} color={fgSubtle} />
-    </Pressable>
+          <MaterialCommunityIcons name={icon} size={24} color={accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontFamily: "CormorantGaramond_500Medium",
+              fontSize: 22,
+              lineHeight: 26,
+              color: "#2A2520",
+              marginBottom: 2,
+              letterSpacing: -0.2,
+              includeFontPadding: false,
+            }}
+          >
+            {title}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontFamily: "Inter",
+              fontSize: 12,
+              lineHeight: 16,
+              color: "#6E6457",
+              letterSpacing: 0.1,
+              includeFontPadding: false,
+            }}
+          >
+            {subtitle}
+          </Text>
+        </View>
+        <MaterialCommunityIcons name="arrow-right" size={20} color={accent} />
+      </Pressable>
+    </View>
   );
 }
 

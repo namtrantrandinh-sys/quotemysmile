@@ -6,6 +6,7 @@ import { BackBar } from "@/components/BackBar";
 import { Skeleton } from "@/components/Skeleton";
 import { listMyBookings } from "@/lib/services/bookings";
 import { PatientTabBar } from "@/components/PatientTabBar";
+import { formatAudDollars } from "@/lib/copy";
 
 type BookingRow = {
   id: string;
@@ -123,7 +124,7 @@ function BookingRowCard({ b }: { b: BookingRow; onPress?: () => void }) {
         </Text>
         {b.quotes?.total ? (
           <Text className="font-display text-xl text-gold">
-            ${b.quotes.total}
+            {formatAudDollars(b.quotes.total)}
           </Text>
         ) : null}
       </View>
