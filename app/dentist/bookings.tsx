@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BackBar } from "@/components/BackBar";
 import { Button } from "@/components/Button";
@@ -18,6 +19,7 @@ type Row = {
 };
 
 export default function DentistBookingsScreen() {
+  const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,6 +57,10 @@ export default function DentistBookingsScreen() {
     );
   };
 
+  const openChat = (id: string) => {
+    router.push({ pathname: "/booking/messages/[id]", params: { id } });
+  };
+
   const upcoming = rows.filter((r) => r.status === "confirmed" && new Date(r.slot) > new Date());
   const today = rows.filter(
     (r) => r.status === "confirmed" && new Date(r.slot).toDateString() === new Date().toDateString(),
@@ -85,7 +91,7 @@ export default function DentistBookingsScreen() {
         {today.length > 0 ? (
           <Section title="Today">
             {today.map((r) => (
-              <Card key={r.id} r={r} onMark={handleMark} showActions />
+              <Card key={r.id} r={r} onMark={handleMark} onMessage={openChat} showActions />
             ))}
           </Section>
         ) : null}
@@ -93,7 +99,7 @@ export default function DentistBookingsScreen() {
         {upcoming.length > 0 ? (
           <Section title="Upcoming">
             {upcoming.map((r) => (
-              <Card key={r.id} r={r} onMark={handleMark} />
+              <Card key={r.id} r={r} onMark={handleMark} onMessage={openChat} />
             ))}
           </Section>
         ) : null}
@@ -101,7 +107,7 @@ export default function DentistBookingsScreen() {
         {past.length > 0 ? (
           <Section title="Past">
             {past.map((r) => (
-              <Card key={r.id} r={r} onMark={handleMark} />
+              <Card key={r.id} r={r} onMark={handleMark} onMessage={openChat} />
             ))}
           </Section>
         ) : null}
@@ -129,7 +135,17 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Card({ r, onMark, showActions }: { r: Row; onMark: (id: string, a: boolean) => void; showActions?: boolean }) {
+function Card({
+  r,
+  onMark,
+  onMessage,
+  showActions,
+}: {
+  r: Row;
+  onMark: (id: string, a: boolean) => void;
+  onMessage: (id: string) => void;
+  showActions?: boolean;
+}) {
   const when = new Date(r.slot).toLocaleString("en-AU", {
     weekday: "short",
     day: "numeric",
@@ -137,6 +153,10 @@ function Card({ r, onMark, showActions }: { r: Row; onMark: (id: string, a: bool
     hour: "numeric",
     minute: "2-digit",
   });
+  // "Past" bookings (completed/no_show/cancelled) hide the chat button —
+  // the conversation thread persists but a one-time CTA on a closed
+  // booking would over-promise on response time.
+  const isClosed = ["completed", "no_show", "cancelled"].includes(r.status);
   return (
     <View className="border border-linen bg-eggshell/40 px-5 py-4 mb-3">
       <View className="flex-row items-center justify-between mb-2">
@@ -146,16 +166,28 @@ function Card({ r, onMark, showActions }: { r: Row; onMark: (id: string, a: bool
       <Text className="font-sans text-sm text-walnut">
         Quote {formatAudDollars(r.quotes?.total)} · deposit {formatAud(r.deposit_amount)}
       </Text>
-      {showActions ? (
-        <View className="flex-row gap-2 mt-4">
-          <Button variant="primary" size="sm" onPress={() => onMark(r.id, true)}>
-            Mark attended
+      <View className="flex-row flex-wrap gap-2 mt-4">
+        {showActions ? (
+          <>
+            <Button variant="primary" size="sm" onPress={() => onMark(r.id, true)}>
+              Mark attended
+            </Button>
+            <Button variant="secondary" size="sm" onPress={() => onMark(r.id, false)}>
+              No-show
+            </Button>
+          </>
+        ) : null}
+        {!isClosed ? (
+          <Button
+            variant="tonal"
+            size="sm"
+            leftSketch="chat"
+            onPress={() => onMessage(r.id)}
+          >
+            Message patient
           </Button>
-          <Button variant="secondary" size="sm" onPress={() => onMark(r.id, false)}>
-            No-show
-          </Button>
-        </View>
-      ) : null}
+        ) : null}
+      </View>
     </View>
   );
 }

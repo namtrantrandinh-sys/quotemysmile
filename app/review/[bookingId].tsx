@@ -8,7 +8,8 @@ import { FieldLabel } from "@/components/FieldLabel";
 import { TextField } from "@/components/TextField";
 import { Icon } from "@/components/Icon";
 import { getBooking } from "@/lib/services/bookings";
-import { submitReview } from "@/lib/services/reviews";
+import { submitReview, ReviewClinicalRejectedError } from "@/lib/services/reviews";
+import { scanReview } from "@/lib/ahpraFilter";
 
 export default function ReviewScreen() {
   const router = useRouter();
@@ -36,11 +37,25 @@ export default function ReviewScreen() {
       Alert.alert("Thank you", "Your review has been published.");
       router.replace("/inbox");
     } catch (e) {
+      if (e instanceof ReviewClinicalRejectedError) {
+        Alert.alert(
+          "AHPRA rules · please rewrite",
+          `Your review mentions clinical treatment (${e.matches.join(", ")}). Australian advertising law (AHPRA s.133) only allows reviews about the visit itself — staff, wait time, how costs were explained, how welcomed you felt. Please rewrite without referring to the treatment or your outcome.`,
+          [{ text: "OK" }],
+        );
+        return;
+      }
       Alert.alert("Could not submit", e instanceof Error ? e.message : "Try again.");
     } finally {
       setBusy(false);
     }
   };
+
+  // Live scan of the body as the patient types so they don't get
+  // surprised at submit time. We only show this inline hint when matches
+  // appear — the alert above is the hard gate.
+  const liveScan = scanReview(body);
+  const liveMatches = liveScan.ok ? [] : liveScan.matches;
 
   return (
     <SafeAreaView className="flex-1 bg-bone">
@@ -83,7 +98,7 @@ export default function ReviewScreen() {
         <View className="px-8 mb-12">
           <FieldLabel
             label="Your thoughts"
-            hint="Optional. AHPRA rules — focus on the experience, not clinical outcomes."
+            hint="Optional. Australian law (AHPRA s.133) prohibits reviews about treatment or clinical outcomes. Describe the visit only: staff, wait, how costs were explained."
           >
             <TextField
               value={body}
@@ -93,6 +108,41 @@ export default function ReviewScreen() {
               maxLength={400}
             />
           </FieldLabel>
+          {liveMatches.length > 0 ? (
+            <View
+              style={{
+                marginTop: 10,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                borderWidth: 1,
+                borderColor: "rgba(158,94,71,0.40)",
+                backgroundColor: "rgba(158,94,71,0.06)",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "Inter-Medium",
+                  fontSize: 10,
+                  letterSpacing: 1.4,
+                  textTransform: "uppercase",
+                  color: "#9E5E47",
+                  marginBottom: 4,
+                }}
+              >
+                AHPRA · please rewrite
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter",
+                  fontSize: 12,
+                  lineHeight: 18,
+                  color: "#4D423A",
+                }}
+              >
+                Mentioning {liveMatches.map((m) => `"${m}"`).join(", ")} makes this a testimonial about clinical care, which Australian law prohibits in advertising. Describe the visit (staff, wait, billing clarity) instead.
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View className="px-8 pb-24 items-center">

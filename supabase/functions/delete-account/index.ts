@@ -102,8 +102,9 @@ Deno.serve(async (req) => {
       .eq("patient_id", uid)
       .neq("status", "cancelled");
 
-    // 4) Scrub public.users PII (FK cascade from auth deletion will drop the
-    //    row entirely, but doing this first means no race on observers).
+    // 4) Scrub PII. FK cascade from auth.users deletion will drop the
+    //    users row + both profile rows, but doing this first avoids any
+    //    race where observers see live data on a just-deleted account.
     await admin
       .from("users")
       .update({
@@ -111,13 +112,12 @@ Deno.serve(async (req) => {
         email: null,
         phone: null,
         push_token: null,
-        ahpra_no: null,
-        ahpra_status: "unknown",
-        ahpra_verified_at: null,
-        ahpra_last_checked_at: null,
-        onboarding_acks: null,
       })
       .eq("id", uid);
+    // Patient + dentist profile rows are independent now — both get
+    // cleared (or removed via cascade) regardless of whether one exists.
+    await admin.from("patient_profiles").delete().eq("user_id", uid);
+    await admin.from("dentist_profiles").delete().eq("user_id", uid);
 
     // 5) Audit BEFORE we drop the auth row (audit row needs the actor_id to
     //    point at the about-to-be-deleted uid).

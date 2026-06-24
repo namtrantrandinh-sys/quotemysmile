@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, Platform } from "react-native";
+import { Component, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Easing, View, Text, Pressable, Platform } from "react-native";
 import MapView, {
   Marker,
   Circle,
@@ -8,6 +8,120 @@ import MapView, {
   type Region,
 } from "react-native-maps";
 import type { Quote } from "@/lib/types";
+
+/**
+ * ArrivalPin — drops a freshly-arrived pin in (translateY + scale + opacity).
+ * Earlier revisions added an absolutely-positioned halo ring as a sibling
+ * inside <Marker>, but react-native-maps captures custom-marker views as
+ * static images on iOS and absolutely-positioned siblings can throw off
+ * the marker's measured bounds → blank pin / "error code" screen. Pure
+ * transform animation on a single wrapper is safe.
+ *
+ * Established pins (isNew=false) render with no animation at all.
+ */
+function ArrivalPin({
+  isNew,
+  children,
+}: {
+  isNew: boolean;
+  children: React.ReactNode;
+}) {
+  const enter = useRef(new Animated.Value(isNew ? 0 : 1)).current;
+
+  useEffect(() => {
+    if (!isNew) return;
+    Animated.timing(enter, {
+      toValue: 1,
+      duration: 520,
+      easing: Easing.out(Easing.back(1.4)),
+      useNativeDriver: true,
+    }).start();
+  }, [isNew, enter]);
+
+  if (!isNew) {
+    return <>{children}</>;
+  }
+
+  return (
+    <Animated.View
+      style={{
+        opacity: enter,
+        transform: [
+          {
+            translateY: enter.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-14, 0],
+            }),
+          },
+          {
+            scale: enter.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.6, 1],
+            }),
+          },
+        ],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+/**
+ * MapErrorBoundary — surfaces a graceful empty state if MapView throws
+ * (e.g. native module missing in Expo Go, malformed marker children).
+ * Prevents the red error screen the user reported when toggling Map.
+ */
+class MapErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <View
+          style={{
+            height: 460,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#F5F1E8",
+            padding: 24,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 10,
+              letterSpacing: 1.8,
+              textTransform: "uppercase",
+              color: "#8A7E70",
+              marginBottom: 8,
+            }}
+          >
+            Map unavailable on this device
+          </Text>
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 13,
+              color: "#4D423A",
+              textAlign: "center",
+              maxWidth: 320,
+              lineHeight: 18,
+            }}
+          >
+            Switch back to List to see the same quotes.
+          </Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Switch to Google Maps when a REAL platform key is present. Placeholder
 // values like REPLACE_WITH_… would otherwise crash the native map view.
@@ -45,6 +159,25 @@ export function QuotesMap({ quotes, patient, radiusKm = 10, onQuoteSelect }: Pro
     quotes.find((q) => q.isLowest)?.id ?? quotes[0]?.id ?? null,
   );
   const [zoomDelta, setZoomDelta] = useState(0.04);
+
+  // Track which quote IDs we've already rendered. Anything new on the
+  // next render gets the ArrivalPin drop-in + halo animation. The very
+  // first render is *not* treated as "new" — otherwise every existing
+  // quote would animate on screen mount.
+  const seenIdsRef = useRef<Set<string> | null>(null);
+  const newIdsRef = useRef<Set<string>>(new Set());
+  if (seenIdsRef.current === null) {
+    seenIdsRef.current = new Set(quotes.map((q) => q.id));
+  } else {
+    const fresh = new Set<string>();
+    for (const q of quotes) {
+      if (!seenIdsRef.current.has(q.id)) {
+        fresh.add(q.id);
+        seenIdsRef.current.add(q.id);
+      }
+    }
+    newIdsRef.current = fresh;
+  }
 
   const region: Region = useMemo(() => {
     const all = [patient, ...quotes.filter((q) => q.lat != null && q.lng != null).map((q) => ({ lat: q.lat!, lng: q.lng! }))];
@@ -129,6 +262,7 @@ export function QuotesMap({ quotes, patient, radiusKm = 10, onQuoteSelect }: Pro
   const selected = quotes.find((q) => q.id === selectedId) ?? null;
 
   return (
+    <MapErrorBoundary>
     <View className="bg-bone">
       <View style={{ height: 460 }} className="overflow-hidden">
         <MapView
@@ -214,43 +348,50 @@ export function QuotesMap({ quotes, patient, radiusKm = 10, onQuoteSelect }: Pro
               : q.isFinal
                 ? "bg-walnut"
                 : "bg-espresso";
+            const isNew = newIdsRef.current.has(q.id);
             return (
               <Marker
                 key={q.id}
                 coordinate={{ latitude: q.lat!, longitude: q.lng! }}
                 anchor={{ x: 0.5, y: 1 }}
                 onPress={() => select(q)}
+                // Only request live re-render while the entry animation
+                // is running. Leaving it true permanently kills FPS on
+                // iOS as every marker would re-rasterise each frame.
+                tracksViewChanges={isNew}
               >
-                <View className="items-center">
-                  <View
-                    className={`${tone} px-3 py-1.5 ${isSel ? "border-2 border-bone" : ""}`}
-                    style={{ borderRadius: 2 }}
-                  >
-                    <Text
-                      className={`font-display text-base ${q.isLowest ? "text-espresso" : "text-bone"}`}
-                      style={{ lineHeight: 18 }}
+                <ArrivalPin isNew={isNew}>
+                  <View className="items-center">
+                    <View
+                      className={`${tone} px-3 py-1.5 ${isSel ? "border-2 border-bone" : ""}`}
+                      style={{ borderRadius: 2 }}
                     >
-                      ${q.total}
-                    </Text>
+                      <Text
+                        className={`font-display text-base ${q.isLowest ? "text-espresso" : "text-bone"}`}
+                        style={{ lineHeight: 18 }}
+                      >
+                        ${q.total}
+                      </Text>
+                    </View>
+                    <View
+                      className={tone}
+                      style={{
+                        width: 0,
+                        height: 0,
+                        borderLeftWidth: 6,
+                        borderRightWidth: 6,
+                        borderTopWidth: 8,
+                        borderLeftColor: "transparent",
+                        borderRightColor: "transparent",
+                        borderTopColor: q.isLowest
+                          ? "#A9CFC0"
+                          : q.isFinal
+                            ? "#4D423A"
+                            : "#2A2520",
+                      }}
+                    />
                   </View>
-                  <View
-                    className={tone}
-                    style={{
-                      width: 0,
-                      height: 0,
-                      borderLeftWidth: 6,
-                      borderRightWidth: 6,
-                      borderTopWidth: 8,
-                      borderLeftColor: "transparent",
-                      borderRightColor: "transparent",
-                      borderTopColor: q.isLowest
-                        ? "#A9CFC0"
-                        : q.isFinal
-                          ? "#4D423A"
-                          : "#2A2520",
-                    }}
-                  />
-                </View>
+                </ArrivalPin>
               </Marker>
             );
           })}
@@ -267,7 +408,7 @@ export function QuotesMap({ quotes, patient, radiusKm = 10, onQuoteSelect }: Pro
           <View className="flex-row items-center gap-2">
             <View className="h-2 w-2 bg-gold" />
             <Text className="text-[10px] tracking-cap uppercase text-walnut font-sans">
-              Lowest indicative
+              Lowest guide price
             </Text>
           </View>
         </View>
@@ -301,5 +442,6 @@ export function QuotesMap({ quotes, patient, radiusKm = 10, onQuoteSelect }: Pro
         </Pressable>
       ) : null}
     </View>
+    </MapErrorBoundary>
   );
 }

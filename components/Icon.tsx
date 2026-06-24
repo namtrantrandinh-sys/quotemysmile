@@ -68,7 +68,7 @@ const SKETCH_MAP: Record<IconName, SketchIconName> = {
   map: "map",
 };
 
-export function Icon({ name, size = 48, color = "#3F7E73" }: Props) {
+export function Icon({ name, size = 48, color = "#2E7268" }: Props) {
   const sketchName = SKETCH_MAP[name];
   if (sketchName) {
     return <SketchIcon name={sketchName} size={size} color={color} />;

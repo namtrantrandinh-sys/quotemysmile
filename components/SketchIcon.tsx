@@ -18,14 +18,14 @@ import { View } from "react-native";
  *   • No fills except for tiny "ink dot" marks (sparkles, eyes, jewels).
  *   • Strokes intentionally don't always close — open corners read as
  *     drawn-by-hand, not extruded by a path tool.
- *   • Default colour: deep mint #3F7E73 (matches Tend's botanical green).
+ *   • Default colour: deep mint #2E7268 (matches Tend's botanical green).
  *
  * Use sparingly: ONE hero illustration per screen header, smaller inline
  * marks in row tiles. Avoid filling whole grids with this style — the
  * sketch feel needs whitespace to breathe.
  */
 
-const COLOR_DEFAULT = "#3F7E73";
+const COLOR_DEFAULT = "#2E7268";
 const STROKE_DEFAULT = 1.4;
 const GHOST_OPACITY = 0.22;
 const GHOST_DX = 0.7;
@@ -70,7 +70,9 @@ export type SketchIconName =
   | "list"
   | "map"
   | "map-pin"
-  | "phone";
+  | "phone"
+  | "inbox"
+  | "sign-out";
 
 type Props = {
   name: SketchIconName;
@@ -173,35 +175,38 @@ function renderGlyph(name: SketchIconName, c: string, sw: number) {
       );
 
     case "tooth":
-      // Tooth crown with a tiny gleam dot in the upper-right. Roots
-      // taper to round tips. Crown surface gets a faint shading curve.
+      // Tend-style: one confident continuous tooth silhouette, no extras.
+      // The "filling + clean" semantic comes from one small leaf-tip mark
+      // (Tend's botanical signature) on the upper-left — keeps it living,
+      // not clinical. Centred in viewBox so it reads at any size.
       return (
         <G>
           <Path
-            d="M8.4 4.6 Q12 3.4 15.6 4.6 Q17.6 6.0 16.8 9.6 Q16.4 12.4 15.2 16.0 Q14.6 19.6 13.4 19.6 Q12.6 19.6 12.2 16.4 Q12 14.4 11.8 16.4 Q11.4 19.6 10.6 19.6 Q9.4 19.6 8.8 16.0 Q7.6 12.4 7.2 9.6 Q6.4 6.0 8.4 4.6 Z"
+            d="M8.4 5.6 Q12 4.0 15.6 5.6 Q17.6 7.2 17.0 10.6 Q16.4 13.6 15.2 16.6 Q14.4 19.4 13.2 19.4 Q12.4 19.4 12.1 16.8 Q12.0 15.2 11.9 16.8 Q11.6 19.4 10.8 19.4 Q9.6 19.4 8.8 16.6 Q7.6 13.6 7.0 10.6 Q6.4 7.2 8.4 5.6 Z"
             {...stroke}
           />
-          <Path
-            d="M9.4 7.6 Q11.4 6.4 13.6 7.4"
-            {...stroke}
-            opacity={0.55}
-          />
-          <Circle cx={14.4} cy={6.2} r={0.5} fill={c} />
+          {/* Tiny leaf glint — Tend botanical mark, sits on the crown */}
+          <Path d="M10.4 8.6 Q11.6 7.4 13.0 8.6" {...stroke} opacity={0.6} />
         </G>
       );
 
     case "tooth-clean":
-      // Tooth with three small "bubbles" floating above — a clean &
-      // checkup glyph. Bubbles intentionally different sizes.
+      // Tend-style: tooth + one slim leaf arcing off the upper-right.
+      // The leaf is Tend's botanical signature — replaces both the
+      // dated bubbles and the previous sparkle. Reads as "fresh, living,
+      // post-clean" without shouting.
       return (
         <G>
           <Path
-            d="M8.4 7.4 Q12 6.2 15.6 7.4 Q17.6 8.8 16.8 12.4 Q16.4 15.2 15.2 18.8 Q14.6 22.0 13.4 22.0 Q12.6 22.0 12.2 19.2 Q12 17.4 11.8 19.2 Q11.4 22.0 10.6 22.0 Q9.4 22.0 8.8 18.8 Q7.6 15.2 7.2 12.4 Q6.4 8.8 8.4 7.4 Z"
+            d="M7.6 8.4 Q12 6.8 16.4 8.4 Q18.2 9.8 17.4 13.0 Q16.8 15.8 15.6 18.6 Q14.8 21.0 13.4 21.0 Q12.6 21.0 12.2 18.4 Q12 16.6 11.8 18.4 Q11.4 21.0 10.6 21.0 Q9.2 21.0 8.4 18.6 Q7.2 15.8 6.6 13.0 Q5.8 9.8 7.6 8.4 Z"
             {...stroke}
           />
-          <Circle cx={7.4} cy={4.2} r={1.1} {...stroke} />
-          <Circle cx={11.2} cy={2.6} r={0.75} {...stroke} />
-          <Circle cx={14.6} cy={4.4} r={0.55} fill={c} />
+          {/* Leaf — single almond-shape stroke + stem curving into the tooth */}
+          <Path
+            d="M16.4 3.2 Q19.6 3.8 19.2 6.6 Q17.2 7.4 15.8 5.8 Q15.4 4.4 16.4 3.2 Z"
+            {...stroke}
+          />
+          <Path d="M15.8 5.8 Q15.0 7.0 14.6 8.4" {...stroke} opacity={0.7} />
         </G>
       );
 
@@ -240,37 +245,41 @@ function renderGlyph(name: SketchIconName, c: string, sw: number) {
       );
 
     case "whiten":
-      // Tooth silhouette with three radiating sparks — whitening vibe.
+      // Tend-style: tooth haloed by THREE soft curved arcs (not rays).
+      // Curves feel botanical/breath-like instead of mechanical sun-rays.
+      // Each arc widens outward — quiet escalation, balanced both sides.
       return (
         <G>
           <Path
-            d="M9.0 8.4 Q12 7.4 15.0 8.4 Q16.7 9.6 16.0 12.6 Q15.6 14.8 14.6 17.6 Q14.0 20.2 13.0 20.2 Q12.4 20.2 12.1 17.8 Q12.0 16.4 11.9 17.8 Q11.6 20.2 11.0 20.2 Q10.0 20.2 9.4 17.6 Q8.4 14.8 8.0 12.6 Q7.3 9.6 9.0 8.4 Z"
+            d="M8.4 8.6 Q12 7.0 15.6 8.6 Q17.4 10.0 16.6 13.2 Q16.0 15.6 15.0 18.4 Q14.4 21.0 13.4 21.0 Q12.6 21.0 12.2 18.4 Q12.0 16.6 11.8 18.4 Q11.4 21.0 10.6 21.0 Q9.6 21.0 9.0 18.4 Q8.0 15.6 7.4 13.2 Q6.6 10.0 8.4 8.6 Z"
             {...stroke}
           />
-          <Path d="M4.0 6.4 L5.6 7.6" {...stroke} opacity={0.7} />
-          <Path d="M3.6 10.4 L5.4 10.6" {...stroke} opacity={0.7} />
-          <Path d="M5.6 4.4 L6.4 6.0" {...stroke} opacity={0.7} />
-          <Circle cx={14.2} cy={9.8} r={0.4} fill={c} />
+          {/* Soft curved halo — three nested arcs above the tooth */}
+          <Path d="M9.4 5.6 Q12 4.4 14.6 5.6" {...stroke} opacity={0.85} />
+          <Path d="M7.8 3.4 Q12 1.4 16.2 3.4" {...stroke} opacity={0.55} />
         </G>
       );
 
     case "crown":
-      // Three-point crown with a curved baseline + jewel dots at each
-      // tip. Wobbled-on-purpose so it doesn't read as enterprise SaaS.
+      // Tend-style: a single graceful dental crown — soft dome with a
+      // gentle rounded baseline. No notch lines, no jewel dot, no second
+      // tooth-shape below. The whole glyph IS the crown, breathing in
+      // generous whitespace.
       return (
         <G>
+          {/* Crown silhouette — dome with rounded baseline and tapered sides */}
           <Path
-            d="M4.2 17.2 L4.8 8.4 L8.6 13.0 L12 6.4 L15.4 13.0 L19.2 8.4 L19.8 17.2 Z"
+            d="M5.6 16.6 Q5.4 9.6 12 5.4 Q18.6 9.6 18.4 16.6 Q12 17.6 5.6 16.6 Z"
             {...stroke}
           />
+          {/* Baseline shelf — single arc, suggests where crown meets gum */}
           <Path
-            d="M4.6 18.4 Q12 17.2 19.4 18.4"
+            d="M5.6 16.6 Q12 18.4 18.4 16.6"
             {...stroke}
             opacity={0.7}
           />
-          <Circle cx={4.8} cy={8.4} r={0.6} fill={c} />
-          <Circle cx={12} cy={6.4} r={0.7} fill={c} />
-          <Circle cx={19.2} cy={8.4} r={0.6} fill={c} />
+          {/* Faint inner highlight — one quiet curve, no jewels */}
+          <Path d="M9.4 9.8 Q12 8.4 14.6 9.8" {...stroke} opacity={0.5} />
         </G>
       );
 
@@ -698,6 +707,35 @@ function renderGlyph(name: SketchIconName, c: string, sw: number) {
           <Path d="M14.4 10.8 L14.6 12.8 L12.6 13.0" {...stroke} />
           <Path d="M14.4 13.6 Q13.4 15.4 11.6 15.4 Q10.0 15.4 9.6 14.4" {...stroke} />
           <Path d="M9.6 16.2 L9.4 14.2 L11.4 14.0" {...stroke} />
+        </G>
+      );
+
+    case "inbox":
+      // Tray with a small arrow descending into it — clearly distinct
+      // from "chat" (used for active conversation threads).
+      return (
+        <G>
+          <Path
+            d="M4.2 14.4 L4.2 18.2 Q4.2 19.4 5.4 19.4 L18.6 19.4 Q19.8 19.4 19.8 18.2 L19.8 14.4 L15.6 14.4 L14.6 16.0 L9.4 16.0 L8.4 14.4 Z"
+            {...stroke}
+          />
+          <Path d="M6.4 14.4 L6.4 5.6 Q6.4 4.6 7.4 4.6 L16.6 4.6 Q17.6 4.6 17.6 5.6 L17.6 14.4" {...stroke} />
+          <Path d="M12 7.4 L12 12.4" {...stroke} />
+          <Path d="M10 10.4 L12 12.4 L14 10.4" {...stroke} />
+        </G>
+      );
+
+    case "sign-out":
+      // Door frame with arrow exiting to the right — "leave the app".
+      return (
+        <G>
+          <Path
+            d="M11.4 4.4 L5.4 4.4 Q4.4 4.4 4.4 5.4 L4.4 18.6 Q4.4 19.6 5.4 19.6 L11.4 19.6"
+            {...stroke}
+          />
+          <Path d="M11.4 4.4 L11.4 19.6" {...stroke} />
+          <Path d="M10.4 12 L19.4 12" {...stroke} />
+          <Path d="M16.6 9 L19.6 12 L16.6 15" {...stroke} />
         </G>
       );
 

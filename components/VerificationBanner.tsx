@@ -96,19 +96,44 @@ export function VerificationBanner({
   }
 
   if (pending) {
+    // Compact pending card. The previous treatment was a fat eggshell
+    // panel with three paragraphs of body copy + ghost text recheck.
+    // It dominated the dashboard for what is really just a "stay tuned"
+    // status. New version: one-line headline + two tight rows + a real
+    // mint-gradient Recheck pill so the dentist has a clear action.
     return (
-      <View className="border border-linen bg-eggshell/40 p-5">
-        <View className="flex-row items-center gap-3 mb-2">
-          <Icon name="clock" size={18} color="#8A7E6F" />
-          <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans">
-            Verifying credentials
+      <View
+        style={{
+          backgroundColor: "#FFFFFF",
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: "rgba(31,79,71,0.12)",
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          shadowColor: "#2E7268",
+          shadowOpacity: 0.05,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 3 },
+          elevation: 2,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <Icon name="clock" size={16} color="#2E7268" />
+          <Text
+            style={{
+              fontFamily: "Inter",
+              fontSize: 11,
+              letterSpacing: 1.4,
+              textTransform: "uppercase",
+              color: "#2E7268",
+              fontWeight: "700",
+              flex: 1,
+            }}
+          >
+            Verifying credentials · under a minute
           </Text>
         </View>
-        <Text className="text-sm text-walnut font-sans leading-relaxed mb-3">
-          We're checking AHPRA + ABR against the public registers. This usually
-          takes under a minute. You'll see live requests once verification clears.
-        </Text>
-        <View className="gap-1.5">
+        <View style={{ gap: 6, marginBottom: 12 }}>
           <Row
             label="AHPRA registration"
             state={ahpra === "active" || ahpra === "conditional" ? "ok" : "pending"}
@@ -116,11 +141,45 @@ export function VerificationBanner({
           <Row label="ABN" state={abn === "verified" ? "ok" : "pending"} />
         </View>
         {onRecheck ? (
-          <Pressable onPress={onRecheck} disabled={rechecking} className="mt-4">
-            <Text className="text-[11px] tracking-cap uppercase text-gold font-sans">
-              {rechecking ? "Rechecking…" : "Recheck now"}
-            </Text>
-          </Pressable>
+          <View
+            style={{
+              alignSelf: "stretch",
+              borderRadius: 12,
+              backgroundColor: rechecking ? "#7BC5B5" : "#2E7268",
+              overflow: "hidden",
+            }}
+          >
+            <Pressable
+              onPress={onRecheck}
+              disabled={rechecking}
+              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+            >
+              <View
+                style={{
+                  paddingVertical: 11,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: 42,
+                  flexDirection: "row",
+                  gap: 8,
+                }}
+              >
+                <Icon name="clock" size={14} color="#FFFFFF" />
+                <Text
+                  style={{
+                    fontFamily: "Inter",
+                    fontSize: 12,
+                    letterSpacing: 1.6,
+                    textTransform: "uppercase",
+                    color: "#FFFFFF",
+                    fontWeight: "700",
+                  }}
+                >
+                  {rechecking ? "Rechecking…" : "Recheck now"}
+                </Text>
+              </View>
+            </Pressable>
+          </View>
         ) : null}
       </View>
     );

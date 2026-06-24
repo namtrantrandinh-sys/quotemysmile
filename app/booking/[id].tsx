@@ -124,7 +124,7 @@ export default function BookingDetailScreen() {
               style={{
                 position: "absolute",
                 top: 0, left: 0, right: 0, bottom: 0,
-                backgroundColor: "#3F7E73",
+                backgroundColor: "#2E7268",
                 opacity: 0.55,
                 transform: [{ skewY: "-3deg" }, { translateY: 60 }],
               }}
@@ -157,7 +157,7 @@ export default function BookingDetailScreen() {
                 borderColor: "rgba(255,255,255,0.95)",
                 alignItems: "center",
                 justifyContent: "center",
-                shadowColor: "#1F4F47",
+                shadowColor: "#2E7268",
                 shadowOpacity: 0.25,
                 shadowRadius: 18,
                 shadowOffset: { width: 0, height: 8 },
@@ -168,7 +168,7 @@ export default function BookingDetailScreen() {
                 style={{
                   fontFamily: "CormorantGaramond-Medium",
                   fontSize: 38,
-                  color: "#3F7E73",
+                  color: "#2E7268",
                   letterSpacing: -0.5,
                 }}
               >
@@ -183,7 +183,7 @@ export default function BookingDetailScreen() {
             style={{
               fontFamily: "Caveat",
               fontSize: 22,
-              color: "#3F7E73",
+              color: "#2E7268",
               marginBottom: 4,
             }}
           >
@@ -211,7 +211,7 @@ export default function BookingDetailScreen() {
               marginBottom: 8,
             }}
           >
-            <Icon name="calendar" size={14} color="#3F7E73" />
+            <Icon name="calendar" size={14} color="#2E7268" />
             <Text
               style={{
                 fontFamily: "Inter-Medium",
@@ -296,7 +296,12 @@ export default function BookingDetailScreen() {
             Message clinic
           </Button>
           {b.status === "confirmed" ? (
-            <Button variant="ghost" size="md" onPress={handleCancel}>
+            <Button
+              variant="ghost"
+              size="md"
+              onPress={handleCancel}
+              disabled={busy}
+            >
               {busy ? "Cancelling…" : "Cancel booking"}
             </Button>
           ) : null}

@@ -12,7 +12,11 @@ import { PatientTabBar } from "@/components/PatientTabBar";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { profile, loading } = useUserProfile();
+  const { user, patient, dentist, isPatient, isDentist, loading } = useUserProfile();
+  // Pick a display name + email + phone for the header. Prefer the
+  // patient profile (this app screen lives inside the patient tab bar);
+  // fall back to dentist profile name if the user is dentist-only.
+  const displayName = patient?.full_name ?? dentist?.full_name ?? user?.full_name ?? null;
   const [busy, setBusy] = useState<"signout" | "delete" | null>(null);
 
   const handleSignOut = async () => {
@@ -79,26 +83,40 @@ export default function SettingsScreen() {
             Account
           </Text>
           <Text className="font-display text-4xl text-espresso text-center leading-[1.05] mb-2">
-            {profile?.full_name ?? (loading ? "" : "Guest")}
+            {displayName ?? (loading ? "" : "Guest")}
           </Text>
-          {profile?.email ? (
-            <Text className="text-sm text-walnut font-sans">{profile.email}</Text>
+          {user?.email ? (
+            <Text className="text-sm text-walnut font-sans">{user.email}</Text>
           ) : null}
-          {profile?.phone ? (
+          {user?.phone ? (
             <Text className="text-xs text-taupe font-sans mt-1">
-              {profile.phone}
+              {user.phone}
             </Text>
           ) : null}
         </View>
 
-        {/* Profile */}
+        {/* Profile — shows BOTH profiles if the same identity holds
+            them. Same number/email can carry a patient AND a dentist
+            persona; we list each independently so the user can see at a
+            glance what's set up. */}
         <Section title="Profile">
-          <Row label="Name" value={profile?.full_name ?? "—"} />
-          <Row label="Email" value={profile?.email ?? "—"} />
-          <Row label="Mobile" value={profile?.phone ?? "—"} />
+          <Row label="Email" value={user?.email ?? "—"} />
+          <Row label="Mobile" value={user?.phone ?? "—"} />
           <Row
-            label="Role"
-            value={profile?.role ? profile.role[0].toUpperCase() + profile.role.slice(1) : "—"}
+            label="Patient profile"
+            value={isPatient ? (patient?.full_name ?? "Active") : "—"}
+          />
+          <Row
+            label="Dentist profile"
+            value={isDentist ? (dentist?.full_name ?? "Active") : "—"}
+          />
+        </Section>
+
+        {/* Wellness */}
+        <Section title="Wellness">
+          <LinkRow
+            label="Smile Score · 30s quiz"
+            onPress={() => router.push("/smile-score")}
           />
         </Section>
 

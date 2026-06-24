@@ -7,16 +7,30 @@ import { Button } from "@/components/Button";
 import { ProgressDots } from "@/components/ProgressDots";
 import { Checkbox } from "@/components/Checkbox";
 import { Icon } from "@/components/Icon";
-import { setIntake } from "@/lib/intakeStore";
+import { setIntake, getIntake } from "@/lib/intakeStore";
 import { URGENCY_META, type Urgency } from "@/lib/types";
 
 const STANDARD: Urgency[] = ["1h", "few", "24h", "3d"];
+
+/**
+ * Booking-readiness funnel (industry research: pre-qualifying intent
+ * dramatically improves lead quality for dentists, which keeps them on
+ * the platform). Dentists see this on the quote builder + prioritise
+ * "ready_now" leads. Stored inside symptom_json so no schema change.
+ */
+const READINESS = [
+  { id: "ready_now", label: "Ready to book this week", hint: "Hot lead" },
+  { id: "this_month", label: "Within a month", hint: "" },
+  { id: "browsing", label: "Just researching", hint: "" },
+] as const;
+type Readiness = (typeof READINESS)[number]["id"];
 
 export default function UrgencyScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ c?: string }>();
   const [choice, setChoice] = useState<Urgency>("24h");
   const [emergencyAck, setEmergencyAck] = useState(false);
+  const [readiness, setReadiness] = useState<Readiness>("ready_now");
 
   const meta = URGENCY_META[choice];
   const blocked = choice === "emergency" && !emergencyAck;
@@ -44,34 +58,122 @@ export default function UrgencyScreen() {
           </Text>
         </View>
 
-        <View className="px-8 pb-8">
-          <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mb-3">
+        <View className="px-6 pb-8">
+          <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mb-3" style={{ paddingHorizontal: 4 }}>
             Standard
           </Text>
-          {STANDARD.map((u) => (
-            <Pressable
-              key={u}
-              onPress={() => {
-                setChoice(u);
-                setEmergencyAck(false);
-              }}
-              className={`border ${
-                choice === u ? "border-espresso bg-eggshell/40" : "border-linen"
-              } px-5 py-5 mb-3 flex-row items-center justify-between`}
-            >
-              <View className="flex-1">
-                <Text className="font-display text-xl text-espresso mb-1">
-                  {URGENCY_META[u].label}
-                </Text>
-                <Text className="text-xs text-taupe font-sans">
-                  {URGENCY_META[u].feeNote}
-                </Text>
+          {STANDARD.map((u) => {
+            const selected = choice === u;
+            return (
+              <View
+                key={u}
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 18,
+                  borderWidth: selected ? 2 : 1,
+                  borderColor: selected ? "#5FA89B" : "rgba(31,79,71,0.08)",
+                  shadowColor: selected ? "#2E7268" : "#2E7268",
+                  shadowOpacity: selected ? 0.18 : 0.08,
+                  shadowRadius: selected ? 16 : 10,
+                  shadowOffset: { width: 0, height: selected ? 8 : 4 },
+                  elevation: selected ? 5 : 2,
+                  marginBottom: 12,
+                  overflow: "hidden",
+                }}
+              >
+                <Pressable
+                  onPress={() => {
+                    setChoice(u);
+                    setEmergencyAck(false);
+                  }}
+                  android_ripple={{ color: "rgba(31,79,71,0.06)" }}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
+                >
+                  <View
+                    style={{
+                      paddingVertical: 18,
+                      paddingHorizontal: 18,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 12,
+                    }}
+                  >
+                  {/* Mint check disc on selected — gives the card a clear
+                      "this is the choice" affordance instead of a hairline
+                      border that the user said reads as a book entry. */}
+                  <View
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 12,
+                      borderWidth: selected ? 0 : 1.5,
+                      borderColor: "rgba(31,79,71,0.25)",
+                      backgroundColor: selected ? "#5FA89B" : "transparent",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {selected ? (
+                      <View
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: 4,
+                          backgroundColor: "#FFFFFF",
+                        }}
+                      />
+                    ) : null}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontFamily: "Inter",
+                        fontWeight: "700",
+                        fontSize: 17,
+                        color: "#2A2520",
+                        marginBottom: 2,
+                        letterSpacing: 0.1,
+                      }}
+                    >
+                      {URGENCY_META[u].label}
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: 12,
+                        color: "#6E6457",
+                        lineHeight: 16,
+                      }}
+                    >
+                      {URGENCY_META[u].feeNote}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 999,
+                      backgroundColor: selected ? "rgba(95,168,155,0.16)" : "rgba(31,79,71,0.06)",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: 9.5,
+                        letterSpacing: 1.2,
+                        textTransform: "uppercase",
+                        color: selected ? "#2E7268" : "#6E6457",
+                        fontWeight: "700",
+                      }}
+                    >
+                      {URGENCY_META[u].window}
+                    </Text>
+                  </View>
+                  </View>
+                </Pressable>
               </View>
-              <Text className="text-[10px] tracking-cap uppercase text-walnut font-sans">
-                {URGENCY_META[u].window}
-              </Text>
-            </Pressable>
-          ))}
+            );
+          })}
         </View>
 
         {/* Emergency tile */}
@@ -124,6 +226,30 @@ export default function UrgencyScreen() {
           ) : null}
         </View>
 
+        {/* Booking readiness — fast 3-option tap, no extra screen. */}
+        <View className="px-8 pb-2">
+          <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mb-3">
+            Booking readiness
+          </Text>
+          <View className="flex-row flex-wrap gap-2 mb-2">
+            {READINESS.map((r) => (
+              <Pressable
+                key={r.id}
+                onPress={() => setReadiness(r.id)}
+                className={`px-4 py-2 border ${
+                  readiness === r.id ? "border-espresso bg-eggshell/60" : "border-linen"
+                }`}
+              >
+                <Text className="font-sans text-sm text-espresso">{r.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="text-[11px] text-taupe font-sans mb-8">
+            Dentists prioritise patients ready to book — your timeline is
+            never shared verbatim, just a hot/cold flag.
+          </Text>
+        </View>
+
         {/* Confirmation summary */}
         <View className="px-8 mb-12">
           <View className={`border ${meta.tone === "clay" ? "border-clay/40" : "border-linen"} bg-eggshell/40 p-5 items-center`}>
@@ -150,7 +276,14 @@ export default function UrgencyScreen() {
                 Alert.alert("Please confirm", "Tick the emergency acknowledgement to continue.");
                 return;
               }
-              setIntake({ urgency: choice });
+              // Layer urgency + booking readiness into the existing
+              // symptomJson so dentists see both on the quote builder.
+              // No new schema column — symptomJson is the catch-all.
+              const prevSymptoms = getIntake().symptomJson ?? {};
+              setIntake({
+                urgency: choice,
+                symptomJson: { ...prevSymptoms, __booking_readiness: readiness },
+              });
               router.push("/submitting");
             }}
           >

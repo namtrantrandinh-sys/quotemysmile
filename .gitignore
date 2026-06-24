@@ -28,3 +28,9 @@ android/app/build/
 package.json.tmp
 
 .qms-*
+
+# Design reference imagery (not part of the app build)
+inspo/
+
+# Abandoned WaterBanner experiment (superseded by water.mp4)
+assets/video/crystal.mp4

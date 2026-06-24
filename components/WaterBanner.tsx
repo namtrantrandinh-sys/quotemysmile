@@ -65,7 +65,7 @@ export function WaterBanner({ caption, onBack }: Props) {
       style={{
         position: "relative",
         overflow: "hidden",
-        backgroundColor: "#1F4F47",
+        backgroundColor: "#2E7268",
       }}
     >
       {/* ============================================================

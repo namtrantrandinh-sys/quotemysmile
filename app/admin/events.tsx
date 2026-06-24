@@ -10,13 +10,11 @@ import { listRecentEvents, type EventRow } from "@/lib/services/admin";
  * Useful for debugging payments, bookings, AHPRA checks, and pushes in prod.
  */
 export default function AdminEventsScreen() {
-  const { profile } = useUserProfile();
+  const { isAdmin } = useUserProfile();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [type, setType] = useState("");
   const [bookingId, setBookingId] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const isAdmin = profile?.role === "admin";
 
   const load = async () => {
     setLoading(true);

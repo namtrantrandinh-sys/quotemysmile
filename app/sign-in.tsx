@@ -1,9 +1,22 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, Alert } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Alert,
+  Platform,
+  TextInput,
+  Keyboard,
+  KeyboardAvoidingView,
+  StyleSheet,
+  Image,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { SketchIcon, type SketchIconName } from "@/components/SketchIcon";
 import { WaterBanner } from "@/components/WaterBanner";
 import { Button } from "@/components/Button";
 import { FieldLabel } from "@/components/FieldLabel";
@@ -20,9 +33,22 @@ import {
   startLinkPhone,
   confirmLinkEmail,
   confirmLinkPhone,
-  createUserProfile,
+  createPatientProfile,
+  createDentistProfile,
+  signInWithApple,
 } from "@/lib/services/auth";
 import { supabase } from "@/lib/supabase";
+
+// Editorial smile hero — shared with the welcome screen so the visual
+// language is continuous from "/" → "/sign-in" → "/sign-up". Pexels
+// 16121509 (laughing blonde, 3513x6000 ~2.8 MB) currently installed.
+const HERO_SMILE = require("../assets/images/hero-smile.jpg");
+
+// Patient log-in dedicated hero — hand holding a clear orthodontic
+// aligner on a clean off-white backdrop (Pexels 3845985, 3840x5760
+// ~620 KB). Patients see this on the sign-in surface; dentists keep
+// the smile portrait. Speaks directly to the dental-quote use-case.
+const PATIENT_LOGIN_BG = require("../assets/images/patient-login-bg.jpg");
 
 /**
  * App-Review-only bypass. When the reviewer types this email/code, we skip
@@ -66,10 +92,13 @@ export default function SignInScreen() {
   //   phone  → enter mobile or email
   //   otp    → verify, route to home
   const [phase, setPhase] = useState<"phone" | "otp" | "profile" | "linkOtp">("phone");
-  // Method tab — defaults to phone, user can switch to email so the
-  // keyboard is correct from the very first keystroke. Auto-flips to
-  // email if they paste an address into the phone field.
-  const [method, setMethod] = useState<"phone" | "email">("phone");
+  // Method tab — defaults to EMAIL while QMS's Supabase Auth project
+  // doesn't have an SMS provider wired up (per the QMS↔LORDLY infra
+  // isolation rule we can't reuse LORDLY's Twilio account, so QMS phone
+  // OTP currently fails at the provider layer). Email OTP is proven
+  // through the QMS Resend sender. User can still tap Mobile but the
+  // inline notice below tells them it's offline.
+  const [method, setMethod] = useState<"phone" | "email">("email");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -143,6 +172,11 @@ export default function SignInScreen() {
       setPhase("otp");
       setResendIn(60);
     } catch (e) {
+      // Surface the full error to console so we can see the actual
+      // Supabase code/body when the user reports "couldn't send code".
+      // Without this, all 401/500/SMTP errors collapse into a single
+      // generic alert and we lose the diagnostic signal.
+      console.error("[QMS] OTP send failed:", e);
       const msg = e instanceof Error ? e.message : "Try again.";
       const noSignup = /signups not allowed|user not found|not.*registered/i.test(msg);
       if (mode === "signin" && noSignup) {
@@ -165,12 +199,59 @@ export default function SignInScreen() {
       }
       const looksLikeTwilioBlocked =
         /unsupported|invalid.*phone|sms not configured|provider/i.test(msg);
-      Alert.alert(
-        "Couldn't send code",
-        looksLikeTwilioBlocked
-          ? `${msg}\n\nTry your email address instead — we'll send the code to your inbox.`
-          : msg,
+      // A user trying to SIGN UP with an identifier already bound to a
+      // different role (most often a dentist signing up as a patient
+      // with the same email) lands here. Steer them to Sign In so they
+      // can land on the patient flow without creating a new account.
+      const alreadyRegistered =
+        mode === "signup" && /already.*registered|already.*exists/i.test(msg);
+      if (alreadyRegistered) {
+        Alert.alert(
+          "Already on QuoteMySmile",
+          `This ${isEmail ? "email" : "number"} is already on an account. Sign in instead — you can use the patient flow whichever role your account was set up with.`,
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Sign in",
+              onPress: () =>
+                router.replace({
+                  pathname: "/sign-in",
+                  params: { role, mode: "signin" },
+                }),
+            },
+          ],
+        );
+        return;
+      }
+      // Detect the common Supabase-config root causes and steer the
+      // user toward the path that's actually wired. The QMS Supabase
+      // project (mqlaoxcjebzsihiocmzm) currently relies on Resend for
+      // email OTP; phone OTP isn't wired yet (Twilio isolation rule).
+      // When email send itself fails it's almost always the SMTP
+      // template — surface a clearer hint rather than the raw error.
+      const looksLikeSmtpBroken =
+        isEmail &&
+        /smtp|email rate|error sending|email otp|confirmation email|rate limit/i.test(
+          msg,
+        );
+      const looksLikeAuthDisabled = /signups? (are )?disabled|signup disabled/i.test(
+        msg,
       );
+      const title = looksLikeAuthDisabled
+        ? "Sign-ups are paused"
+        : looksLikeSmtpBroken
+          ? "Email isn't sending"
+          : looksLikeTwilioBlocked
+            ? "Mobile codes aren't ready yet"
+            : "Couldn't send code";
+      const body = looksLikeAuthDisabled
+        ? "QuoteMySmile sign-ups are temporarily paused. Try again shortly."
+        : looksLikeSmtpBroken
+          ? `Our mailer is busy or not yet wired for this address. (${msg})\n\nIf you keep seeing this, message support — we'll send your code by hand.`
+          : looksLikeTwilioBlocked
+            ? `${msg}\n\nMobile OTP isn't connected for QMS yet. Use your email address — we'll send the code to your inbox.`
+            : msg;
+      Alert.alert(title, body);
     } finally {
       setBusy(false);
     }
@@ -184,41 +265,112 @@ export default function SignInScreen() {
       } else {
         await verifyPhoneOtp(phone, code);
       }
-      // Check if profile exists. RLS trigger may not have completed the
-      // upsert yet, so retry briefly before sending the user to the
-      // role-completion screen (avoids prompting twice on a slow network).
+      // Dual-role lookup: the role the user PICKED on the role tile
+      // decides which profile table we consult. The OTHER profile's
+      // existence is irrelevant — a dentist signing in via the
+      // PATIENT button lands on the patient portal, even if they also
+      // hold a dentist profile. No crossover, ever.
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error("No session after verify");
-      let profile: { id: string; role: string; full_name: string | null } | null =
-        null;
+
+      const profileTable =
+        role === "dentist" ? "dentist_profiles" : "patient_profiles";
+      // Brief retry — RLS or post-OTP session settle can race the row.
+      let hasProfile = false;
       for (let i = 0; i < 3; i++) {
         const { data } = await supabase
-          .from("users")
-          .select("id, role, full_name")
-          .eq("id", user.id)
+          .from(profileTable)
+          .select("user_id")
+          .eq("user_id", user.id)
           .maybeSingle();
         if (data) {
-          profile = data;
+          hasProfile = true;
           break;
         }
         if (i < 2) await new Promise((r) => setTimeout(r, 600));
       }
-      if (!profile) {
-        // Reachable in two cases:
-        //   (a) SIGN-UP: first-time OTP just succeeded — go collect the
-        //       second identifier + name so both bind to this auth user.
-        //   (b) SIGN-IN: auth.users row exists (Supabase let us through)
-        //       but no public.users row yet — happens when a previous
-        //       signup was abandoned mid-profile. Resume by sending them
-        //       through the same profile + link flow.
-        setPhase("profile");
-      } else {
-        router.replace(profile.role === "dentist" ? "/dentist" : "/");
+
+      if (hasProfile) {
+        // Picked role's profile exists — straight to that portal.
+        router.replace(role === "dentist" ? "/dentist" : "/");
+        return;
       }
+
+      // No profile of the picked role. Two paths:
+      //   • Dentist button → /dentist/onboarding collects AHPRA + clinic
+      //     and writes the dentist_profiles row at the end.
+      //   • Patient button → in-screen profile phase captures name
+      //     (and links the second identifier if not yet bound), then
+      //     writes patient_profiles.
+      if (role === "dentist") {
+        router.replace("/dentist/onboarding");
+        return;
+      }
+      setPhase("profile");
     } catch (e) {
       Alert.alert("Code didn't match", e instanceof Error ? e.message : "Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /**
+   * Apple 4.8 — Sign In with Apple. Routes to the same post-verify
+   * profile-lookup branch as the OTP flow so dentist/patient routing
+   * works identically. iOS-only; the button is hidden on Android.
+   */
+  const handleAppleSignIn = async () => {
+    setBusy(true);
+    try {
+      const { user } = await signInWithApple();
+      if (!user) throw new Error("No session after Apple sign-in");
+      const profileTable =
+        role === "dentist" ? "dentist_profiles" : "patient_profiles";
+      let hasProfile = false;
+      for (let i = 0; i < 3; i++) {
+        const { data } = await supabase
+          .from(profileTable)
+          .select("user_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (data) {
+          hasProfile = true;
+          break;
+        }
+        if (i < 2) await new Promise((r) => setTimeout(r, 500));
+      }
+      if (hasProfile) {
+        router.replace(role === "dentist" ? "/dentist" : "/");
+        return;
+      }
+      if (role === "dentist") {
+        router.replace("/dentist/onboarding");
+        return;
+      }
+      // Patient first-time Apple sign-in. We still need name capture
+      // (Apple may hide email; profile screen also captures phone).
+      setPhase("profile");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // User cancelled Apple sheet — silent, don't alert.
+      if (/canceled|cancelled|ERR_REQUEST_CANCELED|1001/i.test(msg)) return;
+      // Common cause: Supabase Auth Apple provider not yet configured
+      // for the QMS project. Surface a more helpful nudge so the user
+      // can fall back to email OTP while infra is being completed.
+      const providerNotConfigured =
+        /provider is not enabled|provider not found|missing identity provider|provider .* not enabled/i.test(
+          msg,
+        );
+      Alert.alert(
+        providerNotConfigured
+          ? "Apple sign-in not ready yet"
+          : "Apple sign-in failed",
+        providerNotConfigured
+          ? "Sign in with Apple is being configured for QuoteMySmile. Please use the email or mobile option above for now."
+          : msg,
+      );
     } finally {
       setBusy(false);
     }
@@ -250,24 +402,40 @@ export default function SignInScreen() {
       Alert.alert("Your name", "We need your name to introduce you to dentists.");
       return;
     }
-    // Capture + validate the SECOND identifier. Both phone and email must
-    // bind to the same auth.users row before we write public.users, so a
-    // future sign-in with EITHER one resolves to the same account.
-    const rawSecondary = secondary.trim();
-    if (linkType === "email") {
-      if (!EMAIL_RE.test(rawSecondary.toLowerCase())) {
-        Alert.alert("Add your email", "Enter the email address you'll use to sign in.");
-        return;
-      }
-    } else {
-      const e164 = normalisePhone(rawSecondary);
-      if (e164.replace(/\D/g, "").length < 10) {
-        Alert.alert("Add your mobile", "Enter a valid AU mobile (e.g. 0412 345 678).");
-        return;
-      }
-    }
     setBusy(true);
     try {
+      // Dual-role short-circuit: if this auth user ALREADY has both
+      // phone and email bound (because they previously created the
+      // OTHER role's profile and went through the link step then), we
+      // skip the second-identifier prompt entirely and just write the
+      // patient_profiles row. No second OTP needed.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user?.email && user?.phone) {
+        await createPatientProfile({
+          fullName: name.trim(),
+          phone: user.phone ?? undefined,
+          email: user.email ?? undefined,
+        });
+        router.replace("/");
+        return;
+      }
+
+      // First-profile creation flow — capture + link the OTHER identifier.
+      const rawSecondary = secondary.trim();
+      if (linkType === "email") {
+        if (!EMAIL_RE.test(rawSecondary.toLowerCase())) {
+          Alert.alert("Add your email", "Enter the email address you'll use to sign in.");
+          return;
+        }
+      } else {
+        const e164 = normalisePhone(rawSecondary);
+        if (e164.replace(/\D/g, "").length < 10) {
+          Alert.alert("Add your mobile", "Enter a valid AU mobile (e.g. 0412 345 678).");
+          return;
+        }
+      }
       // Kick off the identity-link: Supabase sends an OTP to the new
       // identifier. We advance to linkOtp and the user enters it there.
       if (linkType === "email") {
@@ -300,6 +468,39 @@ export default function SignInScreen() {
     }
   };
 
+  // Escape hatch for when SMS isn't deliverable (Twilio off, provider
+  // outage, user without a mobile right now). Skips the second-identifier
+  // OTP entirely and creates the patient profile with whatever single
+  // identifier the auth user already has (email-only is fine — the
+  // patient_profiles row only requires user_id + full_name). Patient-side
+  // only: dentists still need phone for AHPRA / clinic comms, so they
+  // continue to use the SMS path on /dentist/onboarding.
+  const skipSecondaryAndFinish = async () => {
+    if (!name.trim()) {
+      Alert.alert("Your name", "We need your name to introduce you to dentists.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      await createPatientProfile({
+        fullName: name.trim(),
+        phone: user?.phone ?? undefined,
+        email: user?.email ?? undefined,
+      });
+      router.replace("/");
+    } catch (e) {
+      Alert.alert(
+        "Couldn't save profile",
+        e instanceof Error ? e.message : "Try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const verifyLinkOtp = async () => {
     if (!secondaryCode.trim()) {
       Alert.alert("Enter the code", "Check the code we just sent.");
@@ -313,15 +514,15 @@ export default function SignInScreen() {
         await confirmLinkPhone(secondary, secondaryCode.trim());
       }
       // Both identifiers are now bound to one auth.users row. Write the
-      // public.users row with BOTH so unique constraints catch any future
-      // collision and either sign-in method finds the same profile.
-      await createUserProfile({
-        role,
+      // PATIENT profile (dentists go through /dentist/onboarding for
+      // AHPRA + clinic capture). Same identity may also hold a
+      // dentist_profile later — that's fine, the rows are independent.
+      await createPatientProfile({
         fullName: name.trim(),
         phone: linkType === "phone" ? secondary : phone,
         email: linkType === "email" ? secondary : phone,
       });
-      router.replace(role === "dentist" ? "/dentist/onboarding" : "/");
+      router.replace("/");
     } catch (e) {
       const msg =
         (e as { message?: string })?.message ??
@@ -350,6 +551,315 @@ export default function SignInScreen() {
   // banner, mint accent, friendly copy). Dentists get an authoritative
   // practitioner treatment (deep teal header, lock glyph, AHPRA reference).
   const isDentist = role === "dentist";
+
+  // Patient entry hero — minimalist mint full-bleed. Replaces the
+  // previous role-picker + WaterBanner stack for the default patient
+  // path. White wordmark, italic tagline "Your dream smile, in your
+  // hand.", single identifier field, white pill CTA. SIWA stays
+  // (Apple resubmit requirement, build 27). "I'm a dentist" link at
+  // foot routes to the dentist flow. The dentist path and all OTP /
+  // profile / link phases continue to use the existing UI below.
+  if (phase === "phone") {
+    const submitDisabled = busy || phone.trim().length < 3;
+    const handleSubmit = () => {
+      Keyboard.dismiss();
+      if (!submitDisabled) send();
+    };
+    return (
+      <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+        {/* Full-bleed smile photo — same Image pattern as the welcome
+            screen (app/index.tsx) so the visual hand-off from "/" to
+            "/sign-in" is seamless. Absolute-positioned 100%×100% with
+            cover so the smile crops identically across both screens. */}
+        <Image
+          source={HERO_SMILE}
+          resizeMode="cover"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100%",
+          }}
+        />
+        {/* Bottom-anchored dark scrim — matches the welcome screen.
+            Keeps the smile + teeth bright at the top of the viewport
+            while darkening the lower half so the form and white wordmark
+            stay legible. */}
+        <LinearGradient
+          colors={[
+            "rgba(0,0,0,0.10)",
+            "rgba(0,0,0,0.05)",
+            "rgba(20,40,38,0.45)",
+            "rgba(20,40,38,0.82)",
+          ]}
+          locations={[0, 0.35, 0.65, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          >
+            <ScrollView
+              contentContainerStyle={{ flexGrow: 1 }}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View
+                style={{
+                  flex: 1,
+                  paddingHorizontal: 32,
+                  paddingTop: 72,
+                  paddingBottom: 24,
+                  justifyContent: "space-between",
+                }}
+              >
+                {/* Hero — white wordmark + italic tagline */}
+                <View style={{ alignItems: "center", gap: 28 }}>
+                  <Wordmark size="lg" tone="light" />
+                  <Text
+                    style={{
+                      fontFamily: "Allura",
+                      fontSize: 44,
+                      lineHeight: 52,
+                      color: "rgba(255,255,255,0.96)",
+                      textAlign: "center",
+                      letterSpacing: 0.3,
+                      textShadowColor: "rgba(255,255,255,0.25)",
+                      textShadowOffset: { width: 0, height: 0 },
+                      textShadowRadius: 12,
+                    }}
+                  >
+                    Dentists compete{"\n"}for your quote.
+                  </Text>
+                </View>
+
+                {/* Form — single underlined input + white pill button */}
+                <View style={{ gap: 18 }}>
+                  {/* Role pill — always visible at the top of the form
+                      so the user can see / switch between Patient and
+                      Dentist sign-in. Replaces the easily-missed footer
+                      link that was clipping off small viewports. */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      backgroundColor: "rgba(255,255,255,0.18)",
+                      borderRadius: 999,
+                      padding: 4,
+                      alignSelf: "center",
+                    }}
+                  >
+                    {(["patient", "dentist"] as const).map((r) => {
+                      const active = (isDentist ? "dentist" : "patient") === r;
+                      return (
+                        <Pressable
+                          key={r}
+                          onPress={() => {
+                            if (active) return;
+                            setPickedRole(r);
+                            setPhone("");
+                          }}
+                          style={{
+                            paddingVertical: 10,
+                            paddingHorizontal: 22,
+                            borderRadius: 999,
+                            backgroundColor: active
+                              ? "#FFFFFF"
+                              : "transparent",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: "Inter",
+                              fontSize: 12,
+                              letterSpacing: 1.6,
+                              fontWeight: "700",
+                              textTransform: "uppercase",
+                              color: active ? "#1F4F47" : "#FFFFFF",
+                            }}
+                          >
+                            {r === "patient" ? "Patient" : "Dentist"}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  <View>
+                    <Text
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: 10,
+                        letterSpacing: 2.4,
+                        color: "rgba(255,255,255,0.7)",
+                        textTransform: "uppercase",
+                        fontWeight: "500",
+                        marginBottom: 8,
+                      }}
+                    >
+                      {mode === "signin" ? "Sign in" : "Sign up"}
+                    </Text>
+                    <TextInput
+                      value={phone}
+                      onChangeText={setPhone}
+                      onSubmitEditing={handleSubmit}
+                      placeholder="Mobile or email"
+                      placeholderTextColor="rgba(255,255,255,0.55)"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="go"
+                      selectionColor="#FFFFFF"
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: 17,
+                        color: "#FFFFFF",
+                        paddingVertical: 10,
+                        borderBottomWidth: 1,
+                        borderBottomColor: "rgba(255,255,255,0.55)",
+                      }}
+                    />
+                  </View>
+
+                  {/* White pill CTA — canonical Pressable pattern:
+                      outer View owns visuals (bg, radius, shadow),
+                      Pressable owns opacity only, inner View owns
+                      layout. Avoids the iOS layout-drop bug. */}
+                  <View
+                    style={{
+                      borderRadius: 999,
+                      overflow: "hidden",
+                      backgroundColor: "#FFFFFF",
+                      shadowColor: "#FFFFFF",
+                      shadowOpacity: 0.45,
+                      shadowRadius: 16,
+                      shadowOffset: { width: 0, height: 0 },
+                      elevation: 4,
+                      opacity: submitDisabled ? 0.6 : 1,
+                      marginTop: 8,
+                    }}
+                  >
+                    <Pressable
+                      onPress={handleSubmit}
+                      disabled={submitDisabled}
+                      style={({ pressed }) => ({
+                        opacity: pressed && !submitDisabled ? 0.85 : 1,
+                      })}
+                    >
+                      <View
+                        style={{
+                          paddingVertical: 18,
+                          paddingHorizontal: 24,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "Inter",
+                            fontWeight: "700",
+                            fontSize: 12,
+                            letterSpacing: 2.6,
+                            color: "#1F4F47",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {busy
+                            ? "Sending…"
+                            : mode === "signin"
+                              ? "Sign in"
+                              : "Sign up"}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  </View>
+
+                  {/* Apple SIWA — required for Apple App Review (build 27
+                      resubmit). Reuses the canonical handleAppleSignIn
+                      handler so post-Apple routing (patient vs dentist
+                      profile lookup, onboarding redirect, provider-not-
+                      configured messaging) is identical to the old
+                      flow. iOS only. */}
+                  {Platform.OS === "ios" ? (
+                    <View style={{ marginTop: 4 }}>
+                      <AppleAuthentication.AppleAuthenticationButton
+                        buttonType={
+                          mode === "signin"
+                            ? AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
+                            : AppleAuthentication.AppleAuthenticationButtonType.SIGN_UP
+                        }
+                        buttonStyle={
+                          AppleAuthentication.AppleAuthenticationButtonStyle.WHITE_OUTLINE
+                        }
+                        cornerRadius={999}
+                        style={{ width: "100%", height: 52 }}
+                        onPress={handleAppleSignIn}
+                      />
+                    </View>
+                  ) : null}
+
+                  {/* Sign-in ↔ Sign-up switcher */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      marginTop: 12,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: 13,
+                        color: "rgba(255,255,255,0.75)",
+                      }}
+                    >
+                      {mode === "signin"
+                        ? "New to QuoteMySmile? "
+                        : "Have an account? "}
+                    </Text>
+                    <Pressable
+                      onPress={() =>
+                        router.replace({
+                          pathname: "/sign-in",
+                          params: {
+                            role: isDentist ? "dentist" : "patient",
+                            mode: mode === "signin" ? "signup" : "signin",
+                          },
+                        })
+                      }
+                      hitSlop={8}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "Inter",
+                          fontSize: 13,
+                          color: "#FFFFFF",
+                          fontWeight: "600",
+                          textDecorationLine: "underline",
+                        }}
+                      >
+                        {mode === "signin" ? "Create account" : "Sign in"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                {/* Spacer — keeps the form sized like before now that
+                    the role pill lives at the top of the form section
+                    instead of as a separate footer link. */}
+                <View />
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   // Role picker — shown when no role has been deep-linked in. Lets the
   // user choose Patient vs Dentist from a single sign-in landing.
@@ -402,27 +912,41 @@ export default function SignInScreen() {
             </Text>
           </View>
 
-          <View className="px-6 pb-12" style={{ gap: 12 }}>
+          <View
+            className="px-6 pb-12"
+            style={{ flexDirection: "row", gap: 10 }}
+          >
             <RoleSignInButton
               role="patient"
               title="I'm a Patient"
-              subtitle="Get AHPRA-signed quotes near you"
-              icon="account-heart-outline"
+              icon="smile"
               onPress={() => setPickedRole("patient")}
             />
             <RoleSignInButton
               role="dentist"
               title="I'm a Dentist"
-              subtitle="AHPRA practitioner · paid per attendance"
-              icon="tooth-outline"
+              icon="tooth"
               onPress={() => setPickedRole("dentist")}
             />
           </View>
 
-          <View className="items-center pb-16">
+          <View className="items-center pb-16 px-8">
             <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans text-center">
               All quotes are AHPRA-signed · A$5 platform fee per attended booking
             </Text>
+            <View style={{ flexDirection: "row", gap: 14, marginTop: 14 }}>
+              <Pressable onPress={() => router.push("/legal/privacy")} hitSlop={10}>
+                <Text className="text-[10px] tracking-cap uppercase text-gold font-sans">
+                  Privacy policy
+                </Text>
+              </Pressable>
+              <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans">·</Text>
+              <Pressable onPress={() => router.push("/legal/terms")} hitSlop={10}>
+                <Text className="text-[10px] tracking-cap uppercase text-gold font-sans">
+                  Terms of service
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -483,17 +1007,19 @@ export default function SignInScreen() {
           alignItems: "center",
           justifyContent: "center",
           zIndex: 10,
-          shadowColor: "#1F4F47",
+          shadowColor: "#2E7268",
           shadowOpacity: isDentist ? 0 : 0.10,
           shadowRadius: 6,
           shadowOffset: { width: 0, height: 2 },
           elevation: 3,
         }}
       >
-        <MaterialCommunityIcons
-          name="arrow-left"
+        <SketchIcon
+          name="chevron-left"
           size={20}
           color={isDentist ? "#FFFFFF" : "#2A2520"}
+          strokeWidth={1.6}
+          noGhost
         />
       </Pressable>
       <ScrollView>
@@ -505,29 +1031,21 @@ export default function SignInScreen() {
               fontSize: 10,
               letterSpacing: 2.4,
               textTransform: "uppercase",
-              color: isDentist ? "#3F7E73" : "#8A7E70",
+              color: isDentist ? "#2E7268" : "#8A7E70",
               marginTop: 36,
               marginBottom: 18,
               fontWeight: "500",
             }}
           >
-            {phase === "phone"
-              ? isDentist
-                ? mode === "signin"
-                  ? "Practitioner portal · Sign in"
-                  : "Practitioner portal · Register"
-                : mode === "signin"
-                  ? "Patient · Sign in"
-                  : "Patient · Create account"
-              : phase === "otp"
-                ? "Verify"
-                : phase === "linkOtp"
-                  ? linkType === "email"
-                    ? "Confirm email"
-                    : "Confirm mobile"
-                  : isDentist
-                    ? "AHPRA on file"
-                    : "Almost there"}
+            {phase === "otp"
+              ? "Verify"
+              : phase === "linkOtp"
+                ? linkType === "email"
+                  ? "Confirm email"
+                  : "Confirm mobile"
+                : isDentist
+                  ? "AHPRA on file"
+                  : "Almost there"}
           </Text>
           <Text
             style={{
@@ -540,156 +1058,27 @@ export default function SignInScreen() {
               letterSpacing: -0.5,
             }}
           >
-            {phase === "phone"
-              ? isDentist
-                ? mode === "signin"
-                  ? "Welcome, doctor."
-                  : "Join the panel."
-                : mode === "signin"
-                  ? "Welcome back."
-                  : "Your number."
-              : phase === "otp"
-                ? "Enter the code."
-                : phase === "linkOtp"
-                  ? "One more code."
-                  : isDentist
-                    ? "Your registered name."
-                    : "What's your name?"}
+            {phase === "otp"
+              ? "Enter the code."
+              : phase === "linkOtp"
+                ? "One more code."
+                : isDentist
+                  ? "Your registered name."
+                  : "What's your name?"}
           </Text>
           <Text className="text-sm text-walnut font-sans text-center max-w-md leading-relaxed">
-            {phase === "phone"
-              ? isDentist
-                ? mode === "signin"
-                  ? "Sign in with the mobile attached to your AHPRA registration. We'll send a one-time code."
-                  : "QuoteMySmile is for AHPRA-registered Australian dentists. You'll add your AHPRA number, ABN and PI insurance after sign-in."
-                : mode === "signin"
-                  ? "Sign in with the mobile you registered. We'll send a one-time code."
-                  : "We'll send a one-time code by SMS. No password, no fuss."
-              : phase === "otp"
-                ? `Sent to ${phone}. The code expires in 5 minutes.`
-                : phase === "linkOtp"
-                  ? `Sent to ${secondary}. We'll bind it to this account so you can sign in with either.`
-                  : isDentist
-                    ? "Use the name on your AHPRA registration, then add your email so you can sign in with either."
-                    : "We'll use your name to introduce you to the dentist. Add your email so you can sign in with either."}
+            {phase === "otp"
+              ? `Sent to ${phone}. The code expires in 5 minutes.`
+              : phase === "linkOtp"
+                ? `Sent to ${secondary}. We'll bind it to this account so you can sign in with either.`
+                : isDentist
+                  ? "Use the name on your AHPRA registration, then add your email so you can sign in with either."
+                  : "We'll use your name to introduce you to the dentist. Add your email so you can sign in with either."}
           </Text>
         </View>
 
         <View className="px-8 pb-24">
-          {phase === "phone" ? (
-            <>
-              {/* Phone / Email toggle — picks the right keyboard BEFORE
-                  the user types. Tap Email and the keyboard has letters. */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  backgroundColor: "rgba(95,168,155,0.10)",
-                  borderRadius: 12,
-                  padding: 4,
-                  marginBottom: 22,
-                  alignSelf: "center",
-                }}
-              >
-                {(["phone", "email"] as const).map((m) => {
-                  const active = method === m;
-                  return (
-                    <Pressable
-                      key={m}
-                      onPress={() => {
-                        setMethod(m);
-                        // If user is mid-typing wrong value, clear it
-                        // so the placeholder/format hint guides them.
-                        if (
-                          (m === "phone" && /[@a-zA-Z]/.test(phone)) ||
-                          (m === "email" && /^\+?\d/.test(phone))
-                        ) {
-                          setPhone("");
-                        }
-                      }}
-                      style={{
-                        paddingVertical: 10,
-                        paddingHorizontal: 22,
-                        borderRadius: 10,
-                        backgroundColor: active ? "#1F4F47" : "transparent",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "Inter",
-                          fontSize: 13,
-                          letterSpacing: 0.2,
-                          color: active ? "#FFFFFF" : "#3F7E73",
-                          fontWeight: "600",
-                        }}
-                      >
-                        {m === "phone" ? "Mobile" : "Email"}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              <FieldLabel
-                label={method === "email" ? "Email address" : "Mobile number"}
-                hint={
-                  method === "email"
-                    ? "We'll email you a one-time code."
-                    : "AU mobile — 04XX XXX XXX or +61 4XX XXX XXX."
-                }
-              >
-                <TextField
-                  value={phone}
-                  onChangeText={setPhone}
-                  placeholder={
-                    method === "email" ? "you@email.com" : "0412 345 678"
-                  }
-                  keyboardType={method === "email" ? "email-address" : "phone-pad"}
-                />
-              </FieldLabel>
-              <View className="items-center mt-6">
-                <Button variant="primary" size="lg" onPress={send}>
-                  {busy
-                    ? "Sending…"
-                    : isDentist
-                      ? "Send sign-in code"
-                      : isEmail
-                        ? "Email code"
-                        : "Send code"}
-                </Button>
-              </View>
-              {isDentist ? (
-                <View
-                  style={{
-                    marginTop: 28,
-                    paddingTop: 16,
-                    borderTopWidth: 1,
-                    borderTopColor: "rgba(229,220,200,0.7)",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                  }}
-                >
-                  <MaterialCommunityIcons name="shield-check-outline" size={14} color="#3F7E73" />
-                  <Text
-                    style={{
-                      fontFamily: "Inter-Medium",
-                      fontSize: 10,
-                      letterSpacing: 1.6,
-                      textTransform: "uppercase",
-                      color: "#3F7E73",
-                    }}
-                  >
-                    AHPRA · ABN · PI insurance verified
-                  </Text>
-                </View>
-              ) : (
-                <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans text-center mt-6">
-                  {REVIEW_CODE_HINT}
-                </Text>
-              )}
-            </>
-          ) : phase === "otp" ? (
+          {phase === "otp" ? (
             <>
               <FieldLabel label="Sign-in code">
                 <TextField
@@ -701,7 +1090,7 @@ export default function SignInScreen() {
                   autoFocus
                 />
               </FieldLabel>
-              <View className="items-center gap-3 mt-6">
+              <View className="gap-3 mt-6 items-center">
                 <Button variant="primary" size="lg" onPress={verify}>
                   {busy ? "Verifying…" : "Verify"}
                 </Button>
@@ -761,7 +1150,7 @@ export default function SignInScreen() {
                   />
                 </FieldLabel>
               </View>
-              <View className="items-center mt-6">
+              <View className="items-center mt-6 gap-3">
                 <Button variant="primary" size="lg" onPress={completeProfile}>
                   {busy
                     ? "Sending code…"
@@ -769,6 +1158,22 @@ export default function SignInScreen() {
                       ? "Send email code"
                       : "Send SMS code"}
                 </Button>
+                {/* Skip-link escape — patient + phone-link only. Lets
+                    new users finish signup with email alone when SMS is
+                    unavailable (Twilio off, dev project, outage). They
+                    can add their phone later from settings. Dentists are
+                    excluded because /dentist/onboarding still requires
+                    phone for AHPRA contact + booking SMS. */}
+                {linkType === "phone" && role === "patient" ? (
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onPress={skipSecondaryAndFinish}
+                    disabled={busy}
+                  >
+                    Skip — I'll add my phone later
+                  </Button>
+                ) : null}
               </View>
             </>
           ) : (
@@ -822,14 +1227,12 @@ export default function SignInScreen() {
 function RoleSignInButton({
   role,
   title,
-  subtitle,
   icon,
   onPress,
 }: {
   role: "patient" | "dentist";
   title: string;
-  subtitle: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: SketchIconName;
   onPress: () => void;
 }) {
   // Tend Dental tactile card: white surface, warm hairline border,
@@ -839,7 +1242,7 @@ function RoleSignInButton({
   // Background sits on the wrapper View to dodge the iOS bug where
   // Pressable function-styles intermittently drop backgroundColor.
   const isDentist = role === "dentist";
-  const accent = isDentist ? "#1F4F47" : "#5FA89B";
+  const accent = isDentist ? "#2E7268" : "#5FA89B";
   const accentSoft = isDentist
     ? "rgba(31,79,71,0.10)"
     : "rgba(95,168,155,0.14)";
@@ -847,13 +1250,14 @@ function RoleSignInButton({
   return (
     <View
       style={{
+        flex: 1,
         backgroundColor: "#FFFFFF",
-        borderRadius: 16,
+        borderRadius: 14,
         borderWidth: 1,
         borderColor: "rgba(31,79,71,0.10)",
-        shadowColor: "#1F4F47",
+        shadowColor: "#2E7268",
         shadowOpacity: 0.06,
-        shadowRadius: 16,
+        shadowRadius: 14,
         shadowOffset: { width: 0, height: 6 },
         elevation: 2,
         overflow: "hidden",
@@ -862,57 +1266,51 @@ function RoleSignInButton({
       <Pressable
         onPress={onPress}
         android_ripple={{ color: "rgba(31,79,71,0.06)" }}
-        style={({ pressed }) => ({
-          paddingVertical: 20,
-          paddingHorizontal: 20,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 16,
-          backgroundColor: pressed ? "#FAFAF7" : "transparent",
-        })}
+        style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
       >
         <View
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            backgroundColor: accentSoft,
+            paddingVertical: 14,
+            paddingHorizontal: 10,
             alignItems: "center",
             justifyContent: "center",
+            gap: 6,
           }}
         >
-          <MaterialCommunityIcons name={icon} size={24} color={accent} />
-        </View>
-        <View style={{ flex: 1 }}>
+          <View
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: accentSoft,
+              borderWidth: 1,
+              borderColor: isDentist
+                ? "rgba(31,79,71,0.18)"
+                : "rgba(95,168,155,0.30)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <SketchIcon name={icon} size={22} color={accent} strokeWidth={1.5} />
+          </View>
           <Text
             numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
             style={{
-              fontFamily: "CormorantGaramond_500Medium",
-              fontSize: 22,
-              lineHeight: 26,
+              fontFamily: "Inter",
+              fontWeight: "600",
+              fontSize: 13,
+              lineHeight: 17,
               color: "#2A2520",
-              marginBottom: 2,
-              letterSpacing: -0.2,
+              letterSpacing: 0.1,
+              textAlign: "center",
               includeFontPadding: false,
             }}
           >
             {title}
           </Text>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: "Inter",
-              fontSize: 12,
-              lineHeight: 16,
-              color: "#6E6457",
-              letterSpacing: 0.1,
-              includeFontPadding: false,
-            }}
-          >
-            {subtitle}
-          </Text>
         </View>
-        <MaterialCommunityIcons name="arrow-right" size={20} color={accent} />
       </Pressable>
     </View>
   );
@@ -971,11 +1369,11 @@ function DentistHeader() {
       style={{
         position: "relative",
         overflow: "hidden",
-        backgroundColor: "#1F4F47",
+        backgroundColor: "#2E7268",
       }}
     >
       <LinearGradient
-        colors={["#1F4F47", "#2D6E66", "#3F7E73"]}
+        colors={["#2E7268", "#2D6E66", "#2E7268"]}
         locations={[0, 0.55, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
@@ -1000,7 +1398,7 @@ function DentistHeader() {
               gap: 8,
             }}
           >
-            <MaterialCommunityIcons name="shield-check-outline" size={16} color="#A8DCCB" />
+            <SketchIcon name="verified" size={16} color="#A8DCCB" strokeWidth={1.5} noGhost />
             <Text
               style={{
                 fontFamily: "Inter-Medium",

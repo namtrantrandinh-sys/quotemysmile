@@ -6,7 +6,7 @@ export function Disclaimer({ variant = "short" }: Props) {
   if (variant === "short") {
     return (
       <Text className="text-[11px] tracking-cap uppercase text-taupe font-sans text-center">
-        Indicative · based on photos
+        Guide price · based on your photos
       </Text>
     );
   }
@@ -16,10 +16,10 @@ export function Disclaimer({ variant = "short" }: Props) {
         About this quote
       </Text>
       <Text className="text-sm leading-relaxed text-walnut font-sans">
-        This quote is indicative, based on the photos and information you provided.
-        The clearer the photo, the more accurate the quote. Final fees and treatment
-        are the responsibility of the quoting dentist and confirmed at your
-        clinical examination.
+        A photo-based guide price from an AHPRA-registered dentist. The clearer
+        the photo, the closer the guide. Your final price is confirmed at the
+        in-person check-up before any work begins — you'll always see and agree
+        the number before going ahead.
       </Text>
     </View>
   );

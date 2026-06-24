@@ -1,23 +1,38 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, Alert, Image, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  Image,
+  Pressable,
+  Modal,
+  Dimensions,
+  StatusBar,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BackBar } from "@/components/BackBar";
 import { Button } from "@/components/Button";
 import { FieldLabel } from "@/components/FieldLabel";
 import { TextField } from "@/components/TextField";
-import { submitQuote, broadcastTyping } from "@/lib/services/quotes";
+import {
+  submitQuote,
+  broadcastTyping,
+  listQuotesForRequest,
+} from "@/lib/services/quotes";
 import { getMyClinic } from "@/lib/services/dentist";
 import { getRequestForDentist } from "@/lib/services/requests";
 import { signedPhotoUrl } from "@/lib/services/photos";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { scanNote } from "@/lib/ahpraFilter";
 import { Checkbox } from "@/components/Checkbox";
+import { SketchIcon } from "@/components/SketchIcon";
 
-const COMPETITORS = [
-  { name: "Bright Dental · Kew", total: 349, status: "live" },
-  { name: "Smile Co · Hawthorn", total: 420, status: "live" },
-];
+type CompetitorRow = {
+  name: string;
+  total: number;
+};
 
 const TEMPLATE_ITEMS = [
   { code: "011", label: "Comprehensive exam", amount: 75 },
@@ -29,7 +44,7 @@ const TEMPLATE_ITEMS = [
 export default function IncomingRequestScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { profile } = useUserProfile();
+  const { dentist } = useUserProfile();
   const [phase, setPhase] = useState<"view" | "build" | "submitted">("view");
   const [items, setItems] = useState(TEMPLATE_ITEMS);
   const [note, setNote] = useState("");
@@ -44,17 +59,79 @@ export default function IncomingRequestScreen() {
   const [patientNote, setPatientNote] = useState<string>("");
   const [category, setCategory] = useState<string>("Filling + clean");
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [minutesLeft, setMinutesLeft] = useState<number>(28);
   const [qualityScore, setQualityScore] = useState<number | null>(null);
+  const [competitors, setCompetitors] = useState<CompetitorRow[]>([]);
+  const [myClinicName, setMyClinicName] = useState<string>("");
+
+  // AHPRA gate — the DB will reject the insert if status is not
+  // active/conditional (trigger from migration 0027), but we surface the
+  // gate up here so the dentist sees a clear "verify first" message
+  // instead of a raw Postgres exception when they tap Submit.
+  const ahpraStatus = dentist?.ahpra_status ?? "unknown";
+  const verified = ahpraStatus === "active" || ahpraStatus === "conditional";
 
   // Broadcast typing presence when in the build phase
   useEffect(() => {
-    if (phase !== "build" || !id || !profile) return;
-    const ch = broadcastTyping(id as string, profile.full_name ?? "Dentist");
+    if (phase !== "build" || !id || !dentist) return;
+    const ch = broadcastTyping(id as string, dentist.full_name ?? "Dentist");
     return () => {
       (ch as any)?.unsubscribe?.();
     };
-  }, [phase, id, profile]);
+  }, [phase, id, dentist]);
+
+  // Resolve the dentist's own clinic name once — used to label the "You"
+  // row in the submitted state instead of a hardcoded demo string.
+  useEffect(() => {
+    let cancelled = false;
+    getMyClinic()
+      .then((c) => {
+        if (cancelled) return;
+        setMyClinicName(((c as { name?: string } | null)?.name ?? "Your clinic"));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Load the real live quotes already submitted for this request. Shown as
+  // anonymised competitor rows ("Clinic A · $349") so the dentist gets a
+  // sense of the going rate without exposing other clinics' names directly.
+  // The open-feed marketplace already shows full names on the patient
+  // side; here we show clinic_name_at_quote (set at submit time) trimmed
+  // to first word, which keeps the field useful without leaking targets.
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    listQuotesForRequest(id as string)
+      .then((rows) => {
+        if (cancelled) return;
+        const list = (rows ?? []) as Array<{
+          id: string;
+          dentist_id: string;
+          total: number | null;
+          dentist_name_at_quote: string | null;
+        }>;
+        const mine = dentist?.user_id;
+        const others = list
+          .filter((q) => q.dentist_id !== mine && (q.total ?? 0) > 0)
+          .map((q, i) => ({
+            name: q.dentist_name_at_quote
+              ? `Clinic ${String.fromCharCode(65 + i)}`
+              : `Clinic ${String.fromCharCode(65 + i)}`,
+            total: Math.round(Number(q.total ?? 0)),
+          }))
+          .slice(0, 6);
+        setCompetitors(others);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [id, dentist?.user_id]);
 
   useEffect(() => {
     if (!id) return;
@@ -70,18 +147,49 @@ export default function IncomingRequestScreen() {
           (row.symptom_json as { note?: string } | null)?.note ?? "";
         setPatientNote(symptomNote);
         const paths = (row.photo_urls as string[]) ?? [];
-        const urls = await Promise.all(
-          paths.map((p) =>
-            signedPhotoUrl(p, 600).catch(() => null),
-          ),
+        // Sign every storage path; surface the first signing error so the
+        // dentist sees a real reason (RLS denied, expired link, etc) rather
+        // than silently rendering empty circles. Filter out failures from
+        // the rendered list so one bad path doesn't blank the row.
+        const signed = await Promise.all(
+          paths.map(async (p) => {
+            try {
+              return await signedPhotoUrl(p, 3600);
+            } catch (e) {
+              return { error: e instanceof Error ? e.message : "Failed to sign" };
+            }
+          }),
         );
-        setPhotoUrls(urls.filter(Boolean) as string[]);
+        const urls = signed.filter(
+          (s): s is string => typeof s === "string",
+        );
+        const firstErr = signed.find(
+          (s): s is { error: string } => typeof s !== "string",
+        );
+        setPhotoUrls(urls);
+        if (paths.length > 0 && urls.length === 0 && firstErr) {
+          setPhotoError(firstErr.error);
+        } else {
+          setPhotoError(null);
+        }
       })
       .catch(() => {});
   }, [id]);
 
   const handleSubmit = async () => {
     if (!ack1 || !ack2) return;
+    // Health-professional gate — only AHPRA-verified dentists can quote.
+    // The DB trigger enforces the same rule (migration 0027); this client
+    // check turns a raw exception into a friendly message.
+    if (!verified) {
+      Alert.alert(
+        "Verification required",
+        ahpraStatus === "suspended" || ahpraStatus === "not_found"
+          ? "Your AHPRA registration is not active. You can't submit quotes until it's restored."
+          : "We need to verify your AHPRA registration before you can quote. Open your dashboard and tap Recheck on the verification card.",
+      );
+      return;
+    }
     const scan = scanNote(note);
     if (!scan.ok) {
       Alert.alert(
@@ -91,11 +199,11 @@ export default function IncomingRequestScreen() {
       return;
     }
     try {
-      if (profile?.ahpra_no) {
+      if (dentist?.ahpra_no) {
         // Guard: a quote without a real name shows as "Dentist" on the
         // patient side. Refuse to submit until the dentist has a name on
         // file (set during onboarding).
-        const dentistName = (profile.full_name ?? "").trim();
+        const dentistName = (dentist.full_name ?? "").trim();
         if (!dentistName) {
           Alert.alert(
             "Add your name",
@@ -115,8 +223,8 @@ export default function IncomingRequestScreen() {
           items,
           availabilitySlots: [new Date(Date.now() + 24 * 3600_000).toISOString()],
           note,
-          ahpraNo: profile.ahpra_no,
-          ahpraRegType: (profile.ahpra_reg_type as "General" | "Specialist") ?? "General",
+          ahpraNo: dentist.ahpra_no,
+          ahpraRegType: (dentist.ahpra_reg_type as "General" | "Specialist") ?? "General",
           dentistNameAtQuote: dentistName,
           emergencyPremiumPct,
         });
@@ -155,49 +263,357 @@ export default function IncomingRequestScreen() {
             ) : null}
 
             <View className="px-8 mb-10">
-              <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mb-4">
-                Photos · {photoUrls.length || 3} attached
-              </Text>
-              <View className="flex-row gap-3">
-                {(photoUrls.length > 0 ? photoUrls : [null, null, null]).map((url, i) => (
-                  <View
-                    key={i}
-                    className="flex-1 aspect-square border border-linen bg-eggshell/40 items-center justify-center overflow-hidden"
-                  >
-                    {url ? (
-                      <Image source={{ uri: url }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-                    ) : (
-                      <Text className="font-display text-2xl text-taupe">◯</Text>
-                    )}
-                  </View>
-                ))}
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans">
+                  Photos · {photoUrls.length} attached
+                </Text>
+                {photoUrls.length > 0 ? (
+                  <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans">
+                    Tap to enlarge
+                  </Text>
+                ) : null}
               </View>
-              {qualityScore != null ? (
+
+              {photoUrls.length > 0 ? (
+                <View className="flex-row" style={{ gap: 10 }}>
+                  {photoUrls.map((url, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        flex: 1,
+                        aspectRatio: 1,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        backgroundColor: "#EDE6D6",
+                        borderWidth: 1,
+                        borderColor: "rgba(31,79,71,0.10)",
+                      }}
+                    >
+                    <Pressable
+                      onPress={() => setLightboxIndex(i)}
+                      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+                    >
+                      <View style={{ width: "100%", height: "100%" }}>
+                      <Image
+                        source={{ uri: url }}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="cover"
+                        onError={() =>
+                          setPhotoError(
+                            "Couldn't load one of the photos — the signed URL may have expired.",
+                          )
+                        }
+                      />
+                      {/* Magnify hint in bottom-right corner */}
+                      <View
+                        style={{
+                          position: "absolute",
+                          right: 6,
+                          bottom: 6,
+                          paddingHorizontal: 6,
+                          paddingVertical: 4,
+                          borderRadius: 6,
+                          backgroundColor: "rgba(0,0,0,0.55)",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        <SketchIcon
+                          name="magnify"
+                          size={11}
+                          color="#FFFFFF"
+                          noGhost
+                          strokeWidth={1.6}
+                        />
+                      </View>
+                      </View>
+                    </Pressable>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                /* No-photo case is a WARNING, not a normal state. QMS
+                   requires patients to attach at least one photo or
+                   video; if a dentist sees this card, something went
+                   wrong upstream (legacy row, failed signing, RLS deny)
+                   and they shouldn't quote. */
+                <View
+                  style={{
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: "rgba(158,94,71,0.35)",
+                    backgroundColor: "rgba(158,94,71,0.06)",
+                    paddingVertical: 22,
+                    paddingHorizontal: 18,
+                    alignItems: "center",
+                  }}
+                >
+                  <SketchIcon
+                    name="emergency"
+                    size={22}
+                    color="#9E5E47"
+                    noGhost
+                    strokeWidth={1.6}
+                  />
+                  <Text
+                    style={{
+                      fontFamily: "Inter",
+                      fontSize: 10,
+                      letterSpacing: 1.4,
+                      textTransform: "uppercase",
+                      color: "#9E5E47",
+                      fontWeight: "700",
+                      marginTop: 10,
+                    }}
+                  >
+                    Photos missing
+                  </Text>
+                  <Text className="text-sm text-walnut font-sans mt-2 text-center leading-relaxed">
+                    QMS requires every patient to attach at least one photo or
+                    video. Don't quote this one — flag it and pass.
+                  </Text>
+                  {photoError ? (
+                    <Text className="text-xs text-taupe font-sans mt-2 text-center">
+                      Reason: {photoError}
+                    </Text>
+                  ) : null}
+                </View>
+              )}
+
+              {photoError ? (
+                <Text className="text-xs text-clay font-sans mt-3">
+                  {photoError}
+                </Text>
+              ) : null}
+              {qualityScore != null && photoUrls.length > 0 ? (
                 <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans mt-3">
                   Photo quality {qualityScore.toFixed(1)} / 5
                 </Text>
               ) : null}
             </View>
 
+            {/* Lightbox — fullscreen modal with swipe-to-dismiss feel.
+                Tapping anywhere dismisses; arrows step between photos. */}
+            <Modal
+              visible={lightboxIndex !== null}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setLightboxIndex(null)}
+            >
+              <StatusBar barStyle="light-content" />
+              <Pressable
+                onPress={() => setLightboxIndex(null)}
+                style={{
+                  flex: 1,
+                  backgroundColor: "rgba(0,0,0,0.92)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {lightboxIndex !== null && photoUrls[lightboxIndex] ? (
+                  <Image
+                    source={{ uri: photoUrls[lightboxIndex] }}
+                    style={{
+                      width: Dimensions.get("window").width,
+                      height: Dimensions.get("window").height * 0.8,
+                    }}
+                    resizeMode="contain"
+                  />
+                ) : null}
+
+                {/* Counter + close pill (top) */}
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 60,
+                    left: 0,
+                    right: 0,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    paddingHorizontal: 22,
+                    alignItems: "center",
+                  }}
+                  pointerEvents="box-none"
+                >
+                  <View
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 999,
+                      backgroundColor: "rgba(255,255,255,0.18)",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: 11,
+                        letterSpacing: 1.2,
+                        textTransform: "uppercase",
+                        color: "#FFFFFF",
+                        fontWeight: "700",
+                      }}
+                    >
+                      {(lightboxIndex ?? 0) + 1} / {photoUrls.length}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => setLightboxIndex(null)}
+                    hitSlop={12}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: "rgba(255,255,255,0.18)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#FFFFFF",
+                        fontSize: 18,
+                        fontWeight: "600",
+                      }}
+                    >
+                      ×
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {/* Prev/next arrows (only when there's more than one photo) */}
+                {photoUrls.length > 1 ? (
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: 60,
+                      left: 0,
+                      right: 0,
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      gap: 22,
+                    }}
+                    pointerEvents="box-none"
+                  >
+                    <Pressable
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setLightboxIndex(
+                          (i) =>
+                            i === null
+                              ? 0
+                              : (i - 1 + photoUrls.length) % photoUrls.length,
+                        );
+                      }}
+                      hitSlop={12}
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 26,
+                        backgroundColor: "rgba(255,255,255,0.18)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#FFFFFF", fontSize: 22 }}>‹</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setLightboxIndex((i) =>
+                          i === null ? 0 : (i + 1) % photoUrls.length,
+                        );
+                      }}
+                      hitSlop={12}
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 26,
+                        backgroundColor: "rgba(255,255,255,0.18)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#FFFFFF", fontSize: 22 }}>›</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+              </Pressable>
+            </Modal>
+
             <View className="px-8 mb-10">
               <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mb-4">
-                Currently quoting · {COMPETITORS.length}
+                Currently quoting · {competitors.length}
               </Text>
-              {COMPETITORS.map((c) => (
-                <View
-                  key={c.name}
-                  className="flex-row items-center justify-between py-3 border-b border-linen"
-                >
-                  <Text className="font-sans text-sm text-walnut">{c.name}</Text>
-                  <Text className="font-display text-xl text-espresso">${c.total}</Text>
-                </View>
-              ))}
+              {competitors.length === 0 ? (
+                <Text className="font-sans text-sm text-taupe italic">
+                  No other quotes yet — you'd be first in.
+                </Text>
+              ) : (
+                competitors.map((c) => (
+                  <View
+                    key={c.name}
+                    className="flex-row items-center justify-between py-3 border-b border-linen"
+                  >
+                    <Text className="font-sans text-sm text-walnut">{c.name}</Text>
+                    <Text className="font-display text-xl text-espresso">${c.total}</Text>
+                  </View>
+                ))
+              )}
             </View>
 
+            {!verified ? (
+              <View className="px-8 mb-6">
+                <View
+                  style={{
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: "rgba(158,94,71,0.35)",
+                    backgroundColor: "rgba(158,94,71,0.06)",
+                    paddingVertical: 18,
+                    paddingHorizontal: 18,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "Inter",
+                      fontSize: 10,
+                      letterSpacing: 1.4,
+                      textTransform: "uppercase",
+                      color: "#9E5E47",
+                      fontWeight: "700",
+                      marginBottom: 6,
+                    }}
+                  >
+                    AHPRA verification required
+                  </Text>
+                  <Text className="text-sm text-walnut font-sans leading-relaxed">
+                    {ahpraStatus === "suspended" || ahpraStatus === "not_found"
+                      ? "Your AHPRA registration isn't active. Restore it before quoting."
+                      : "Only AHPRA-verified dentists can quote on QuoteMySmile. Open the dashboard and tap Recheck (under a minute)."}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
             <View className="px-8 pb-24 items-center gap-3">
-              <Button variant="primary" size="lg" onPress={() => setPhase("build")}>
-                Build my quote
+              <Button
+                variant="primary"
+                size="lg"
+                disabled={!verified}
+                onPress={() => setPhase("build")}
+              >
+                {verified ? "Build my quote" : "Verification required"}
               </Button>
+              {!verified ? (
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onPress={() => router.push("/dentist")}
+                >
+                  Go to verification
+                </Button>
+              ) : null}
               <Button variant="ghost" size="md" onPress={() => router.back()}>
                 Pass
               </Button>
@@ -351,7 +767,7 @@ export default function IncomingRequestScreen() {
 
             <View className="border-y border-linen w-full max-w-md py-8 items-center mb-10">
               <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mb-2">
-                Camberwell Dental · You
+                {myClinicName || "Your clinic"} · You
               </Text>
               <Text className="font-display text-5xl text-gold mb-1">${total}</Text>
               <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans">

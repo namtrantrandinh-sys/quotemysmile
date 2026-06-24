@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { View, Text, Pressable, type LayoutChangeEvent } from "react-native";
+import { View, Text, Pressable, Alert, type LayoutChangeEvent, Platform } from "react-native";
 import { useRouter, usePathname } from "expo-router";
+import { BlurView } from "expo-blur";
+import { signOut } from "@/lib/services/auth";
 import Svg, {
   Path,
   Defs,
@@ -8,85 +10,169 @@ import Svg, {
   Stop,
   RadialGradient,
   Rect,
+  Line,
+  Polyline,
+  Circle,
 } from "react-native-svg";
-import { SketchIcon, type SketchIconName } from "@/components/SketchIcon";
+import { SketchIcon } from "@/components/SketchIcon";
 
 /**
- * Bottom tab bar with a true SVG-carved notch cradling the floating
- * camera button. Gradient is multi-stop mint-to-deep-teal, halo is a
- * soft radial glow that emits warmth without overpowering the icon.
+ * Bottom tab bar — LIQUID GLASS aesthetic.
+ *
+ * Switched away from the opaque mint-gradient slab so the bar reads as
+ * a translucent floating panel: BlurView underlay (iOS native, RN
+ * fallback on Android) + soft white tint + top-edge gloss + hairline
+ * white border. The SVG-carved notch and floating camera button are
+ * retained because they're the strongest brand cue in the patient UI.
+ *
+ * Layout was also rebuilt: previously the side icons used `space-
+ * between` around an 88pt invisible spacer, which left an uneven gap
+ * pattern (home/inbox bunched tight, bookings/sign-out spread apart).
+ * Now the bar is a strict 5-slot grid where every side button is
+ * `flex:1` so each icon occupies the same horizontal real-estate and
+ * is centred in its own column.
  */
+type TabKey = "home" | "inbox" | "bookings" | "sign-out";
 type SideTab = {
-  key: "home" | "inbox";
+  key: TabKey;
   label: string;
-  icon: SketchIconName;
-  href: string;
+  href?: string;
+  action?: "sign-out";
 };
 
-const SIDE_TABS: SideTab[] = [
-  {
-    key: "home",
-    label: "Home",
-    icon: "home",
-    href: "/",
-  },
-  {
-    key: "inbox",
-    label: "Bookings",
-    icon: "bookings",
-    href: "/inbox",
-  },
+// Minimal stroke icons (custom thin SVG paths) — replaces the chunky
+// Ionicons filled glyphs. The premium look is editorial line-art:
+// 1.4pt stroke, rounded caps/joins, no fill, just geometry. Active vs
+// inactive state cues via color tone + label weight only, not by
+// swapping to a filled glyph — the line set should feel coherent.
+const LEFT_TABS: SideTab[] = [
+  { key: "home", label: "Home", href: "/" },
+  { key: "inbox", label: "Inbox", href: "/inbox" },
 ];
+
+const RIGHT_TABS: SideTab[] = [
+  { key: "bookings", label: "Bookings", href: "/bookings" },
+  { key: "sign-out", label: "Sign out", action: "sign-out" },
+];
+
+/** Minimal 24x24 stroke icon set — premium editorial line-art. */
+function TabIcon({ name, color }: { name: TabKey; color: string }) {
+  const stroke = color;
+  const sw = 1.4;
+  switch (name) {
+    case "home":
+      return (
+        <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M3.5 11 12 4l8.5 7"
+            stroke={stroke}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Path
+            d="M5.5 10v9a.5.5 0 0 0 .5.5h12a.5.5 0 0 0 .5-.5v-9"
+            stroke={stroke}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Path
+            d="M10 19.5v-4.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v4.5"
+            stroke={stroke}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      );
+    case "inbox":
+      return (
+        <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M4 5h16a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-9.5L7 18.5V15H4a.5.5 0 0 1-.5-.5v-9A.5.5 0 0 1 4 5Z"
+            stroke={stroke}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Circle cx="8.5" cy="10" r="0.6" fill={stroke} />
+          <Circle cx="12" cy="10" r="0.6" fill={stroke} />
+          <Circle cx="15.5" cy="10" r="0.6" fill={stroke} />
+        </Svg>
+      );
+    case "bookings":
+      return (
+        <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M4.5 6h15a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-.5.5h-15a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 .5-.5Z"
+            stroke={stroke}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Line x1="4" y1="10" x2="20" y2="10" stroke={stroke} strokeWidth={sw} />
+          <Line x1="8" y1="4" x2="8" y2="7" stroke={stroke} strokeWidth={sw} strokeLinecap="round" />
+          <Line x1="16" y1="4" x2="16" y2="7" stroke={stroke} strokeWidth={sw} strokeLinecap="round" />
+        </Svg>
+      );
+    case "sign-out":
+      return (
+        <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+          <Path
+            d="M14 4h4.5a.5.5 0 0 1 .5.5v15a.5.5 0 0 1-.5.5H14"
+            stroke={stroke}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Line x1="4" y1="12" x2="14" y2="12" stroke={stroke} strokeWidth={sw} strokeLinecap="round" />
+          <Polyline
+            points="10,8 14,12 10,16"
+            stroke={stroke}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </Svg>
+      );
+  }
+}
 
 const CAPTURE_HREF = "/categories";
 
-// Bar geometry
+// Bar geometry — unchanged, the carved-notch socket cradles the camera.
 const BAR_HEIGHT = 78;
-// Notch radius is now button radius + an explicit cushion so there's a
-// visible mint ring between the button edge and the carved bar — the
-// button reads as "floating inside" the ditch, not stuck to its walls.
 const BUTTON_SIZE = 60;
-const NOTCH_CUSHION = 10; // visible breathing room on each side of the button
+const NOTCH_CUSHION = 10;
 const NOTCH_RADIUS = BUTTON_SIZE / 2 + NOTCH_CUSHION;
 const BAR_RADIUS = 32;
+// Width reserved over the notch in the icon row so the two pairs of
+// side buttons don't slide under the camera. Matches the visual carve
+// width (notch radius + cushion + flare).
+const NOTCH_SLOT_WIDTH = (NOTCH_RADIUS + 16) * 2;
 
 function buildBarPath(width: number) {
-  // Returns an SVG path that draws the bar:
-  //   • rounded outer corners (BAR_RADIUS)
-  //   • a concave notch centred on top to cradle the camera button.
-  // Uses arc + bezier so the notch lip eases into the top edge instead of
-  // forming sharp corners.
   const cx = width / 2;
   const notchHalf = NOTCH_RADIUS;
-  const lipDepth = 22; // how deep the notch carves into the bar
-  const lipFlare = 16; // horizontal flare on each side of the notch
+  const lipDepth = 22;
+  const lipFlare = 16;
   const leftLipX = cx - notchHalf - lipFlare;
   const rightLipX = cx + notchHalf + lipFlare;
-
-  // M start at top-left after corner
   return [
     `M ${BAR_RADIUS} 0`,
     `H ${leftLipX}`,
-    // Left flare easing INTO the notch lip
     `C ${cx - notchHalf - 4} 0, ${cx - notchHalf} 6, ${cx - notchHalf} ${lipDepth / 2.4}`,
-    // Concave arc carving down into the notch
     `A ${notchHalf} ${notchHalf} 0 0 0 ${cx + notchHalf} ${lipDepth / 2.4}`,
-    // Right flare easing back up to the top edge
     `C ${cx + notchHalf} 6, ${cx + notchHalf + 4} 0, ${rightLipX} 0`,
     `H ${width - BAR_RADIUS}`,
-    // Top-right corner
     `Q ${width} 0, ${width} ${BAR_RADIUS}`,
-    // Right edge
     `V ${BAR_HEIGHT - BAR_RADIUS}`,
-    // Bottom-right corner
     `Q ${width} ${BAR_HEIGHT}, ${width - BAR_RADIUS} ${BAR_HEIGHT}`,
-    // Bottom edge
     `H ${BAR_RADIUS}`,
-    // Bottom-left corner
     `Q 0 ${BAR_HEIGHT}, 0 ${BAR_HEIGHT - BAR_RADIUS}`,
-    // Left edge
     `V ${BAR_RADIUS}`,
-    // Top-left corner
     `Q 0 0, ${BAR_RADIUS} 0`,
     `Z`,
   ].join(" ");
@@ -101,18 +187,40 @@ export function PatientTabBar() {
     setBarWidth(e.nativeEvent.layout.width);
   };
 
-  const activeKey: "home" | "inbox" | "new" | null =
+  const activeKey: TabKey | "new" | null =
     pathname === "/" || pathname === ""
       ? "home"
-      : pathname.startsWith("/inbox") || pathname.startsWith("/booking")
+      : pathname.startsWith("/inbox")
         ? "inbox"
-        : pathname.startsWith("/categories") ||
-            pathname.startsWith("/capture") ||
-            pathname.startsWith("/symptoms") ||
-            pathname.startsWith("/location") ||
-            pathname.startsWith("/urgency")
-          ? "new"
-          : null;
+        : pathname.startsWith("/bookings") || pathname.startsWith("/booking")
+          ? "bookings"
+          : pathname.startsWith("/categories") ||
+              pathname.startsWith("/capture") ||
+              pathname.startsWith("/symptoms") ||
+              pathname.startsWith("/location") ||
+              pathname.startsWith("/urgency")
+            ? "new"
+            : null;
+
+  const handleTabPress = async (tab: SideTab) => {
+    if (tab.action === "sign-out") {
+      Alert.alert("Sign out", "Are you sure you want to sign out?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch {}
+            router.replace("/");
+          },
+        },
+      ]);
+      return;
+    }
+    if (tab.href) router.push(tab.href as never);
+  };
 
   return (
     <View
@@ -125,50 +233,121 @@ export function PatientTabBar() {
       }}
     >
       {/* ============================================================
-          BAR — SVG so the notch is a real concave carve, not an overlay
+          BAR — liquid-glass panel:
+            1. BlurView (native frosted blur) sits at the bottom
+            2. SVG with the carved-notch path masks the blur to the
+               correct silhouette and paints a translucent white tint
+               + top gloss + hairline border on top
          ============================================================ */}
       <View
         onLayout={onBarLayout}
         style={{
           height: BAR_HEIGHT,
-          shadowColor: "#1F4F47",
-          shadowOpacity: 0.22,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 10 },
-          elevation: 12,
+          shadowColor: "#1B3A35",
+          shadowOpacity: 0.16,
+          shadowRadius: 24,
+          shadowOffset: { width: 0, height: 12 },
+          elevation: 14,
         }}
       >
         {barWidth > 0 ? (
-          <Svg
-            width={barWidth}
-            height={BAR_HEIGHT}
-            style={{ position: "absolute", top: 0, left: 0 }}
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: barWidth,
+              height: BAR_HEIGHT,
+            }}
           >
-            <Defs>
-              {/* Refined three-stop mint gradient — pale mint top-left
-                  fading through brand mint to deep teal bottom-right.
-                  Less flat than a 2-stop, more aesthetic depth. */}
-              <SvgLinearGradient id="barFill" x1="0" y1="0" x2="1" y2="1">
-                <Stop offset="0" stopColor="#A3D4C6" stopOpacity="1" />
-                <Stop offset="0.45" stopColor="#6EB3A4" stopOpacity="1" />
-                <Stop offset="1" stopColor="#3F7E73" stopOpacity="1" />
-              </SvgLinearGradient>
-              {/* Top-edge highlight — sells the curved-glass look */}
-              <SvgLinearGradient id="topGloss" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.32" />
-                <Stop offset="0.4" stopColor="#FFFFFF" stopOpacity="0" />
-              </SvgLinearGradient>
-            </Defs>
+            {/* Native blur — on iOS this is the real frosted-glass
+                effect; Android (where BlurView is best-effort) falls
+                back to its experimental impl. The SVG path overlay
+                masks the visible silhouette so the blur appears
+                confined to the carved-bar shape rather than a rectangle. */}
+            <View
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: barWidth,
+                height: BAR_HEIGHT,
+                borderRadius: BAR_RADIUS,
+                overflow: "hidden",
+              }}
+            >
+              <BlurView
+                intensity={Platform.OS === "ios" ? 32 : 50}
+                tint="light"
+                style={{ flex: 1 }}
+              />
+            </View>
 
-            {/* Main shape with carved notch */}
-            <Path d={buildBarPath(barWidth)} fill="url(#barFill)" />
-            {/* Top-edge gloss layered on top of the fill */}
-            <Path d={buildBarPath(barWidth)} fill="url(#topGloss)" />
-          </Svg>
+            {/* SVG layer paints the carved-notch silhouette in
+                translucent white over the blur. Anywhere the path
+                does NOT cover (the notch concavity, the corners
+                beyond the radius) is transparent — that's where the
+                blur is hidden and the page shows through cleanly. */}
+            <Svg
+              width={barWidth}
+              height={BAR_HEIGHT}
+              style={{ position: "absolute", top: 0, left: 0 }}
+            >
+              <Defs>
+                {/* Pure clear-glass tint — no mint cast. User feedback:
+                    "take away the teal blur make it look more glassy".
+                    Neutral white over the BlurView reads as actual
+                    frosted glass instead of tinted plastic. */}
+                <SvgLinearGradient id="glassTint" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.34" />
+                  <Stop offset="0.55" stopColor="#FFFFFF" stopOpacity="0.22" />
+                  <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.28" />
+                </SvgLinearGradient>
+                {/* Crisp top-edge gloss — sells the glass curvature */}
+                <SvgLinearGradient id="topGloss" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.55" />
+                  <Stop offset="0.35" stopColor="#FFFFFF" stopOpacity="0" />
+                </SvgLinearGradient>
+                {/* Inner hairline highlight — like the rim of a glass */}
+                <SvgLinearGradient id="rimHighlight" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.9" />
+                  <Stop offset="0.04" stopColor="#FFFFFF" stopOpacity="0" />
+                </SvgLinearGradient>
+              </Defs>
+
+              {/* Tint layer */}
+              <Path d={buildBarPath(barWidth)} fill="url(#glassTint)" />
+              {/* Top gloss */}
+              <Path d={buildBarPath(barWidth)} fill="url(#topGloss)" />
+              {/* Rim highlight (faint white inner line near the top) */}
+              <Path d={buildBarPath(barWidth)} fill="url(#rimHighlight)" />
+              {/* Hairline border — defines the glass edge against the
+                  page; uses stroke-only so it's a 1px crisp line.
+                  Slightly cooler grey rather than pure white so the
+                  bar reads as a sealed glass panel, not a paper cut-out. */}
+              <Path
+                d={buildBarPath(barWidth)}
+                fill="none"
+                stroke="rgba(255,255,255,0.7)"
+                strokeWidth={1}
+              />
+              <Path
+                d={buildBarPath(barWidth)}
+                fill="none"
+                stroke="rgba(46,114,104,0.10)"
+                strokeWidth={0.5}
+              />
+            </Svg>
+          </View>
         ) : null}
       </View>
 
-      {/* Side icons row — sits absolutely positioned over the SVG bar */}
+      {/* Side icons row — strict 5-column flex grid so every side
+          button has equal width and is centred in its own column.
+          Column layout (left→right):
+            [Home][Inbox][notch slot · width=NOTCH_SLOT_WIDTH][Bookings][Sign out]
+          Previously this used space-between which made the gaps look
+          uneven. */}
       <View
         pointerEvents="box-none"
         style={{
@@ -179,27 +358,31 @@ export function PatientTabBar() {
           height: BAR_HEIGHT,
           flexDirection: "row",
           alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 28,
         }}
       >
-        <SideButton
-          tab={SIDE_TABS[0]}
-          active={activeKey === "home"}
-          onPress={() => router.push(SIDE_TABS[0].href as never)}
-        />
-        <View style={{ width: 88 }} />
-        <SideButton
-          tab={SIDE_TABS[1]}
-          active={activeKey === "inbox"}
-          onPress={() => router.push(SIDE_TABS[1].href as never)}
-        />
+        {LEFT_TABS.map((tab) => (
+          <View key={tab.key} style={{ flex: 1, alignItems: "center" }}>
+            <SideButton
+              tab={tab}
+              active={activeKey === tab.key}
+              onPress={() => handleTabPress(tab)}
+            />
+          </View>
+        ))}
+        <View style={{ width: NOTCH_SLOT_WIDTH }} />
+        {RIGHT_TABS.map((tab) => (
+          <View key={tab.key} style={{ flex: 1, alignItems: "center" }}>
+            <SideButton
+              tab={tab}
+              active={activeKey === tab.key}
+              onPress={() => handleTabPress(tab)}
+            />
+          </View>
+        ))}
       </View>
 
       {/* ============================================================
-          FLOATING CAMERA BUTTON — sits inside the carved notch with a
-          clear gap to the socket walls so it reads as "floating in the
-          ditch" rather than welded into it. Just above the socket rim.
+          FLOATING CAMERA BUTTON — unchanged, this is the brand anchor.
          ============================================================ */}
       <View
         pointerEvents="box-none"
@@ -211,7 +394,6 @@ export function PatientTabBar() {
           alignItems: "center",
         }}
       >
-        {/* Subtle radial halo — soft mint warmth around the floating button */}
         <Svg
           width={120}
           height={120}
@@ -220,18 +402,14 @@ export function PatientTabBar() {
         >
           <Defs>
             <RadialGradient id="halo" cx="50%" cy="50%" r="50%">
-              <Stop offset="0" stopColor="#7EC2B2" stopOpacity="0.55" />
-              <Stop offset="0.55" stopColor="#7EC2B2" stopOpacity="0.18" />
+              <Stop offset="0" stopColor="#7EC2B2" stopOpacity="0.20" />
+              <Stop offset="0.55" stopColor="#7EC2B2" stopOpacity="0.06" />
               <Stop offset="1" stopColor="#7EC2B2" stopOpacity="0" />
             </RadialGradient>
           </Defs>
           <Rect x="0" y="0" width="140" height="140" fill="url(#halo)" />
         </Svg>
 
-        {/* The camera button itself — sits INSIDE the socket with a
-            visible cushion around it (NOTCH_CUSHION = 10px on each side)
-            so it reads as floating in the ditch. Strong drop shadow
-            sells the hover above the socket floor. */}
         <Pressable
           onPress={() => router.push(CAPTURE_HREF as never)}
           style={{
@@ -240,20 +418,17 @@ export function PatientTabBar() {
             borderRadius: BUTTON_SIZE / 2,
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#1F4F47",
-            shadowOpacity: 0.55,
-            shadowRadius: 18,
-            shadowOffset: { width: 0, height: 10 },
-            elevation: 16,
-            // Sits a few px below the top so it tucks INTO the socket
-            // but a clear gap of mint shows around all sides.
+            shadowColor: "#2E7268",
+            shadowOpacity: 0.22,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 8,
             marginTop: 8,
             borderWidth: 2,
             borderColor: "rgba(255,255,255,0.88)",
             overflow: "hidden",
           }}
         >
-          {/* Button surface — its own mini gradient for liveliness */}
           <Svg
             width={BUTTON_SIZE}
             height={BUTTON_SIZE}
@@ -274,7 +449,6 @@ export function PatientTabBar() {
               fill="url(#btnFill)"
             />
           </Svg>
-          {/* Top highlight bubble */}
           <View
             pointerEvents="none"
             style={{
@@ -290,15 +464,18 @@ export function PatientTabBar() {
           <SketchIcon name="camera" size={26} color="#FFFFFF" noGhost />
         </Pressable>
 
+        {/* "New quote" label — on liquid glass the old white label
+            was invisible against the bone bg; switched to deep teal
+            for legibility on the lighter, translucent panel. */}
         <Text
           style={{
             fontFamily: "Inter",
             fontSize: 9,
             letterSpacing: 1.4,
             textTransform: "uppercase",
-            color: "#FFFFFF",
+            color: "#2E7268",
             marginTop: 14,
-            fontWeight: "600",
+            fontWeight: "700",
           }}
         >
           New quote
@@ -308,6 +485,13 @@ export function PatientTabBar() {
   );
 }
 
+/**
+ * Side button — clean Ionicons line glyph + small label. No mint pill,
+ * no teal halo: the active state just swaps the outline icon for the
+ * filled variant and bumps the label weight. Keeps the bar reading as
+ * neutral frosted glass with the camera button as the sole mint
+ * accent (per user spec).
+ */
 function SideButton({
   tab,
   active,
@@ -320,38 +504,33 @@ function SideButton({
   return (
     <Pressable
       onPress={onPress}
-      style={{ alignItems: "center", paddingHorizontal: 6, paddingVertical: 2 }}
+      hitSlop={6}
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
       <View
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: 22,
           alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: active ? "rgba(255,255,255,0.28)" : "transparent",
+          paddingHorizontal: 4,
+          paddingVertical: 2,
         }}
       >
-        <SketchIcon
-          name={tab.icon}
-          size={23}
-          color="#FFFFFF"
-          strokeWidth={active ? 1.7 : 1.3}
-          noGhost
+        <TabIcon
+          name={tab.key}
+          color={active ? "#1F4F47" : "rgba(31,79,71,0.78)"}
         />
+        <Text
+          style={{
+            fontFamily: "Inter",
+            fontSize: 9,
+            letterSpacing: 0.6,
+            color: active ? "#1F4F47" : "rgba(31,79,71,0.70)",
+            marginTop: 6,
+            fontWeight: active ? "600" : "400",
+          }}
+        >
+          {tab.label}
+        </Text>
       </View>
-      <Text
-        style={{
-          fontFamily: "Inter",
-          fontSize: 9,
-          letterSpacing: 1.2,
-          textTransform: "uppercase",
-          color: active ? "#FFFFFF" : "rgba(255,255,255,0.78)",
-          marginTop: 2,
-        }}
-      >
-        {tab.label}
-      </Text>
     </Pressable>
   );
 }

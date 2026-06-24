@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { View, Text, ScrollView, Linking, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/Button";
 import { Wordmark } from "@/components/Wordmark";
+import { WinCelebration } from "@/components/WinCelebration";
 import { getQuote } from "@/lib/sampleQuotes";
-import { notify as hapticNotify } from "@/lib/haptics";
 
 function formatSlot(slot: string | undefined): string {
   if (!slot) return "Confirmed";
@@ -32,13 +32,22 @@ export default function BookedScreen() {
   const when = formatSlot(slot);
   const depositAud = deposit ? Number(deposit) : null;
 
-  // Success thunk on first render
-  useEffect(() => {
-    hapticNotify("success");
-  }, []);
+  // Celebration moment on first mount — large modal with confetti,
+  // ka-ching sound, and success haptic so the patient feels their
+  // commitment land. Haptic/sound are nested inside WinCelebration and
+  // honour the user's notificationPrefs.
+  const [showCelebration, setShowCelebration] = useState(true);
 
   return (
     <SafeAreaView className="flex-1 bg-bone">
+      <WinCelebration
+        visible={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        kicker="Your booking · confirmed"
+        title="You're booked!"
+        body={`${q.dentistName} at ${q.clinicName} · ${when}`}
+        ctaLabel="View booking"
+      />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View className="flex-1 items-center justify-center px-8 py-20">
           <View className="h-2 w-2 rounded-full bg-gold mb-12" />
@@ -117,6 +126,23 @@ export default function BookedScreen() {
                 }
               >
                 Message clinic
+              </Button>
+            ) : null}
+            {/* Post-booking patient intake. Optional but highlighted —
+                the dentist needs medical history before the chair, and
+                catching it now beats scrambling in the waiting room. */}
+            {bookingId ? (
+              <Button
+                variant="tonal"
+                size="md"
+                onPress={() =>
+                  router.push({
+                    pathname: "/booking/intake/[bookingId]",
+                    params: { bookingId },
+                  })
+                }
+              >
+                Fill 2-min health form
               </Button>
             ) : null}
           </View>

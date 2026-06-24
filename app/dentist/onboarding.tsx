@@ -10,7 +10,7 @@ import { ProgressDots } from "@/components/ProgressDots";
 import * as Location from "expo-location";
 import { RadiusPreview } from "@/components/RadiusPreview";
 import { Checkbox } from "@/components/Checkbox";
-import { createUserProfile } from "@/lib/services/auth";
+import { createDentistProfile } from "@/lib/services/auth";
 import {
   createClinic,
   ackDentistOnboarding,
@@ -427,8 +427,7 @@ export default function DentistOnboarding() {
                         router.push("/sign-in");
                         return;
                       }
-                      await createUserProfile({
-                        role: "dentist",
+                      await createDentistProfile({
                         fullName: name || "Dentist",
                         ahpraNo: ahpra,
                       });

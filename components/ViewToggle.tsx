@@ -18,7 +18,8 @@ export function ViewToggle({ value, onChange, options }: Props) {
           <Pressable
             key={o.id}
             onPress={() => onChange(o.id)}
-            className={`px-4 py-2 rounded-sm ${active ? "bg-espresso" : ""}`}
+            className={`px-5 py-3 rounded-sm ${active ? "bg-espresso" : ""}`}
+            style={{ minHeight: 40, alignItems: "center", justifyContent: "center" }}
           >
             <Text
               className={`text-[11px] tracking-cap uppercase font-sans ${

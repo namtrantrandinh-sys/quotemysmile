@@ -50,24 +50,29 @@ Deno.serve(async (req) => {
     } = await userClient.auth.getUser();
     if (!user) return json({ error: "Not authenticated" }, 401);
 
-    // Pull current profile (need email + name for the Stripe Customer)
-    const { data: profile } = await admin
-      .from("users")
-      .select(
-        "id, full_name, email, role, stripe_customer_id, ahpra_no",
-      )
-      .eq("id", user.id)
-      .maybeSingle();
-    if (!profile) return json({ error: "Profile not found" }, 404);
-    if (profile.role !== "dentist") {
+    // Pull identity + dentist profile (need email + name for the Stripe
+    // Customer; the dentist_profiles row's existence also serves as the
+    // role gate now that the legacy users.role column is gone).
+    const [shellRes, dentRes] = await Promise.all([
+      admin.from("users").select("id, email").eq("id", user.id).maybeSingle(),
+      admin
+        .from("dentist_profiles")
+        .select("full_name, ahpra_no, stripe_customer_id")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
+    if (!shellRes.data) return json({ error: "Profile not found" }, 404);
+    if (!dentRes.data) {
       return json(
         { error: "Only dentists need a card on file." },
         403,
       );
     }
+    const shell = shellRes.data;
+    const dentist = dentRes.data;
 
     // 1) Create the Customer if we don't already have one.
-    let customerId = profile.stripe_customer_id;
+    let customerId = dentist.stripe_customer_id;
     if (!customerId) {
       const custRes = await fetch("https://api.stripe.com/v1/customers", {
         method: "POST",
@@ -78,20 +83,20 @@ Deno.serve(async (req) => {
           "Idempotency-Key": `qms:cust:${user.id}`,
         },
         body: new URLSearchParams({
-          email: profile.email ?? user.email ?? "",
-          name: profile.full_name ?? "",
-          description: `QuoteMySmile dentist · ${profile.ahpra_no ?? ""}`,
+          email: shell.email ?? user.email ?? "",
+          name: dentist.full_name ?? "",
+          description: `QuoteMySmile dentist · ${dentist.ahpra_no ?? ""}`,
           "metadata[qms_user_id]": user.id,
-          "metadata[ahpra_no]": profile.ahpra_no ?? "",
+          "metadata[ahpra_no]": dentist.ahpra_no ?? "",
         }),
       });
       const cust = await custRes.json();
       if (cust.error) return json({ error: cust.error.message }, 400);
       customerId = cust.id;
       await admin
-        .from("users")
+        .from("dentist_profiles")
         .update({ stripe_customer_id: customerId })
-        .eq("id", user.id);
+        .eq("user_id", user.id);
     }
 
     // 2) SetupIntent so the Payment Sheet can save a card off-session.

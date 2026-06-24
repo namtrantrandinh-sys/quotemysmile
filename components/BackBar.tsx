@@ -25,12 +25,25 @@ export function BackBar({ title, right }: Props) {
   const router = useRouter();
   const stacked = !!title && !!right;
 
+  // Why a guarded back handler:
+  //   router.back() is a silent no-op when there's no history (e.g. user
+  //   deep-linked from a notification, restored after a crash, or landed
+  //   here via router.replace). Without a fallback the Back button just
+  //   does nothing and users think the app is broken. Fall back to home.
+  const handleBack = () => {
+    if (router.canGoBack?.()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
+  };
+
   return (
     <View className="px-6 pt-6 pb-4 border-b border-linen">
       {/* Row 1 — Back ↔ Right (or centred title/wordmark when no right) */}
       <View className="flex-row items-center justify-between relative">
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleBack}
           hitSlop={12}
           style={{ minWidth: 60, zIndex: 2 }}
         >

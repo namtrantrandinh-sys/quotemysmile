@@ -10,6 +10,7 @@ import { ProgressDots } from "@/components/ProgressDots";
 import { Slider } from "@/components/Slider";
 import { Icon } from "@/components/Icon";
 import { PhotoInfoCard } from "@/components/PhotoInfoCard";
+import { GpsRadar } from "@/components/GpsRadar";
 import { useLocation, accuracyTier } from "@/hooks/useLocation";
 import { setIntake } from "@/lib/intakeStore";
 import { nearbyDentistsCount } from "@/lib/services/requests";
@@ -47,8 +48,11 @@ export default function LocationScreen() {
       />
       <ScrollView>
         <View className="px-8 pt-12 pb-8 items-center">
-          <View className="mb-6">
-            <Icon name="radius" size={56} />
+          {/* Replace the static radius icon with the live GPS radar — the
+              moment the patient sees their GPS lock in around them. Smaller
+              size (200) so it doesn't crowd the radius slider below. */}
+          <View className="mb-4">
+            <GpsRadar size={200} pinCount={5} sweep={gpsReady} />
           </View>
           <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mb-4">
             Find dentists near you

@@ -10,17 +10,15 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SketchIcon, type SketchIconName } from "@/components/SketchIcon";
 import { Button } from "@/components/Button";
 import { Wordmark } from "@/components/Wordmark";
 import { markOnboardingSeen } from "@/lib/firstLaunch";
 
 const { width } = Dimensions.get("window");
 
-type GlyphName = keyof typeof MaterialCommunityIcons.glyphMap;
-
 type Panel = {
-  icon: GlyphName;
+  icon: SketchIconName;
   kicker: string;
   title: string;
   italicWord?: string;
@@ -29,7 +27,7 @@ type Panel = {
 
 const PANELS: Panel[] = [
   {
-    icon: "trophy-outline",
+    icon: "verified",
     kicker: "00 · The whole idea",
     title: "Dentists compete.",
     italicWord: "compete.",
@@ -37,7 +35,7 @@ const PANELS: Panel[] = [
       "AHPRA-registered dentists near you compete to give you the best quote — live, on your screen. You pick the one that suits.",
   },
   {
-    icon: "phone-off-outline",
+    icon: "chat",
     kicker: "01 · Why this exists",
     title: "No awkward phone calls.",
     italicWord: "calls.",
@@ -45,7 +43,7 @@ const PANELS: Panel[] = [
       "No \"call us for a price\" loops. No in-person quote reveals. Real prices, live, on your screen — accurate and competitive.",
   },
   {
-    icon: "camera-iris",
+    icon: "camera",
     kicker: "02 · Map your mouth",
     title: "Four guided photos.",
     italicWord: "photos.",
@@ -53,7 +51,7 @@ const PANELS: Panel[] = [
       "Front smile, upper arch, lower arch, problem area. Our on-camera guides tell you exactly how to frame each one.",
   },
   {
-    icon: "map-marker-radius-outline",
+    icon: "radius",
     kicker: "03 · Set your radius",
     title: "Pick your radius.",
     italicWord: "radius.",
@@ -61,7 +59,7 @@ const PANELS: Panel[] = [
       "GPS picks up your location. Drag the slider 2–30 km. See the real count of AHPRA-registered dentists in range.",
   },
   {
-    icon: "lightning-bolt-outline",
+    icon: "sparkle",
     kicker: "04 · Live quoting",
     title: "Watch quotes arrive.",
     italicWord: "arrive.",
@@ -69,7 +67,7 @@ const PANELS: Panel[] = [
       "Dentists send indicative quotes within your window — 15 minutes for emergencies, up to three days for considered work. Each only allowed one revision.",
   },
   {
-    icon: "shield-check-outline",
+    icon: "shield",
     kicker: "05 · Book with confidence",
     title: "Pick the quote that suits.",
     italicWord: "suits.",
@@ -145,7 +143,7 @@ export default function OnboardingScreen() {
                 justifyContent: "center",
               }}
             >
-              <MaterialCommunityIcons name={p.icon} size={44} color="#5FA89B" />
+              <SketchIcon name={p.icon} size={56} color="#2E7268" strokeWidth={1.6} />
             </View>
             <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mb-10">
               {p.kicker}
@@ -179,6 +177,27 @@ export default function OnboardingScreen() {
           <Button variant="primary" size="lg" onPress={goNext}>
             {index < PANELS.length - 1 ? "Continue" : "Get started"}
           </Button>
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 14,
+            marginTop: 18,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Pressable onPress={() => router.push("/legal/privacy")} hitSlop={10}>
+            <Text className="text-[10px] tracking-cap uppercase text-gold font-sans">
+              Privacy policy
+            </Text>
+          </Pressable>
+          <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans">·</Text>
+          <Pressable onPress={() => router.push("/legal/terms")} hitSlop={10}>
+            <Text className="text-[10px] tracking-cap uppercase text-gold font-sans">
+              Terms of service
+            </Text>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>

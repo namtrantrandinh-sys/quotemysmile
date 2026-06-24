@@ -91,6 +91,83 @@ export const NOTE_BLOCKED_TERMS = [
   "safe for everyone",
 ];
 
+/**
+ * Words that flag a patient *review* as referencing clinical care.
+ * AHPRA s.133 National Law — any patient-submitted testimonial that
+ * references treatment, outcome, diagnosis or clinical experience is
+ * considered prohibited "testimonial advertising" and exposes the
+ * platform to a penalty up to $60,000 per breach. We restrict reviews
+ * to service-only ("staff", "wait", "explained costs", "felt welcomed").
+ *
+ * Terms here are matched as whole-word (\b...\b) on the lower-cased
+ * body so "extraction" matches but "extra" does not.
+ */
+export const REVIEW_CLINICAL_TERMS = [
+  // Procedures / treatments
+  "filling",
+  "fillings",
+  "crown",
+  "crowns",
+  "veneer",
+  "veneers",
+  "implant",
+  "implants",
+  "root canal",
+  "extraction",
+  "extracted",
+  "extract",
+  "whitening",
+  "bleaching",
+  "scaling",
+  "clean",
+  "cleaning",
+  "polish",
+  "polishing",
+  "fluoride",
+  "braces",
+  "aligner",
+  "aligners",
+  "retainer",
+  "denture",
+  "dentures",
+  "bridge",
+  "filled",
+  "drilled",
+  "drilling",
+  "anaesthetic",
+  "anaesthesia",
+  "anesthetic",
+  "anesthesia",
+  "numb",
+  "numbed",
+  "x-ray",
+  "xray",
+  "x ray",
+  // Outcomes / clinical experience
+  "result",
+  "results",
+  "outcome",
+  "outcomes",
+  "fixed",
+  "cured",
+  "healed",
+  "treated",
+  "diagnosed",
+  "diagnosis",
+  "abscess",
+  "infection",
+  "decay",
+  "cavity",
+  "cavities",
+  "gum disease",
+  "gingivitis",
+  "periodontitis",
+  "pain gone",
+  "no more pain",
+  "painless",
+  "before and after",
+];
+
 /** Safe phrasing dentists are encouraged to use instead. */
 export const NOTE_SAFE_PHRASES = [
   "Results vary",

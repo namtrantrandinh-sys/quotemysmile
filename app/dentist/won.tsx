@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/Button";
 import { Wordmark } from "@/components/Wordmark";
+import { WinCelebration } from "@/components/WinCelebration";
 import { listClinicBookings } from "@/lib/services/bookings";
 
 type BookingRow = {
@@ -16,6 +17,10 @@ type BookingRow = {
 export default function DentistWonScreen() {
   const router = useRouter();
   const [latest, setLatest] = useState<BookingRow | null>(null);
+  // Celebration on mount — confetti + ka-ching + haptic. Honours the
+  // dentist's notificationPrefs (Settings → Notifications) so a busy
+  // practice can quiet the sound/haptic without losing the visual.
+  const [showCelebration, setShowCelebration] = useState(true);
   useEffect(() => {
     listClinicBookings()
       .then((d) => {
@@ -39,22 +44,69 @@ export default function DentistWonScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bone">
+      <WinCelebration
+        visible={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        kicker="New booking · won"
+        title={`$${total} booked!`}
+        body={`Sarah K reserved you for ${slotLabel}.`}
+        ctaLabel="See the details"
+      />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 items-center justify-center px-8 py-20">
-          <View className="h-2 w-2 rounded-full bg-gold mb-12" />
-          <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mb-6">
-            Won
-          </Text>
-          <Text className="font-display text-5xl text-espresso text-center leading-[1.05] mb-10">
+        <View className="flex-1 items-center justify-center px-8 py-16">
+          {/* WON badge — bolder, larger, mint pill so it reads as a celebration
+              chip rather than a quiet caption tag */}
+          <View
+            style={{
+              backgroundColor: "#2E7268",
+              paddingHorizontal: 22,
+              paddingVertical: 8,
+              borderRadius: 999,
+              marginBottom: 24,
+              shadowColor: "#2E7268",
+              shadowOpacity: 0.18,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 4,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 13,
+                letterSpacing: 3.5,
+                textTransform: "uppercase",
+                color: "#FFFFFF",
+                fontWeight: "700",
+              }}
+            >
+              Won
+            </Text>
+          </View>
+          <Text className="font-display text-5xl text-espresso text-center leading-[1.05] mb-12">
             Sarah booked you.
           </Text>
 
-          <View className="border-y border-linen py-10 w-full max-w-md items-center mb-10">
-            <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mb-2">
+          {/* Price band — espresso-dark amount, big, with sentence-case kicker.
+              The previous gold #C8A75A reading on cream was too washed-out
+              to feel like a meaningful payout figure. */}
+          <View className="border-y border-linen py-12 w-full max-w-md items-center mb-10">
+            <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mb-4">
               {slotLabel}
             </Text>
-            <Text className="font-display text-3xl text-gold">${total}</Text>
-            <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans mt-2">
+            <Text
+              style={{
+                fontFamily: "CormorantGaramond_700Bold",
+                fontSize: 64,
+                lineHeight: 68,
+                color: "#2E7268",
+                letterSpacing: -1.5,
+                fontWeight: "700",
+              }}
+            >
+              ${total}
+            </Text>
+            <Text className="text-[10px] tracking-cap uppercase text-walnut font-sans mt-3">
               Final · subject to clinical exam
             </Text>
           </View>
@@ -80,14 +132,34 @@ export default function DentistWonScreen() {
             </Text>
           </View>
 
-          <View className="gap-3 items-center">
-            <Button variant="primary" size="lg">
+          <View className="w-full max-w-md" style={{ gap: 12 }}>
+            <Button variant="primary" size="lg" fullWidth>
               Send confirmation
             </Button>
-            <Button variant="secondary" size="md">
+            {/* Direct chat with the patient — ask for additional photos or
+                a short video clip to refine the treatment plan before they
+                arrive in chair. Disabled until we've resolved the latest
+                booking row from the server. */}
+            <Button
+              variant="secondary"
+              size="md"
+              fullWidth
+              leftSketch="chat"
+              disabled={!latest?.id}
+              onPress={() => {
+                if (!latest?.id) return;
+                router.push({
+                  pathname: "/booking/messages/[id]",
+                  params: { id: latest.id },
+                });
+              }}
+            >
+              Message patient
+            </Button>
+            <Button variant="secondary" size="md" fullWidth>
               Add to Cliniko
             </Button>
-            <Button variant="ghost" size="md" onPress={() => router.replace("/dentist")}>
+            <Button variant="ghost" size="md" fullWidth onPress={() => router.replace("/dentist")}>
               Back to dashboard
             </Button>
           </View>

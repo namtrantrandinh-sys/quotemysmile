@@ -14,6 +14,7 @@ import { Toast } from "@/components/Toast";
 import { LongDisclaimerModal } from "@/components/LongDisclaimerModal";
 import { ViewToggle } from "@/components/ViewToggle";
 import { QuotesMap } from "@/components/QuotesMap";
+import { GpsRadar } from "@/components/GpsRadar";
 import { NewQuoteTicker, type TickerItem } from "@/components/NewQuoteTicker";
 import { PatientTabBar } from "@/components/PatientTabBar";
 import { PushSoftPrompt } from "@/components/PushSoftPrompt";
@@ -269,22 +270,104 @@ export default function LiveFeedScreen() {
         }
       />
       <PushSoftPrompt trigger={quotes.length} />
+      {/* Apple 2.1b — demo data must be clearly labelled. When the user
+          arrives here via the "Live demo" pill on welcome (no request
+          param), surface a persistent banner so they (and reviewers)
+          never mistake seeded sample data for live quotes. */}
+      {!request ? (
+        <View
+          style={{
+            backgroundColor: "rgba(168,132,61,0.10)",
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(168,132,61,0.30)",
+            paddingVertical: 8,
+            paddingHorizontal: 18,
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Inter-Medium",
+              fontSize: 10,
+              letterSpacing: 1.6,
+              textTransform: "uppercase",
+              color: "#A8843D",
+            }}
+          >
+            Demo · sample quotes — sign up to send your own photos
+          </Text>
+        </View>
+      ) : null}
       <ScrollView>
-        {/* Status header */}
+        {/* Status header — demo mode replaces the Wordmark with a single
+            back chevron at the top-left, and drops the LiveBadge +
+            countdown on the right (irrelevant for a demo). */}
         <View className="px-8 py-6 border-b border-linen flex-row items-center justify-between">
-          <Pressable onPress={() => router.back()}>
-            <Wordmark size="sm" />
-          </Pressable>
-          <View className="flex-row items-center gap-6">
-            <LiveBadge />
-            <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans">
-              {closesDisplay}
-            </Text>
-          </View>
+          {!request ? (
+            <Pressable
+              onPress={() => {
+                // router.back() throws "GO_BACK not handled" on direct
+                // deep-links / cold launches into /live (no history).
+                // Fall back to the welcome screen so the chevron is
+                // always safe to tap.
+                if (router.canGoBack()) router.back();
+                else router.replace("/");
+              }}
+              hitSlop={12}
+              accessibilityLabel="Back"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#FFFFFF",
+                borderWidth: 1,
+                borderColor: "#E5DCC8",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: "#2A2520",
+                  fontFamily: "Inter",
+                  lineHeight: 18,
+                  marginTop: -2,
+                }}
+              >
+                ←
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable onPress={() => router.back()}>
+              <Wordmark size="sm" />
+            </Pressable>
+          )}
+          {request ? (
+            <View className="flex-row items-center gap-6">
+              <LiveBadge />
+              <Text className="text-[11px] tracking-cap uppercase text-walnut font-sans">
+                {closesDisplay}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Title block */}
         <View className="px-8 pt-16 pb-8 items-center">
+          {/* Demo-only — show the GPS broadcast moment so the demo
+              covers BOTH "how a quote looks" and "how the GPS finds
+              dentists for you". On a real /live (request param present)
+              we skip this; the user has already seen the radar on the
+              submitting screen and doesn't need a second pass. */}
+          {!request ? (
+            <View className="items-center mb-10">
+              <GpsRadar size={180} pinCount={5} sweep={true} />
+              <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mt-4">
+                Sample broadcast · Camberwell VIC
+              </Text>
+            </View>
+          ) : null}
           <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mb-6 text-center">
             {closed ? "Window closed" : "Your quotes · live"}
           </Text>
@@ -387,7 +470,9 @@ export default function LiveFeedScreen() {
               </Text>
             </View>
           ) : (
-            sortedQuotes.map((q) => <QuoteCard key={q.id} q={q} />)
+            sortedQuotes.map((q) => (
+              <QuoteCard key={q.id} q={q} demo={!request} />
+            ))
           )}
 
           {typing && !initialLoading ? (
@@ -411,11 +496,14 @@ export default function LiveFeedScreen() {
             Sort · Best match
           </Text>
           <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans">
-            ● Lowest indicative
+            ● Lowest guide price
           </Text>
         </View>
       </ScrollView>
-      <PatientTabBar />
+      {/* Hide the bottom tab bar in demo mode — the demo is a focused
+          "here's how a quote arrives" walk-through, not the signed-in
+          patient surface. No Home / New quote / Bookings tabs needed. */}
+      {request ? <PatientTabBar /> : null}
     </SafeAreaView>
   );
 }

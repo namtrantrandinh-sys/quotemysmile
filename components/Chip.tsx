@@ -12,9 +12,10 @@ export function Chip({ label, selected, onPress }: Props) {
     <Pressable
       onPress={onPress}
       className={cn(
-        "px-4 py-2.5 rounded-sm border",
+        "px-5 py-3 rounded-sm border",
         selected ? "border-espresso bg-espresso" : "border-linen bg-transparent",
       )}
+      style={{ minHeight: 40, alignItems: "center", justifyContent: "center" }}
     >
       <Text
         className={cn(

@@ -20,7 +20,7 @@ type Flag = { id: number; payload: { quote_id: string; matches: string[] }; ts: 
 
 export default function AdminScreen() {
   const router = useRouter();
-  const { profile } = useUserProfile();
+  const { isAdmin } = useUserProfile();
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [flags, setFlags] = useState<Flag[]>([]);
   const [queue, setQueue] = useState<AhpraQueueRow[]>([]);
@@ -44,8 +44,6 @@ export default function AdminScreen() {
   useEffect(() => {
     void reload();
   }, []);
-
-  const isAdmin = profile?.role === "admin";
 
   return (
     <SafeAreaView className="flex-1 bg-bone">

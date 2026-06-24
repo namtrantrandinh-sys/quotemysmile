@@ -84,11 +84,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 24-hour cache window — re-checks at most daily per practitioner
+    // 24-hour cache window — re-checks at most daily per practitioner.
+    // AHPRA state lives on dentist_profiles (migration 0027).
     const { data: existing } = await admin
-      .from("users")
+      .from("dentist_profiles")
       .select("ahpra_verified_at, ahpra_reg_type, ahpra_status, ahpra_last_checked_at")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .maybeSingle();
 
     const last = existing?.ahpra_last_checked_at
@@ -152,8 +153,12 @@ Deno.serve(async (req) => {
               : "not_found";
 
     const nowIso = new Date().toISOString();
+    // Upsert the dentist_profiles row. AHPRA lookup is the moment the
+    // user actually proves they are a registered dentist, so it's
+    // legitimate to create the dentist persona here if it doesn't yet
+    // exist (the surrounding onboarding flow guarantees full_name).
     await admin
-      .from("users")
+      .from("dentist_profiles")
       .update({
         ahpra_no: cleaned,
         ahpra_reg_type: parsed.regType ?? null,
@@ -161,7 +166,7 @@ Deno.serve(async (req) => {
         ahpra_last_checked_at: nowIso,
         ahpra_verified_at: finalStatus === "active" ? nowIso : null,
       })
-      .eq("id", user.id);
+      .eq("user_id", user.id);
 
     await admin.from("events").insert({
       actor_id: user.id,

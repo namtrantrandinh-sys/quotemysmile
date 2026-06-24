@@ -248,10 +248,12 @@ export default function SymptomsScreen() {
             </FieldLabel>
           </View>
 
-          <View className="items-center mt-8">
+          <View className="mt-8 px-2">
             <Button
               variant="primary"
               size="lg"
+              fullWidth
+              rightSketch="arrow-right"
               onPress={() => {
                 const symptomJson = isWhitening
                   ? {

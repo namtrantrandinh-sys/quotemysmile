@@ -9,6 +9,7 @@ import {
   Linking,
   Platform,
   TextInput,
+  Image,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -40,6 +41,12 @@ export default function CaptureScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
+  // Preview modal — tapping a captured tile opens the photo full-screen
+  // so the patient can actually SEE their shot before deciding to
+  // retake. Previously the only thing tapping a captured tile did was
+  // pop an Alert offering "Keep current / Retake" with no preview, so
+  // the patient had no way to review what they'd taken.
+  const [reviewSlot, setReviewSlot] = useState<number | null>(null);
   const [snapping, setSnapping] = useState(false);
   const [mode, setMode] = useState<"photo" | "video">("photo");
   // Default to FRONT camera — patients are photographing their own mouth,
@@ -179,23 +186,16 @@ export default function CaptureScreen() {
     }, 150);
   };
 
+  // Tapping a captured tile now opens the photo preview modal so the
+  // patient can review their shot. Retake is one tap from there.
   const handleRetake = (slotId: number) => {
-    Alert.alert(
-      "Retake this photo?",
-      "Your current photo will be replaced.",
-      [
-        { text: "Keep current", style: "cancel" },
-        {
-          text: "Retake",
-          style: "destructive",
-          onPress: () => {
-            photos.retake(slotId);
-            openCamera(slotId);
-          },
-        },
-      ],
-    );
+    setReviewSlot(slotId);
   };
+
+  const reviewSlotObj =
+    reviewSlot != null ? photos.slots[reviewSlot - 1] : null;
+  const reviewIsVideo =
+    !!reviewSlotObj?.uri && /\.(mov|mp4|m4v)$/i.test(reviewSlotObj.uri);
 
   const activeSlotObj = activeSlot != null ? photos.slots[activeSlot - 1] : null;
   const flipCamera = () => setFacing((f) => (f === "back" ? "front" : "back"));
@@ -230,7 +230,7 @@ export default function CaptureScreen() {
         <View className="px-8 mb-2">
           <PhotoInfoCard
             icon="camera"
-            mcIcon="camera-iris"
+            sketchIcon="camera"
             title="Clearer photo = more accurate quote"
             hint="On-camera guides show you exactly where to frame. Tap a slot to start."
             tone="gold"
@@ -257,28 +257,54 @@ export default function CaptureScreen() {
             const isNext = !s.uri && s.id === photos.nextSlot?.id;
             const captured = !!s.uri;
 
-            const leadingIcon = (
-              <View
-                style={{
-                  width: 46,
-                  height: 46,
-                  borderRadius: 23,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: captured
-                    ? "rgba(95,168,155,0.20)"
-                    : "rgba(95,168,155,0.12)",
-                }}
-              >
-                {s.name === "upper-arch" ? (
-                  <ArchIcon variant="upper" size={26} color="#5FA89B" />
-                ) : s.name === "lower-arch" ? (
-                  <ArchIcon variant="lower" size={26} color="#5FA89B" />
-                ) : iconName ? (
-                  <SketchIcon name={iconName} size={26} color="#3F7E73" />
-                ) : null}
-              </View>
-            );
+            // Once captured, swap the schematic icon for a live
+            // thumbnail of the actual shot. This is the patient's tap
+            // affordance: "your photo is here, tap to enlarge". The
+            // tile's onPress now opens the review modal on captured
+            // slots (handleRetake) so a single tap reaches the
+            // full-screen preview + Keep/Retake.
+            const isVideoCapture = !!s.uri && /\.(mov|mp4|m4v)$/i.test(s.uri);
+            const leadingIcon =
+              captured && s.uri && !isVideoCapture ? (
+                <View
+                  style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 23,
+                    overflow: "hidden",
+                    backgroundColor: "rgba(95,168,155,0.20)",
+                    borderWidth: 1,
+                    borderColor: "rgba(95,168,155,0.45)",
+                  }}
+                >
+                  <Image
+                    source={{ uri: s.uri }}
+                    style={{ width: "100%", height: "100%" }}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : (
+                <View
+                  style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 23,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: captured
+                      ? "rgba(95,168,155,0.20)"
+                      : "rgba(95,168,155,0.12)",
+                  }}
+                >
+                  {s.name === "upper-arch" ? (
+                    <ArchIcon variant="upper" size={26} color="#5FA89B" />
+                  ) : s.name === "lower-arch" ? (
+                    <ArchIcon variant="lower" size={26} color="#5FA89B" />
+                  ) : iconName ? (
+                    <SketchIcon name={iconName} size={26} color="#2E7268" />
+                  ) : null}
+                </View>
+              );
 
             // Traffic-light quality chip — green ≥4, amber 3-4, red <3.
             // Promotes the score from a buried subtitle to glanceable feedback.
@@ -353,7 +379,7 @@ export default function CaptureScreen() {
                   emphasis={isNext}
                   kicker={`Photo ${s.id} of ${photos.totalSlots}`}
                   title={s.label}
-                  subtitle={s.hint}
+                  subtitle={captured ? "Tap to review or retake" : s.hint}
                   leftSlot={leadingIcon}
                   trailing={trailing}
                   onPress={() => (s.uri ? handleRetake(s.id) : openCamera(s.id))}
@@ -381,7 +407,7 @@ export default function CaptureScreen() {
                         fontSize: 9,
                         letterSpacing: 1.4,
                         textTransform: "uppercase",
-                        color: "#3F7E73",
+                        color: "#2E7268",
                         marginBottom: 4,
                       }}
                     >
@@ -410,6 +436,167 @@ export default function CaptureScreen() {
             );
           })}
         </View>
+
+        {/* Photo review modal — full-screen preview of a captured slot.
+            Tapping a captured tile lands here so the patient can SEE
+            what they shot before deciding to retake or keep. */}
+        <Modal
+          visible={reviewSlot !== null}
+          animationType="fade"
+          transparent={false}
+          onRequestClose={() => setReviewSlot(null)}
+        >
+          <View style={{ flex: 1, backgroundColor: "#0E1110" }}>
+            <SafeAreaView edges={["top"]} style={{ paddingHorizontal: 18, paddingTop: 8 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Pressable
+                  onPress={() => setReviewSlot(null)}
+                  hitSlop={14}
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.14)",
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 999,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontFamily: "Inter",
+                      fontWeight: "600",
+                      fontSize: 13,
+                      letterSpacing: 0.2,
+                    }}
+                  >
+                    Close
+                  </Text>
+                </Pressable>
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontFamily: "Inter",
+                    fontSize: 11,
+                    letterSpacing: 1.6,
+                    textTransform: "uppercase",
+                    fontWeight: "600",
+                  }}
+                >
+                  Review · {reviewSlotObj?.label ?? ""}
+                </Text>
+                <View style={{ width: 64 }} />
+              </View>
+            </SafeAreaView>
+
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+              }}
+            >
+              {reviewSlotObj?.uri && !reviewIsVideo ? (
+                <Image
+                  source={{ uri: reviewSlotObj.uri }}
+                  resizeMode="contain"
+                  style={{ flex: 1, width: "100%", borderRadius: 14 }}
+                />
+              ) : reviewSlotObj?.uri && reviewIsVideo ? (
+                <View
+                  style={{
+                    width: "100%",
+                    paddingVertical: 60,
+                    backgroundColor: "rgba(255,255,255,0.08)",
+                    borderRadius: 14,
+                    alignItems: "center",
+                  }}
+                >
+                  <SketchIcon name="camera" size={48} color="#FFFFFF" noGhost />
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontFamily: "Inter",
+                      marginTop: 14,
+                      fontSize: 13,
+                    }}
+                  >
+                    Video saved · ready to upload
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            {reviewSlotObj?.qualityScore != null ? (
+              <View
+                style={{
+                  paddingHorizontal: 24,
+                  paddingBottom: 8,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "rgba(255,255,255,0.66)",
+                    fontFamily: "Inter",
+                    fontSize: 11,
+                    letterSpacing: 1.2,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Photo quality · {reviewSlotObj.qualityScore.toFixed(1)} / 5
+                </Text>
+              </View>
+            ) : null}
+
+            <SafeAreaView edges={["bottom"]}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  paddingHorizontal: 20,
+                  paddingTop: 14,
+                  paddingBottom: 14,
+                  gap: 12,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    fullWidth
+                    onPress={() => setReviewSlot(null)}
+                  >
+                    Keep
+                  </Button>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    variant="destructive"
+                    size="md"
+                    fullWidth
+                    leftSketch="camera"
+                    onPress={() => {
+                      const id = reviewSlot;
+                      setReviewSlot(null);
+                      if (id != null) {
+                        photos.retake(id);
+                        setTimeout(() => openCamera(id), 200);
+                      }
+                    }}
+                  >
+                    Retake
+                  </Button>
+                </View>
+              </View>
+            </SafeAreaView>
+          </View>
+        </Modal>
 
         <Modal
           visible={activeSlot !== null}
@@ -462,8 +649,9 @@ export default function CaptureScreen() {
                   hitSlop={12}
                   style={{
                     backgroundColor: "rgba(0,0,0,0.45)",
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
+                    paddingHorizontal: 18,
+                    paddingVertical: 11,
+                    minHeight: 38,
                     borderRadius: 999,
                   }}
                 >
@@ -560,7 +748,7 @@ export default function CaptureScreen() {
               padding: 18,
               borderWidth: 1,
               borderColor: "rgba(31,79,71,0.06)",
-              shadowColor: "#1F4F47",
+              shadowColor: "#2E7268",
               shadowOpacity: 0.05,
               shadowRadius: 8,
               shadowOffset: { width: 0, height: 3 },

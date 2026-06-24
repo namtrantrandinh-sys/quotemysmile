@@ -70,6 +70,7 @@ export default function BookScreen() {
     requestId?: string;
     clinicId?: string;
     availability: string[];
+    isDemo?: boolean;
   } | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
   const [ack, setAck] = useState(false);
@@ -92,6 +93,7 @@ export default function BookScreen() {
             clinicName: sample.clinicName,
             total: sample.total,
             availability: [],
+            isDemo: true,
           });
           return;
         }
@@ -136,6 +138,13 @@ export default function BookScreen() {
   }
 
   const handleConfirm = async () => {
+    if (q.isDemo) {
+      Alert.alert(
+        "Demo quote",
+        "This is a sample quote shown before you sign up. Send your own photos to book a real consult.",
+      );
+      return;
+    }
     if (!slot || !ack) {
       Alert.alert("Almost there", "Pick a time and tick the acknowledgement.");
       return;
@@ -245,6 +254,30 @@ export default function BookScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bone">
       <BackBar title="Book consult" />
+      {q.isDemo ? (
+        <View
+          style={{
+            backgroundColor: "rgba(168,132,61,0.10)",
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(168,132,61,0.30)",
+            paddingVertical: 8,
+            paddingHorizontal: 18,
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Inter-Medium",
+              fontSize: 10,
+              letterSpacing: 1.6,
+              textTransform: "uppercase",
+              color: "#A8843D",
+            }}
+          >
+            Demo · sample quote — booking is disabled
+          </Text>
+        </View>
+      ) : null}
       <ScrollView>
         <View className="px-8 pt-12 pb-6 items-center">
           <Text className="text-[10px] tracking-editorial uppercase text-taupe font-sans mb-3">
@@ -392,7 +425,12 @@ export default function BookScreen() {
         ) : null}
 
         <View className="px-8 pb-24 items-center">
-          <Button variant="primary" size="lg" onPress={handleConfirm}>
+          <Button
+            variant="primary"
+            size="lg"
+            onPress={handleConfirm}
+            disabled={busy}
+          >
             {busy ? "Securing slot…" : `Pay $${depositAud} & secure booking`}
           </Button>
           <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mt-4">

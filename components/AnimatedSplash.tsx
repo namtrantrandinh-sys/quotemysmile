@@ -175,7 +175,7 @@ export function AnimatedSplash({ onDone }: Props) {
             marginBottom: 4,
           }}
         >
-          Your dream smile,
+          Dentists compete
         </Text>
         <Text
           style={{
@@ -186,7 +186,7 @@ export function AnimatedSplash({ onDone }: Props) {
             marginBottom: 18,
           }}
         >
-          in your hand.
+          for your quote.
         </Text>
         <Text
           style={{

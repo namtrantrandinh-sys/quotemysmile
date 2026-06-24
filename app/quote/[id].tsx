@@ -1,14 +1,30 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BackBar } from "@/components/BackBar";
 import { Button } from "@/components/Button";
 import { Disclaimer } from "@/components/Disclaimer";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { getQuote as fetchQuote } from "@/lib/services/quotes";
+import { FinanceBadges } from "@/components/FinanceBadges";
+import { ExpiryCountdown } from "@/components/ExpiryCountdown";
+import { getQuote as fetchQuote, reportQuote } from "@/lib/services/quotes";
 import { getQuote as getSampleQuote } from "@/lib/sampleQuotes";
 import type { AdaItem } from "@/lib/types";
+import {
+  matchProvider,
+  rebateForItems,
+  averageRebateForItems,
+  type FundProvider,
+} from "@/lib/healthFundRebates";
+
+const REPORT_REASONS = [
+  "Misleading or fraudulent quote",
+  "Inappropriate / offensive language",
+  "Suspect not a real dentist",
+  "Spam or unrelated content",
+  "Something else",
+] as const;
 
 type ViewQuote = {
   id: string;
@@ -23,9 +39,14 @@ type ViewQuote = {
   clinicName: string;
   clinicAddress?: string;
   emergencyPremiumPct?: number;
+  // Captured from the patient's intake so we can compute a tailored
+  // private-health rebate without re-prompting them on this screen.
+  fundLabel?: string | null;
+  fundLevel?: string | null;
+  // When the original request stops accepting quotes / locks. Drives
+  // the discrete countdown above the Book consult button.
+  requestClosesAt?: string | null;
 };
-
-const FUND_ESTIMATE = 120;
 
 export default function QuoteDetailScreen() {
   const router = useRouter();
@@ -59,6 +80,11 @@ export default function QuoteDetailScreen() {
           });
           return;
         }
+        const fund = row.requests?.health_fund_json as
+          | { name?: string; level?: string }
+          | null
+          | undefined;
+        const requestClosesAt = (row.requests?.closes_at as string | null) ?? null;
         setQ({
           id: row.id,
           total: row.total,
@@ -72,6 +98,9 @@ export default function QuoteDetailScreen() {
           clinicName: row.clinics?.name ?? "Clinic",
           clinicAddress: row.clinics?.address ?? undefined,
           emergencyPremiumPct: row.emergency_premium_pct ?? 0,
+          fundLabel: fund?.name ?? null,
+          fundLevel: fund?.level ?? null,
+          requestClosesAt,
         });
       })
       .catch(() => {
@@ -99,7 +128,18 @@ export default function QuoteDetailScreen() {
     );
   }
 
-  const oop = q.total - FUND_ESTIMATE;
+  // Pick the patient's fund if we can recognise the label; otherwise
+  // fall back to a four-fund average so the OOP figure is still
+  // grounded. Every dollar shown here is INDICATIVE — the disclaimer
+  // copy above and the rebate library both repeat that.
+  const matched: FundProvider | null = matchProvider(q.fundLabel);
+  const rebate = matched
+    ? rebateForItems(matched, q.items)
+    : averageRebateForItems(q.items);
+  const fundDisplayLabel = matched
+    ? `${matched}${q.fundLevel ? ` · ${q.fundLevel}` : ""}`
+    : "Indicative · avg. of major funds";
+  const oop = Math.max(0, q.total - rebate);
 
   return (
     <SafeAreaView className="flex-1 bg-bone">
@@ -178,14 +218,22 @@ export default function QuoteDetailScreen() {
             Health fund estimate
           </Text>
           <View className="flex-row items-center justify-between py-3">
-            <Text className="font-sans text-base text-walnut">Bupa Top Extras</Text>
-            <Text className="font-display text-xl text-walnut">-${FUND_ESTIMATE}</Text>
+            <Text className="font-sans text-base text-walnut">{fundDisplayLabel}</Text>
+            <Text className="font-display text-xl text-walnut">-${rebate}</Text>
           </View>
           <View className="flex-row items-center justify-between py-3 border-t border-linen">
             <Text className="font-sans text-base text-espresso">Estimated out-of-pocket</Text>
             <Text className="font-display text-2xl text-gold">${oop}</Text>
           </View>
+          <Text className="text-[10px] tracking-cap uppercase text-taupe font-sans mt-3">
+            Verify exact rebate with your fund — depends on tier,
+            annual limits and waiting periods.
+          </Text>
         </View>
+
+        {/* Finance options — only render once the total clears the
+            BNPL-meaningful threshold so we don't gimmick a $25 clean. */}
+        <FinanceBadges total={q.total} />
 
         {q.availability.length > 0 ? (
           <View className="px-8 mb-12">
@@ -217,7 +265,17 @@ export default function QuoteDetailScreen() {
           </View>
         ) : null}
 
-        <View className="px-8 pb-24 items-center">
+        <View className="px-8 pb-6 items-center">
+          {q.requestClosesAt ? (
+            <View className="mb-4">
+              <ExpiryCountdown
+                closesAt={q.requestClosesAt}
+                size="md"
+                prefix="Window closes in"
+                closedLabel="Quote window closed · book direct"
+              />
+            </View>
+          ) : null}
           <Button
             variant="primary"
             size="lg"
@@ -225,6 +283,43 @@ export default function QuoteDetailScreen() {
           >
             Book consult
           </Button>
+        </View>
+
+        {/* Apple 1.2 — UGC report flow. Quotes are dentist-authored text;
+            the App Store requires a 1-tap path for patients to flag
+            objectionable / misleading content. */}
+        <View className="px-8 pb-24 items-center">
+          <Pressable
+            onPress={() => {
+              Alert.alert("Report this quote", "Why are you reporting it?", [
+                ...REPORT_REASONS.map((reason) => ({
+                  text: reason,
+                  onPress: async () => {
+                    try {
+                      const r = await reportQuote({ quoteId: q.id, reason });
+                      Alert.alert(
+                        r.alreadyReported ? "Already reported" : "Thanks — report received",
+                        r.alreadyReported
+                          ? "You've already reported this quote. We'll review it within 24 hours."
+                          : "Our team reviews reports within 24 hours. We may contact you for context.",
+                      );
+                    } catch (e) {
+                      Alert.alert(
+                        "Couldn't send report",
+                        e instanceof Error ? e.message : "Try again, or email support@quotemysmile.com.au",
+                      );
+                    }
+                  },
+                })),
+                { text: "Cancel", style: "cancel" as const },
+              ]);
+            }}
+            hitSlop={10}
+          >
+            <Text className="text-[10px] tracking-cap uppercase text-clay font-sans">
+              Report this quote
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

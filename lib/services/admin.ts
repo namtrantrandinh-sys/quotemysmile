@@ -1,9 +1,9 @@
 /**
  * Admin services — clinic verification queue + flagged quote notes.
  *
- * RLS will block unless the calling user has `role = 'admin'` in public.users.
+ * RLS will block unless the calling user has `is_admin = true` in public.users.
  * To bootstrap your first admin: SQL editor →
- *   update public.users set role='admin' where id='<your-uuid>';
+ *   update public.users set is_admin = true where id='<your-uuid>';
  */
 import { supabase } from "@/lib/supabase";
 
@@ -54,18 +54,17 @@ export type AhpraQueueRow = {
 
 export async function listAhpraQueue(): Promise<AhpraQueueRow[]> {
   const { data, error } = await supabase
-    .from("users")
+    .from("dentist_profiles")
     .select(
-      "id, full_name, ahpra_no, ahpra_status, ahpra_reg_type, ahpra_last_checked_at, clinics!clinics_owner_user_id_fkey(name, abn)",
+      "user_id, full_name, ahpra_no, ahpra_status, ahpra_reg_type, ahpra_last_checked_at, clinics!clinics_owner_user_id_fkey(name, abn)",
     )
-    .eq("role", "dentist")
     .in("ahpra_status", ["unknown", "pending", "conditional", "suspended", "not_found"])
     .order("ahpra_last_checked_at", { ascending: false, nullsFirst: true })
     .limit(100);
   if (error) throw error;
 
   return ((data as unknown as Array<{
-    id: string;
+    user_id: string;
     full_name: string;
     ahpra_no: string | null;
     ahpra_status: string;
@@ -78,7 +77,7 @@ export async function listAhpraQueue(): Promise<AhpraQueueRow[]> {
   }>) ?? []).map((r) => {
     const c = Array.isArray(r.clinics) ? r.clinics[0] : r.clinics;
     return {
-      id: r.id,
+      id: r.user_id,
       full_name: r.full_name,
       ahpra_no: r.ahpra_no,
       ahpra_status: r.ahpra_status,
@@ -96,9 +95,9 @@ export async function listAhpraQueue(): Promise<AhpraQueueRow[]> {
  */
 export async function forceRecheckAhpra(userId: string, ahpraNo: string) {
   await supabase
-    .from("users")
+    .from("dentist_profiles")
     .update({ ahpra_last_checked_at: null })
-    .eq("id", userId);
+    .eq("user_id", userId);
 
   const { data, error } = await supabase.functions.invoke("ahpra-lookup", {
     body: { ahpraNo, expectedName: "" },
@@ -147,13 +146,13 @@ export async function listRecentEvents(opts?: {
 export async function blockDentist(userId: string, reason: string) {
   const nowIso = new Date().toISOString();
   const { error } = await supabase
-    .from("users")
+    .from("dentist_profiles")
     .update({
       ahpra_status: "suspended",
       ahpra_verified_at: null,
       ahpra_last_checked_at: nowIso,
     })
-    .eq("id", userId);
+    .eq("user_id", userId);
   if (error) throw error;
   await supabase.from("events").insert({
     actor_id: userId,

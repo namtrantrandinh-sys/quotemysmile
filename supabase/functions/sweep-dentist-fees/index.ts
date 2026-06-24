@@ -92,12 +92,19 @@ Deno.serve(async (req) => {
     }> = [];
 
     for (const [uid, slot] of byDentist.entries()) {
-      const { data: user } = await admin
-        .from("users")
-        .select("stripe_customer_id, email, full_name")
-        .eq("id", uid)
-        .maybeSingle();
-      if (!user?.stripe_customer_id) {
+      // dentist_profiles holds stripe_customer_id + full_name post-0027.
+      // Email stays on the shared users row.
+      const [dentRes, shellRes] = await Promise.all([
+        admin
+          .from("dentist_profiles")
+          .select("stripe_customer_id, full_name")
+          .eq("user_id", uid)
+          .maybeSingle(),
+        admin.from("users").select("email").eq("id", uid).maybeSingle(),
+      ]);
+      const dent = dentRes.data;
+      const shell = shellRes.data;
+      if (!dent?.stripe_customer_id) {
         results.push({
           user_id: uid,
           cents: slot.cents,
@@ -105,6 +112,12 @@ Deno.serve(async (req) => {
         });
         continue;
       }
+      // Compatibility shim for the rest of the loop (still reads `user`).
+      const user = {
+        stripe_customer_id: dent.stripe_customer_id,
+        email: shell?.email ?? null,
+        full_name: dent.full_name ?? null,
+      };
 
       // Create a Stripe invoice item for the total, then finalise.
       const month = prev.toLocaleString("en-AU", {

@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Wordmark } from "@/components/Wordmark";
 import { Button } from "@/components/Button";
 import { ProgressSteps, type Step } from "@/components/ProgressSteps";
+import { GpsRadar } from "@/components/GpsRadar";
 import { getIntake, clearIntake } from "@/lib/intakeStore";
 import { submitRequest, nearbyDentistsCount } from "@/lib/services/requests";
 import { uploadRequestPhoto } from "@/lib/services/photos";
@@ -122,8 +123,22 @@ export default function SubmittingScreen() {
           );
         }
       } catch (e) {
+        // Surface the real cause. Supabase PostgrestError isn't an Error
+        // instance, so the old `e instanceof Error ? e.message : "Submit failed"`
+        // collapsed every database problem to the bare "Submit failed"
+        // text — which is exactly what the patient sees right now and
+        // gives us nothing to debug from. Read .message off whatever
+        // shape we got.
+        console.error("[QMS] submit failed:", e);
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Submit failed");
+          const msg =
+            e instanceof Error
+              ? e.message
+              : typeof e === "object" && e && "message" in e &&
+                typeof (e as { message: unknown }).message === "string"
+                ? (e as { message: string }).message
+                : "Submit failed";
+          setError(msg);
         }
       }
     })();
@@ -152,9 +167,14 @@ export default function SubmittingScreen() {
           </View>
         ) : (
           <View className="items-center w-full">
-            <View className="h-2 w-2 rounded-full bg-forest mb-8" />
+            {/* GpsRadar — the dopamine moment. Replaces the previous bullet
+                dot; rings pulse outward, mint sweep rotates, dentist pins
+                fade in around the perimeter as the broadcast goes out. */}
+            <View className="mb-6">
+              <GpsRadar size={240} pinCount={6} />
+            </View>
             <Text className="text-[11px] tracking-editorial uppercase text-taupe font-sans mb-4">
-              Submitting your request
+              Broadcasting your request
             </Text>
             <Text className="font-display text-4xl text-espresso text-center leading-[1.1] mb-2">
               Quotes will appear

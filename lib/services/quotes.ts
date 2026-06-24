@@ -115,7 +115,7 @@ export async function getQuote(quoteId: string) {
   const { data, error } = await supabase
     .from("quotes")
     .select(
-      "id, request_id, clinic_id, dentist_id, total, previous_total, items_json, availability_slots, note, status, requote_count, ahpra_no, ahpra_reg_type, dentist_name_at_quote, emergency_premium_pct, clinics(name, address)",
+      "id, request_id, clinic_id, dentist_id, total, previous_total, items_json, availability_slots, note, status, requote_count, ahpra_no, ahpra_reg_type, dentist_name_at_quote, emergency_premium_pct, clinics(name, address), requests(health_fund_json, closes_at)",
     )
     .eq("id", quoteId)
     .maybeSingle();
@@ -179,6 +179,38 @@ export function broadcastTyping(requestId: string, dentistName: string) {
       }
     });
   return channel;
+}
+
+/**
+ * Apple 1.2 — patient-submitted UGC report against a dentist quote.
+ * Inserts into quote_reports; RLS scopes the row to the reporter.
+ * Unique (quote_id, reporter_id) means duplicate reports return a
+ * conflict error — the caller treats that as "already reported".
+ */
+export async function reportQuote(input: {
+  quoteId: string;
+  reason: string;
+  detail?: string;
+}): Promise<{ alreadyReported: boolean }> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Sign in to report a quote.");
+  const { error } = await supabase.from("quote_reports").insert({
+    quote_id: input.quoteId,
+    reporter_id: user.id,
+    reason: input.reason.slice(0, 80),
+    detail: input.detail?.slice(0, 2000) ?? null,
+  });
+  if (error) {
+    // 23505 = unique_violation → user already reported this quote.
+    if ((error as { code?: string }).code === "23505") {
+      return { alreadyReported: true };
+    }
+    throw error;
+  }
+  breadcrumb("quote", "reportQuote:ok", { quoteId: input.quoteId });
+  return { alreadyReported: false };
 }
 
 /**

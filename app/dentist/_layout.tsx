@@ -4,14 +4,14 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 
 export default function DentistLayout() {
   const router = useRouter();
-  const segments = useSegments();
-  const { profile, loading, signedIn } = useUserProfile();
+  const segments = useSegments() as string[];
+  const { isDentist, loading, signedIn } = useUserProfile();
 
-  // Guard the dentist namespace: a patient (or a not-signed-in user) who
-  // somehow lands on /dentist/* via a deep link or a stale router stack
-  // is bounced back to the patient welcome rather than seeing the
-  // dentist dashboard / quoting UI. Reverse of the dentist redirect in
-  // app/index.tsx so each role only ever sees its own surface.
+  // Dual-role guard: /dentist/* is reserved for users who hold a
+  // dentist_profiles row. A patient-only signed-in user (or a signed-out
+  // user) is bounced to the dentist sign-in. /dentist/onboarding is the
+  // ONE exception — that's where a freshly authed user creates the
+  // dentist_profiles row, so we can't gate on it existing yet.
   useEffect(() => {
     if (loading) return;
     if (!segments[0] || segments[0] !== ("dentist" as any)) return;
@@ -22,10 +22,11 @@ export default function DentistLayout() {
       });
       return;
     }
-    if (profile && profile.role !== "dentist") {
-      router.replace("/");
+    const onOnboarding = segments[1] === ("onboarding" as any);
+    if (!isDentist && !onOnboarding) {
+      router.replace("/dentist/onboarding");
     }
-  }, [loading, signedIn, profile, segments, router]);
+  }, [loading, signedIn, isDentist, segments, router]);
 
   return (
     <Stack
