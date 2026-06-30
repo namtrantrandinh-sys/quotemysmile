@@ -1233,7 +1233,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 40px 120px; }
   position: relative;
   isolation: isolate;
 }
-.trust .display { color: #ffffff; }
+.trust .display { color: #ffffff; white-space: nowrap; font-size: clamp(18px, 3.6vw, 46px); }
 .trust .display em {
   color: #ffffff;
   /* keep the Allura script feel but white + subtle ink */
